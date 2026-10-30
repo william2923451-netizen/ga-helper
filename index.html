@@ -145,6 +145,15 @@ table.stand{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nu
 .stand .x{display:none}
 .stand .tag{font-size:10.5px;padding:1px 6px;border-radius:999px;border:1px solid currentColor;margin-left:6px;vertical-align:1px}
 .stand .cutline td{border-bottom:2px dashed var(--accent)}
+.fold-head{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;min-height:28px}
+.fold-head h2{flex:1}
+.chev{width:20px;height:20px;flex:none;color:var(--muted);transition:transform .2s}
+.folded .chev{transform:rotate(-90deg)}
+[data-fold].folded > :not(.fold-head){display:none!important}
+.sec-head{display:flex;align-items:center;justify-content:space-between;width:100%;padding:4px 4px 0;text-align:left}
+.sec-head h2{flex:1}
+#oppBox.folded{display:none!important}
+.fold-all{display:flex;gap:8px}
 .cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .cgrid label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
 .cgrid input{padding:8px 10px;font-family:var(--num);font-size:17px}
@@ -299,25 +308,26 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
     <div class="scroll" id="oppScroll">
       <div class="row" style="justify-content:space-between">
         <h1>對手</h1>
+        <div class="fold-all"><button class="btn sm" id="foldAll">全部收合</button><button class="btn sm" id="unfoldAll">全部展開</button></div>
       </div>
       <div class="card" id="setupCard" hidden>
         <h2>還沒設定 GA 編號</h2>
         <p class="empty" style="margin:0">先到「設定」輸入你的 GA 編號（Omnidex 個人頁上的 # 數字），APP 才知道哪一桌是你。</p>
         <button class="btn pri" data-goto="set">前往設定</button>
       </div>
-      <div class="card">
-        <h2>這場比賽</h2>
+      <div class="card" data-fold="match">
+        <div class="fold-head"><h2>這場比賽</h2></div>
         <div class="row"><input id="evInput" inputmode="url" placeholder="貼上 Omnidex 賽事網址或編號"><button class="btn pri" id="evGo">抓配對</button><button class="icon-btn" id="evFresh" aria-label="重新整理配對" title="重新整理（跳過快取）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button></div>
         <div id="evStatus" class="empty">比賽開始後，把 Omnidex 上這場賽事的網址貼進來，APP 會找出你這一輪的對手。</div>
         <div class="toggle small"><span class="muted">自動更新配對（等配對時每 30 秒、對戰中每 3 分鐘）</span><input type="checkbox" id="autoRef" style="width:auto"></div>
       </div>
-      <div class="card" id="standCard">
-        <div class="row" style="justify-content:space-between"><h2>成績表</h2>
+      <div class="card" id="standCard" data-fold="stand">
+        <div class="row fold-head" style="justify-content:space-between"><h2>成績表</h2>
           <div class="row"><button class="btn sm" id="standGo">抓成績表</button><button class="icon-btn" id="standFresh" aria-label="重新整理成績表" style="width:34px;height:34px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button></div></div>
         <div id="standBox" class="empty">抓配對後按「抓成績表」，會顯示這場比賽目前的瑞士輪排名。</div>
       </div>
-      <div class="card" id="calcCard">
-        <div class="row" style="justify-content:space-between"><h2>晉級計算器</h2><button class="btn sm" id="cFill">帶入這場比賽</button></div>
+      <div class="card" id="calcCard" data-fold="calc">
+        <div class="row fold-head" style="justify-content:space-between"><h2>晉級計算器</h2><button class="btn sm" id="cFill">帶入這場比賽</button></div>
         <p class="muted small" style="margin:0">瑞士輪：勝 3 分、和 1 分、敗 0 分、輪空 3 分。依下面的條件模擬剩下的輪次，算出每種結果的晉級機率。</p>
         <div class="cgrid">
           <label>參賽人數<input id="cN" type="number" inputmode="numeric" min="2" value="16"></label>
@@ -333,9 +343,10 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
         <button class="btn pri" id="cGo">計算</button>
         <div id="calcOut"></div>
       </div>
+      <button class="sec-head" id="oppHead" aria-expanded="true"><h2>對手資料</h2></button>
       <div id="oppBox"></div>
-      <div class="card">
-        <h2>手動查詢</h2>
+      <div class="card" data-fold="manual">
+        <div class="fold-head"><h2>手動查詢</h2></div>
         <div class="row"><input id="qInput" placeholder="對手名稱或 GA 編號"><button class="btn" id="qGo">查詢</button></div>
         <div id="qOut" class="results"></div>
       </div>
@@ -887,7 +898,7 @@ async function fetchMatch(quiet, fresh) {
     j._recv = Date.now(); lastMatch = j; store.set('lastMatch', j);
     if (j.opponent) { lastOpp = j.opponent; store.set('lastOpp', j.opponent); }
     const newOpp = j.current && j.current.opp && j.current.opp.id;
-    if (newOpp && newOpp !== prevOpp) buzz();
+    if (newOpp && newOpp !== prevOpp) { buzz(); if (typeof setFold === 'function') setFold('opp', false); }
     renderOpp(); renderLife(); renderStand(); setAuto();
   } catch (e) {
     if (!quiet) { $('#evStatus').className = ''; $('#evStatus').innerHTML = (lastMatch ? statusHTML(lastMatch) : '') + `<div class="msg err">${esc(e.message)}</div>`; }
@@ -1062,7 +1073,7 @@ async function manual() {
       const p = await api('/api/player?pid=' + q.replace('#', ''));
       out.innerHTML = '';
       if (p.notFound) out.innerHTML = '<p class="empty">找不到這個 GA 編號。</p>';
-      else { lastOpp = p; store.set('lastOpp', p); renderOpp(); $('#oppBox').scrollIntoView({ behavior: 'smooth' }); }
+      else { lastOpp = p; store.set('lastOpp', p); renderOpp(); setFold('opp', false); $('#oppBox').scrollIntoView({ behavior: 'smooth' }); }
       return;
     }
     const hits = await api('/api/search?q=' + encodeURIComponent(q));
@@ -1074,7 +1085,7 @@ $('#qInput').onkeydown = e => { if (e.key === 'Enter') manual(); };
 $('#qOut').onclick = async e => {
   const b = e.target.closest('[data-slug]'); if (!b) return;
   b.style.opacity = .5;
-  try { const p = await api('/api/player?name=' + encodeURIComponent(decodeURIComponent(b.dataset.slug))); lastOpp = p; store.set('lastOpp', p); renderOpp(); $('#oppBox').scrollIntoView({ behavior: 'smooth' }); }
+  try { const p = await api('/api/player?name=' + encodeURIComponent(decodeURIComponent(b.dataset.slug))); lastOpp = p; store.set('lastOpp', p); renderOpp(); setFold('opp', false); $('#oppBox').scrollIntoView({ behavior: 'smooth' }); }
   catch (err) { $('#qOut').innerHTML = `<div class="msg err">${esc(err.message)}</div>`; }
 };
 
@@ -1150,6 +1161,32 @@ function renderSettings() {
     catch (e) { m.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
   };
 }
+// ---------- 摺疊 ----------
+const FOLD_DEFAULT = { match: false, stand: true, calc: true, opp: false, manual: true }; // true = 收合
+let folds = Object.assign({}, FOLD_DEFAULT, store.get('folds', {}));
+const CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+function applyFolds() {
+  document.querySelectorAll('[data-fold]').forEach(c => c.classList.toggle('folded', !!folds[c.dataset.fold]));
+  $('#oppBox').classList.toggle('folded', !!folds.opp); $('#oppHead').classList.toggle('folded', !!folds.opp);
+  $('#oppHead').setAttribute('aria-expanded', String(!folds.opp));
+  document.querySelectorAll('[data-fold] .fold-head').forEach(h => h.setAttribute('aria-expanded', String(!folds[h.closest('[data-fold]').dataset.fold])));
+}
+function setFold(k, v) { folds[k] = v; store.set('folds', folds); applyFolds(); }
+document.querySelectorAll('[data-fold] .fold-head').forEach(h => {
+  h.insertAdjacentHTML('beforeend', CHEV); h.setAttribute('role', 'button'); h.tabIndex = 0;
+  const k = h.closest('[data-fold]').dataset.fold;
+  const toggle = e => { if (e.target.closest('button,input,a') && !e.target.closest('.chev')) return; setFold(k, !folds[k]); };
+  h.addEventListener('click', toggle);
+  h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFold(k, !folds[k]); } });
+});
+$('#oppHead').insertAdjacentHTML('beforeend', CHEV);
+$('#oppHead').onclick = () => setFold('opp', !folds.opp);
+$('#foldAll').onclick = () => { Object.keys(FOLD_DEFAULT).forEach(k => folds[k] = k !== 'match'); store.set('folds', folds); applyFolds(); };
+$('#unfoldAll').onclick = () => { Object.keys(FOLD_DEFAULT).forEach(k => folds[k] = false); store.set('folds', folds); applyFolds(); };
+// 按了標題列上的功能鍵就自動展開那一塊
+['#standGo', '#standFresh'].forEach(id => $(id).addEventListener('click', () => setFold('stand', false)));
+$('#cFill').addEventListener('click', () => setFold('calc', false));
+applyFolds();
 renderOpp();
 })();
 </script>
