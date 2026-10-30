@@ -10,10 +10,14 @@ window.GA_CONFIG = {
 // deck.js：對手英雄、屬性、開賽 ELO（2026-10-30）
 // ascent.js：晉級計算器的 Ascent Day 1 晉級線（2026-10-30）
 // display.js：設定裡的英雄背景亮度（2026-10-30）
+// 版本號：每次改版都要推進（日期＋英文字母），手機才不會卡在快取的舊版。
+// 後面再加「每 10 分鐘換一次」的數字當保險：忘了推進時，最多 10 分鐘也會抓到新版。
+const GA_VERSION = '20261031a';
 document.addEventListener('DOMContentLoaded', () => {
-  for (const f of ['deck.js?v=20261030d', 'ascent.js?v=20261030a', 'display.js?v=20261030a']) {
+  const v = GA_VERSION + '.' + Math.floor(Date.now() / 600000);
+  for (const f of ['deck.js', 'ascent.js', 'display.js']) {
     const s = document.createElement('script');
-    s.src = f;
+    s.src = f + '?v=' + v;
     document.body.appendChild(s);
   }
 });
