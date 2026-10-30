@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>GA 比賽助手</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GA 助手">
+<meta name="theme-color" content="#0f1216">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* 版型：一頁式、底部分頁列；計血頁上下對坐，其他頁單欄卷軸。深色桌面墊風格。 */
+:root{
+  --bg:#0f1216; --panel:#171b21; --panel2:#1f242c; --line:#2b313a;
+  --fg:#e9e6df; --muted:#8d9399; --accent:#d9b35b; --accent-ink:#1b1608;
+  --good:#5bbf8a; --bad:#e2685a;
+  --fire:#e0623f; --water:#4b95dc; --wind:#4fb486; --norm:#a9a196; --other:#9b86c9;
+  --num:"Barlow Condensed","Noto Sans TC",system-ui,sans-serif;
+  --body:"Noto Sans TC",-apple-system,"PingFang TC","Heiti TC",system-ui,sans-serif;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-l:env(safe-area-inset-left,0px); --safe-r:env(safe-area-inset-right,0px);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;overflow:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;touch-action:manipulation}
+input,select{font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;-webkit-user-select:text;user-select:text}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{display:flex;flex-direction:column;height:100%}
+.view{flex:1;min-height:0;display:none}
+.view.on{display:flex;flex-direction:column}
+.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(var(--safe-t) + 14px) max(16px,var(--safe-r)) 24px max(16px,var(--safe-l));display:flex;flex-direction:column;gap:14px}
+
+/* 底部分頁 */
+nav.tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--panel);border-top:1px solid var(--line);
+  padding:6px max(8px,var(--safe-r)) calc(6px + var(--safe-b)) max(8px,var(--safe-l))}
+nav.tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;color:var(--muted);font-size:12px;border-radius:10px}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button.on{color:var(--accent)}
+
+/* 計血 */
+.life{flex:1;display:grid;grid-template-rows:1fr auto 1fr;min-height:0}
+.side{position:relative;display:grid;grid-template-rows:1fr 1fr;min-height:0;overflow:hidden;isolation:isolate}
+.side.opp{padding-top:var(--safe-t)}
+.side.opp.flip{transform:rotate(180deg);padding-top:0;padding-bottom:var(--safe-t)}
+/* 英雄卡圖背景：淡化＋往底色漸層 */
+.side .bg{position:absolute;inset:0;z-index:-1;background-size:cover;background-position:center 22%;opacity:var(--bg-op,.26);filter:saturate(.85)}
+.side .bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(15,18,22,.35),rgba(15,18,22,.85) 75%)}
+.side .tap{display:flex;justify-content:center;font-family:var(--num);font-size:40px;font-weight:600;color:var(--muted);transition:background .12s}
+.side .tap:active{background:rgba(255,255,255,.06)}
+.side .tap.plus{align-items:flex-start;padding-top:10px}
+.side .tap.minus{align-items:flex-end;padding-bottom:10px}
+.side .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.side .who{font-size:13px;letter-spacing:.08em;color:var(--fg);opacity:.75;max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side .val{font-family:var(--num);font-weight:700;font-size:min(28vw,150px);line-height:.9;font-variant-numeric:tabular-nums;pointer-events:auto;text-shadow:0 2px 18px rgba(0,0,0,.6)}
+.side .val.low{color:var(--bad)}
+.side .pend{height:24px;font-family:var(--num);font-size:22px;font-weight:600}
+.side .pend.dn{color:var(--bad)}.side .pend.up{color:var(--good)}
+.side .sub{min-height:18px;font-size:12.5px;color:var(--fg);opacity:.75;font-variant-numeric:tabular-nums}
+.side .sub.ko{color:var(--bad);opacity:1;font-weight:700}
+.side .champ{position:absolute;top:10px;left:max(12px,var(--safe-l));max-width:46%;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(23,27,33,.75);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side .five{position:absolute;top:50%;transform:translateY(-50%);pointer-events:auto;min-width:54px;padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(23,27,33,.8);font-family:var(--num);font-size:18px}
+.side .five.l{left:max(12px,var(--safe-l))}.side .five.r{right:max(12px,var(--safe-r))}
+.champ-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.champ-grid button{display:flex;flex-direction:column;gap:4px;text-align:left;font-size:11.5px;line-height:1.3}
+.champ-grid img{width:100%;aspect-ratio:5/7;object-fit:cover;border-radius:8px;background:var(--panel2);max-width:100%}
+.champ-grid button.on img{outline:2px solid var(--accent)}
+.mid{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px max(12px,var(--safe-r)) 8px max(12px,var(--safe-l));background:var(--panel);border-block:1px solid var(--line)}
+.mid .turn{display:flex;align-items:center;gap:8px}
+.mid .turn b{font-family:var(--num);font-size:24px;min-width:56px;text-align:center}
+.icon-btn{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--panel2);border:1px solid var(--line)}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn.on{border-color:var(--accent);color:var(--accent)}
+
+/* 通用卡片 */
+h1{font-size:20px;margin:0}
+h2{font-size:13px;letter-spacing:.12em;color:var(--muted);margin:0;font-weight:500}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{min-width:0}
+.btn{padding:11px 14px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-weight:500;white-space:nowrap}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.row>.btn,.row>.icon-btn{flex:none}
+#evGo{padding-inline:12px}
+.btn.sm{padding:7px 10px;font-size:13px}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);font-size:13px}
+.chip.on{border-color:var(--accent);color:var(--accent)}
+
+/* 骰子 */
+.dice-out{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:4px}
+.dice-out .big{font-family:var(--num);font-weight:700;font-size:120px;line-height:1}
+.dice-out .sub{color:var(--muted);font-size:14px}
+.dice-out .big.roll{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.6) rotate(-12deg);opacity:.2}100%{transform:none;opacity:1}}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dgrid button{padding:16px 0;border-radius:14px;background:var(--panel2);border:1px solid var(--line);font-family:var(--num);font-size:22px;font-weight:600}
+.dgrid button small{display:block;font-family:var(--body);font-size:11px;color:var(--muted);font-weight:400}
+.hist{display:flex;flex-wrap:wrap;gap:6px}
+.hist span{font-family:var(--num);font-size:16px;padding:3px 9px;border-radius:8px;background:var(--panel2)}
+
+/* 計數器 */
+.ctr{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px}
+.ctr .nm{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctr .n{font-family:var(--num);font-weight:700;font-size:44px;line-height:1;text-align:center;font-variant-numeric:tabular-nums}
+.ctr .pm{width:52px;height:52px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);font-family:var(--num);font-size:28px}
+.ctr-head{display:flex;justify-content:space-between;align-items:center}
+.ctr-head button{color:var(--muted);font-size:13px;padding:4px 6px}
+
+/* 對手 */
+#oppBox{display:flex;flex-direction:column;gap:14px}
+#oppBox:empty{display:none}
+.status{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px}
+.status b{font-family:var(--num);font-size:18px;font-weight:600}
+.opp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.opp-name{font-size:24px;font-weight:700;word-break:break-all;-webkit-user-select:text;user-select:text}
+.elo{text-align:right;flex:none}
+.elo b{font-family:var(--num);font-size:34px;font-weight:700;line-height:1;display:block}
+.tier{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-top:4px}
+.tier.hi{border-color:var(--accent);color:var(--accent)}
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar .lbl{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;margin-bottom:4px}
+.bar .lbl span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .lbl span:last-child{font-family:var(--num);font-size:15px;flex:none;color:var(--muted)}
+.bar .track{height:8px;border-radius:4px;background:var(--panel2);overflow:hidden}
+.bar .fill{height:100%;border-radius:4px}
+.evs{display:flex;flex-direction:column}
+.ev{display:grid;grid-template-columns:52px 1fr auto;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line)}
+.ev:first-child{border-top:0}
+.ev .d{font-family:var(--num);font-size:16px;color:var(--muted);grid-row:span 2}
+.ev .nm{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev .rec{font-family:var(--num);font-size:17px;text-align:right}
+.ev .cut{font-size:11.5px;color:var(--accent);text-align:right}
+.pill{display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill i{width:9px;height:9px;border-radius:50%;flex:none;background:var(--other)}
+.el-Fire{--c:var(--fire)}.el-Water{--c:var(--water)}.el-Wind{--c:var(--wind)}.el-Norm{--c:var(--norm)}
+.pill.el-Fire i,.pill.el-Water i,.pill.el-Wind i,.pill.el-Norm i{background:var(--c)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{padding:5px 10px;font-size:12.5px;color:var(--muted)}
+.seg button.on{background:var(--panel2);color:var(--fg)}
+.results{display:flex;flex-direction:column}
+.results button{display:flex;justify-content:space-between;gap:10px;text-align:left;padding:10px 0;border-top:1px solid var(--line)}
+.results button:first-child{border-top:0}
+.msg{font-size:13.5px;padding:10px 12px;border-radius:10px;background:var(--panel2)}
+.msg.err{color:var(--bad)}
+.empty{color:var(--muted);font-size:14px;line-height:1.7}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--muted);border-top-color:transparent;border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* 下拉面板 */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-height:82%;display:flex;flex-direction:column;background:var(--panel);border-top-left-radius:20px;border-top-right-radius:20px;border-top:1px solid var(--line);
+  padding:14px max(16px,var(--safe-r)) calc(16px + var(--safe-b)) max(16px,var(--safe-l))}
+.sheet .sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sheet .sb{overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.loglist{display:flex;flex-direction:column;font-variant-numeric:tabular-nums}
+.loglist .t{font-size:12px;color:var(--muted);padding:10px 0 4px;letter-spacing:.1em}
+.loglist .e{display:grid;grid-template-columns:46px 1fr 60px 60px;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:14px;align-items:center}
+.loglist .e .dl{font-family:var(--num);font-size:18px;text-align:right}
+.loglist .e .to{font-family:var(--num);font-size:18px;text-align:right}
+label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.toggle{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 計血 -->
+  <section class="view on" id="v-life">
+    <div class="life">
+      <div class="side opp flip" id="side-1"></div>
+      <div class="mid">
+        <div class="turn">
+          <button class="icon-btn" id="turnDn" aria-label="上一回合"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <b id="turnLbl">T1</b>
+          <button class="icon-btn" id="turnUp" aria-label="下一回合"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+        <div class="row">
+          <button class="icon-btn" id="undoBtn" aria-label="復原"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg></button>
+          <button class="icon-btn" id="logBtn" aria-label="血量紀錄"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
+          <button class="icon-btn" id="flipBtn" aria-label="翻轉對手區"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg></button>
+          <button class="icon-btn" id="resetBtn" aria-label="新的一局"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+        </div>
+      </div>
+      <div class="side me" id="side-0"></div>
+    </div>
+  </section>
+
+  <!-- 骰子 -->
+  <section class="view" id="v-dice">
+    <div class="scroll">
+      <h1>骰子</h1>
+      <div class="card dice-out"><div class="big" id="dieBig">–</div><div class="sub" id="dieSub">點下面的按鈕擲骰</div></div>
+      <div class="dgrid">
+        <button data-die="6">D6<small>六面骰</small></button>
+        <button data-die="6x2">2D6<small>兩顆六面</small></button>
+        <button data-die="20">D20<small>二十面骰</small></button>
+        <button data-die="coin">硬幣<small>正面／反面</small></button>
+        <button data-die="first">先後攻<small>各擲 D20</small></button>
+        <button data-die="custom">D<span id="customN">10</span><small>自訂面數</small></button>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><h2>最近結果</h2><button class="btn sm" id="dieClear">清除</button></div>
+        <div class="hist" id="dieHist"><span class="muted small" style="background:none;padding:0">還沒有紀錄</span></div>
+      </div>
+      <label class="fld">自訂骰子面數<input id="customInput" type="number" inputmode="numeric" min="2" max="1000" value="10"></label>
+    </div>
+  </section>
+
+  <!-- 計數器 -->
+  <section class="view" id="v-ctr">
+    <div class="scroll">
+      <div class="row" style="justify-content:space-between"><h1>計數器</h1><button class="btn sm" id="ctrZero">全部歸零</button></div>
+      <div id="ctrList" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div class="card">
+        <h2>新增計數器</h2>
+        <div class="chips" id="ctrPresets"></div>
+        <div class="row"><input id="ctrName" placeholder="自訂名稱，例如：Floating Memory"><button class="btn pri" id="ctrAdd">新增</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 對手 -->
+  <section class="view" id="v-opp">
+    <div class="scroll" id="oppScroll">
+      <div class="row" style="justify-content:space-between">
+        <h1>對手</h1>
+        <button class="icon-btn" id="setBtn" aria-label="設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
+      </div>
+      <div class="card" id="setupCard" hidden>
+        <h2>玩家設定</h2>
+        <p class="empty" style="margin:0">輸入你的 GA 編號（Omnidex 個人頁上的 # 數字），APP 才知道哪一桌是你。</p>
+        <div class="row"><input id="setupPid" inputmode="numeric" placeholder="例如 3753"><button class="btn pri" id="setupGo">確認</button></div>
+        <div id="setupMsg"></div>
+      </div>
+      <div class="card">
+        <h2>這場比賽</h2>
+        <div class="row"><input id="evInput" inputmode="url" placeholder="貼上 Omnidex 賽事網址或編號"><button class="btn pri" id="evGo">抓配對</button><button class="icon-btn" id="evFresh" aria-label="重新整理配對" title="重新整理（跳過快取）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button></div>
+        <div id="evStatus" class="empty">比賽開始後，把 Omnidex 上這場賽事的網址貼進來，APP 會找出你這一輪的對手。</div>
+        <div class="toggle small"><span class="muted">自動更新配對（等配對時每 30 秒、對戰中每 3 分鐘）</span><input type="checkbox" id="autoRef" style="width:auto"></div>
+      </div>
+      <div id="oppBox"></div>
+      <div class="card">
+        <h2>手動查詢</h2>
+        <div class="row"><input id="qInput" placeholder="對手名稱或 GA 編號"><button class="btn" id="qGo">查詢</button></div>
+        <div id="qOut" class="results"></div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tabs">
+    <button class="on" data-v="life"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 21s-7-4.4-9.3-9A5.3 5.3 0 0112 6.6 5.3 5.3 0 0121.3 12C19 16.6 12 21 12 21z"/></svg>計血</button>
+    <button data-v="dice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>骰子</button>
+    <button data-v="ctr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h4M7 10v4M15 12h4M4 5h16v14H4z"/></svg>計數</button>
+    <button data-v="opp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>對手</button>
+  </nav>
+</div>
+
+<div id="sheetRoot"></div>
+
+<script src="config.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('ga.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('ga.' + k, JSON.stringify(v)); } catch (e) {} },
+};
+const buzz = () => { try { navigator.vibrate && navigator.vibrate(8); } catch (e) {} };
+
+// ---------- 設定 ----------
+const urlApi = new URLSearchParams(location.search).get('api');
+if (urlApi) store.set('api', urlApi.replace(/\/+$/, ''));
+const CFG = window.GA_CONFIG || {};
+const S = Object.assign({ api: '', pid: '', myName: '', season: CFG.season || '2026-08-28', hiElo: CFG.hiElo || 1384, start: 15, flip: true, champ: [null, null] }, store.get('settings', {}));
+if (store.get('api')) S.api = store.get('api');
+const apiBase = () => { const u = (S.api || CFG.api || '').trim(); return /你的名稱/.test(u) ? '' : u.replace(/\/+$/, ''); };
+if (!Array.isArray(S.champ)) S.champ = [null, null];
+const saveS = () => store.set('settings', S);
+
+// ---------- 分頁 ----------
+let curView = 'life';
+document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + b.dataset.v));
+  curView = b.dataset.v;
+  if (curView === 'life') wake(true);
+});
+
+// 計血時讓螢幕保持亮著（iOS 16.4 以上支援，失敗就算了）
+let lock = null;
+async function wake(on) {
+  try {
+    if (on && !lock && 'wakeLock' in navigator && document.visibilityState === 'visible') {
+      lock = await navigator.wakeLock.request('screen'); lock.addEventListener('release', () => lock = null);
+    }
+  } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && curView === 'life') wake(true); });
+document.addEventListener('pointerdown', () => wake(curView === 'life'), { once: true });
+
+// ---------- 下拉面板 ----------
+function sheet(title, html, onMount) {
+  const root = $('#sheetRoot');
+  root.innerHTML = `<div class="sheet-bg"></div><div class="sheet" role="dialog" aria-label="${esc(title)}"><div class="sh"><h1>${esc(title)}</h1><button class="btn sm" data-close>關閉</button></div><div class="sb">${html}</div></div>`;
+  const close = () => root.innerHTML = '';
+  root.querySelector('.sheet-bg').onclick = close;
+  root.querySelector('[data-close]').onclick = close;
+  onMount && onMount(root.querySelector('.sb'), close);
+}
+
+// =====================================================================
+// 計血
+// =====================================================================
+// 兩種模式：life = 剩餘血量（從起始血量往下扣）；dmg = 傷害計數（從 0 往上加）
+if (S.mode !== 'dmg') S.mode = 'life';
+const startVal = m => (m === 'dmg' ? 0 : S.start);
+const L = Object.assign({ v: [startVal(S.mode), startVal(S.mode)], turn: 1, log: [], game: 1, mode: S.mode }, store.get('life', {}));
+const DMG = () => L.mode === 'dmg';
+const lifeOf = i => (S.champ && S.champ[i] && S.champ[i].life != null ? S.champ[i].life : null);
+const saveL = () => store.set('life', L);
+const pend = [null, null]; // {delta, from, timer}
+const NAMES = ['我', '對手'];
+const sideName = i => i === 0 ? (S.myName || '我') : ((lastMatchName()) || '對手');
+function lastMatchName() { try { const m = store.get('lastMatch', null); return m && m.current && m.current.opp && m.opponent && m.opponent.name || ''; } catch (e) { return ''; } }
+
+function sideHTML(i) {
+  return `<div class="bg" id="bg${i}"></div>
+  <button class="tap plus" data-i="${i}" data-d="1" aria-label="${NAMES[i]}加 1">+</button>
+  <button class="tap minus" data-i="${i}" data-d="-1" aria-label="${NAMES[i]}扣 1">−</button>
+  <div class="center"><div class="who" id="who${i}"></div><div class="pend" id="pendU${i}"></div><button class="val" id="val${i}" aria-label="設定${NAMES[i]}血量"></button><div class="pend" id="pend${i}"></div><div class="sub" id="sub${i}"></div></div>
+  <button class="champ" id="champ${i}" data-champ="${i}"></button>
+  <button class="five l" data-i="${i}" data-d="-5">−5</button><button class="five r" data-i="${i}" data-d="5">+5</button>`;
+}
+[0, 1].forEach(i => { $('#side-' + i).innerHTML = sideHTML(i); });
+$('#side-1').classList.toggle('flip', !!S.flip);
+
+function renderLife() {
+  [0, 1].forEach(i => {
+    const life = lifeOf(i), dmg = DMG();
+    const remain = dmg ? (life != null ? life - L.v[i] : null) : L.v[i];
+    const el = $('#val' + i); el.textContent = L.v[i]; el.classList.toggle('low', remain != null && remain <= 5);
+    const p = pend[i], txt = p && p.delta ? (p.delta > 0 ? '+' : '') + p.delta : '';
+    // 增加顯示在數字上方、減少顯示在下方，和按的位置一致；傷害模式下增加是壞事，用紅色
+    $('#pendU' + i).textContent = p && p.delta > 0 ? txt : ''; $('#pendU' + i).className = 'pend ' + (dmg ? 'dn' : 'up');
+    $('#pend' + i).textContent = p && p.delta < 0 ? txt : ''; $('#pend' + i).className = 'pend ' + (dmg ? 'up' : 'dn');
+    const sub = $('#sub' + i);
+    if (dmg) {
+      const ko = life != null && remain <= 0;
+      sub.textContent = ko ? `已擊倒（傷害 ${L.v[i]} ≥ 生命 ${life}）` : life != null ? `傷害｜剩 ${remain} / ${life}` : '傷害';
+      sub.className = 'sub' + (ko ? ' ko' : '');
+    } else { sub.textContent = life != null ? `剩餘血量｜生命 ${life}` : ''; sub.className = 'sub'; }
+    $('#who' + i).textContent = sideName(i);
+    const c = S.champ && S.champ[i];
+    $('#champ' + i).textContent = c ? `${c.name}・Lv${c.level ?? '–'}・生命 ${c.life ?? '–'}` : '選擇英雄（背景）';
+    $('#bg' + i).style.backgroundImage = c && c.image ? `url("${c.image}")` : '';
+  });
+  $('#turnLbl').textContent = 'T' + L.turn;
+}
+function commit(i) {
+  const p = pend[i]; if (!p) return;
+  clearTimeout(p.timer); pend[i] = null;
+  if (p.delta) L.log.push({ s: i, d: p.delta, from: p.from, to: L.v[i], t: L.turn, g: L.game, at: Date.now(), m: L.mode });
+  if (L.log.length > 400) L.log = L.log.slice(-400);
+  saveL(); renderLife();
+}
+function change(i, d) {
+  if (!pend[i]) pend[i] = { delta: 0, from: L.v[i] };
+  const p = pend[i]; p.delta += d; L.v[i] += d;
+  clearTimeout(p.timer); p.timer = setTimeout(() => commit(i), 1600);
+  buzz(); saveL(); renderLife();
+}
+function setLife(i, v) {
+  commit(i);
+  if (v === L.v[i]) return;
+  L.log.push({ s: i, d: v - L.v[i], from: L.v[i], to: v, t: L.turn, g: L.game, at: Date.now(), set: true, m: L.mode });
+  L.v[i] = v; saveL(); renderLife();
+}
+// 換模式：用英雄生命（沒選英雄就用起始血量）換算，剩餘 = 生命 − 傷害
+function setMode(m) {
+  commit(0); commit(1);
+  S.mode = m; saveS();
+  if (L.mode === m) return renderLife();
+  [0, 1].forEach(i => { const life = lifeOf(i) ?? S.start; L.v[i] = life - L.v[i]; });
+  L.mode = m; saveL(); renderLife();
+}
+const modeSeg = id => `<div class="seg" id="${id}" style="align-self:flex-start"><button data-m="life" class="${S.mode === 'life' ? 'on' : ''}">剩餘血量</button><button data-m="dmg" class="${S.mode === 'dmg' ? 'on' : ''}">傷害計數（從 0 開始）</button></div>`;
+document.querySelector('.life').addEventListener('click', e => {
+  const b = e.target.closest('[data-d]'); if (b) return change(+b.dataset.i, +b.dataset.d);
+  const v = e.target.closest('.val'); if (v) return lifeSheet(+v.id.slice(3));
+  const ch = e.target.closest('[data-champ]'); if (ch) return champSheet(+ch.dataset.champ);
+});
+function lifeSheet(i) {
+  const presets = DMG() ? [0, 5, 10, 15, 20] : [15, 19, 22, 25, 26, 27, 28, 30];
+  sheet(sideName(i) + (DMG() ? '的傷害' : '的血量'), `
+    <label class="fld">直接輸入<input id="lifeIn" type="number" inputmode="numeric" value="${L.v[i]}"></label>
+    <div class="chips">${presets.map(n => `<button class="chip" data-n="${n}">${n}</button>`).join('')}</div>
+    <button class="btn pri" id="lifeOk">設定</button>`, (sb, close) => {
+    sb.querySelectorAll('[data-n]').forEach(c => c.onclick = () => { setLife(i, +c.dataset.n); close(); });
+    sb.querySelector('#lifeOk').onclick = () => { const n = parseInt(sb.querySelector('#lifeIn').value, 10); if (!isNaN(n)) setLife(i, n); close(); };
+  });
+}
+$('#turnUp').onclick = () => { commit(0); commit(1); L.turn++; buzz(); saveL(); renderLife(); };
+$('#turnDn').onclick = () => { if (L.turn > 1) { L.turn--; saveL(); renderLife(); } };
+$('#undoBtn').onclick = () => {
+  commit(0); commit(1);
+  const last = L.log.pop(); if (!last) return;
+  L.v[last.s] = last.from; saveL(); renderLife(); buzz();
+};
+$('#flipBtn').onclick = () => { S.flip = !S.flip; saveS(); $('#side-1').classList.toggle('flip', S.flip); $('#flipBtn').classList.toggle('on', S.flip); };
+$('#flipBtn').classList.toggle('on', !!S.flip);
+$('#resetBtn').onclick = () => {
+  const presets = [15, 19, 22, 25, 26, 27, 28, 30];
+  sheet('新的一局', `
+    <p class="muted small" style="margin:0">雙方重設、回合回到 T1、英雄背景清空。上一局的紀錄會保留在血量紀錄裡。精靈卡生命是 15。</p>
+    <h2>計血方式</h2>
+    ${modeSeg('rsMode')}
+    <div id="rsStart"><h2 style="margin-bottom:8px">起始血量</h2>
+    <div class="chips">${presets.map(n => `<button class="chip ${n === S.start ? 'on' : ''}" data-n="${n}">${n}</button>`).join('')}</div></div>
+    <button class="btn pri" id="rsOk"></button>
+    <button class="btn" id="rsClear">清除全部紀錄</button>`, (sb, close) => {
+    const label = () => {
+      sb.querySelector('#rsOk').textContent = S.mode === 'dmg' ? `開始第 ${L.game + 1} 局（傷害從 0 開始）` : `開始第 ${L.game + 1} 局（血量 ${S.start}）`;
+      sb.querySelector('#rsStart').hidden = S.mode === 'dmg';
+    };
+    sb.querySelector('#rsMode').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; S.mode = b.dataset.m; saveS(); sb.querySelectorAll('#rsMode [data-m]').forEach(x => x.classList.toggle('on', x === b)); label(); };
+    sb.querySelectorAll('[data-n]').forEach(c => c.onclick = () => {
+      S.start = +c.dataset.n; saveS();
+      sb.querySelectorAll('[data-n]').forEach(x => x.classList.toggle('on', x === c));
+      label();
+    });
+    label();
+    sb.querySelector('#rsOk').onclick = () => { commit(0); commit(1); L.game++; L.turn = 1; L.mode = S.mode; L.v = [startVal(L.mode), startVal(L.mode)]; S.champ = [null, null]; saveS(); saveL(); renderLife(); close(); };
+    const clr = sb.querySelector('#rsClear');
+    clr.onclick = () => {
+      if (clr.dataset.sure) { L.log = []; L.game = 1; L.turn = 1; L.mode = S.mode; L.v = [startVal(L.mode), startVal(L.mode)]; saveL(); renderLife(); close(); }
+      else { clr.dataset.sure = 1; clr.textContent = '再按一次確認清除'; clr.style.color = 'var(--bad)'; }
+    };
+  });
+};
+$('#logBtn').onclick = () => {
+  commit(0); commit(1);
+  const games = {};
+  L.log.forEach(e => (games[e.g] = games[e.g] || []).push(e));
+  const keys = Object.keys(games).map(Number).sort((a, b) => b - a);
+  const html = keys.length ? keys.map(g => {
+    const rows = games[g].slice().reverse();
+    let out = `<div class="t">第 ${g} 局${g === L.game ? '（目前）' : ''}</div>`;
+    for (const e of rows) {
+      const tm = new Date(e.at).toTimeString().slice(0, 5);
+      out += `<div class="e"><span class="muted">T${e.t}</span><span>${e.s === 0 ? '我' : '對手'}${e.m === 'dmg' ? '・傷害' : ''}${e.set ? '（設定）' : ''} <span class="muted small">${tm}</span></span><span class="dl" style="color:${(e.d < 0) !== (e.m === 'dmg') ? 'var(--bad)' : 'var(--good)'}">${e.d > 0 ? '+' : ''}${e.d}</span><span class="to">${e.from}→${e.to}</span></div>`;
+    }
+    return out;
+  }).join('') : '<p class="empty">還沒有血量變化。</p>';
+  sheet('血量紀錄', `<div class="loglist">${html}</div>`);
+};
+
+// ---------- 英雄（背景＋生命）----------
+let CHAMPS = store.get('champs', null), champsAt = store.get('champsAt', 0);
+async function loadChamps() {
+  if (CHAMPS && Date.now() - champsAt < 7 * 864e5) return CHAMPS;
+  CHAMPS = await api('/api/champions'); champsAt = Date.now();
+  store.set('champs', CHAMPS); store.set('champsAt', champsAt);
+  return CHAMPS;
+}
+const EL_ZH = { FIRE: '火', WATER: '水', WIND: '風', NORM: '無', ARCANE: 'Arcane', CRUX: 'Crux', TERA: 'Tera', EXIA: 'Exia', ASTRA: '星', UMBRA: '影', LUXEM: '光', NEOS: 'Neos' };
+function champSheet(i) {
+  sheet((i === 0 ? '我方' : '對手') + '英雄', `
+    <p class="muted small" style="margin:0">選了之後會淡化當成這一側的背景，英雄的生命也會用來算剩餘血量。升級時選新的等級，傷害會保留。</p>
+    <input id="chQ" placeholder="搜尋英雄，例如 Guo Jia、Lorraine">
+    <div id="chAct"></div>
+    <div class="champ-grid" id="chGrid"><p class="empty"><span class="spin"></span> 載入英雄卡…</p></div>
+    <button class="btn" id="chNone">不要背景</button>`, async (sb, close) => {
+    const grid = sb.querySelector('#chGrid'), q = sb.querySelector('#chQ'), act = sb.querySelector('#chAct');
+    sb.querySelector('#chNone').onclick = () => { S.champ[i] = null; saveS(); renderLife(); close(); };
+    let list;
+    try { list = await loadChamps(); } catch (e) { grid.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
+    const cur = S.champ[i];
+    // 預設先顯示目前英雄的同名系列
+    q.value = cur ? cur.name.split(',')[0] : '';
+    const draw = () => {
+      const k = q.value.trim().toLowerCase();
+      const hits = list.filter(c => !k || c.name.toLowerCase().includes(k)).slice(0, 60);
+      grid.innerHTML = hits.length ? hits.map((c, n) => `<button data-n="${list.indexOf(c)}" class="${cur && cur.name === c.name ? 'on' : ''}"><img loading="lazy" alt="" src="${esc(c.image)}"><span>${esc(c.name)}</span><span class="muted">Lv${c.level ?? '–'}・生命 ${c.life ?? '–'}・${EL_ZH[c.element] || c.element || ''}</span></button>`).join('') : '<p class="empty">找不到這個英雄。</p>';
+    };
+    q.oninput = draw; draw();
+    grid.onclick = e => {
+      const b = e.target.closest('[data-n]'); if (!b) return;
+      const c = list[+b.dataset.n], old = S.champ[i];
+      const pick = c => { S.champ[i] = { name: c.name, level: c.level, life: c.life, image: c.image }; saveS(); };
+      const opts = [];
+      if (c.life != null && old && old.life != null && c.life !== old.life) {
+        if (DMG()) opts.push(`<button class="btn pri" data-a="lvl">升級：傷害保留 ${L.v[i]}，剩 ${old.life - L.v[i]} → ${c.life - L.v[i]}（生命 ${old.life}→${c.life}）</button>`);
+        else opts.push(`<button class="btn pri" data-a="lvl">升級：剩餘血量 ${L.v[i]} → ${L.v[i] + (c.life - old.life)}（生命 ${old.life}→${c.life}）</button>`);
+      }
+      if (c.life != null) opts.push(`<button class="btn ${opts.length ? '' : 'pri'}" data-a="set">${DMG() ? '傷害歸零' : '血量設為 ' + c.life}（新的一局）</button>`);
+      opts.push(`<button class="btn" data-a="bg">只換背景，血量不動</button>`);
+      act.innerHTML = `<div class="card" style="gap:8px"><b>${esc(c.name)}</b>${opts.join('')}</div>`;
+      act.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      act.onclick = ev => {
+        const a = ev.target.closest('[data-a]'); if (!a) return;
+        if (a.dataset.a === 'lvl') { pick(c); if (!DMG()) setLife(i, L.v[i] + (c.life - old.life)); }
+        else if (a.dataset.a === 'set') { pick(c); setLife(i, DMG() ? 0 : c.life); }
+        else pick(c);
+        renderLife(); close();
+      };
+    };
+  });
+}
+renderLife();
+
+// =====================================================================
+// 骰子
+// =====================================================================
+let dieHist = store.get('dice', []);
+const rnd = n => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n + 1; };
+function showDie(big, sub, tag) {
+  const b = $('#dieBig'); b.textContent = big; b.classList.remove('roll'); void b.offsetWidth; b.classList.add('roll');
+  $('#dieSub').textContent = sub;
+  dieHist.unshift(tag); dieHist = dieHist.slice(0, 24); store.set('dice', dieHist); renderHist(); buzz();
+}
+function renderHist() {
+  $('#dieHist').innerHTML = dieHist.length ? dieHist.map(h => `<span>${esc(h)}</span>`).join('') : '<span class="muted small" style="background:none;padding:0">還沒有紀錄</span>';
+}
+document.querySelectorAll('[data-die]').forEach(b => b.onclick = () => {
+  const k = b.dataset.die;
+  if (k === '6') { const r = rnd(6); showDie(r, 'D6', 'D6:' + r); }
+  else if (k === '6x2') { const a = rnd(6), c = rnd(6); showDie(a + c, `${a} + ${c}`, `2D6:${a + c}`); }
+  else if (k === '20') { const r = rnd(20); showDie(r, 'D20', 'D20:' + r); }
+  else if (k === 'coin') { const r = rnd(2); showDie(r === 1 ? '正' : '反', '擲硬幣', r === 1 ? '正面' : '反面'); }
+  else if (k === 'first') {
+    let a, c; do { a = rnd(20); c = rnd(20); } while (a === c);
+    showDie(`${a}:${c}`, a > c ? '我方點數大，由我方決定先後' : '對手點數大，由對手決定先後', `先後 ${a}:${c}`);
+  } else { const n = Math.max(2, Math.min(1000, parseInt($('#customInput').value, 10) || 10)); const r = rnd(n); showDie(r, 'D' + n, `D${n}:${r}`); }
+});
+$('#customInput').oninput = e => $('#customN').textContent = Math.max(2, parseInt(e.target.value, 10) || 10);
+$('#dieClear').onclick = () => { dieHist = []; store.set('dice', dieHist); renderHist(); };
+renderHist();
+
+// =====================================================================
+// 計數器
+// =====================================================================
+let ctrs = store.get('ctrs', [{ id: 1, n: '等級', v: 0 }, { id: 2, n: '石頭（Fractal）', v: 0 }, { id: 3, n: '對手等級', v: 0 }]);
+const saveC = () => store.set('ctrs', ctrs);
+const PRESETS = ['回合', '等級', '對手等級', '石頭（Fractal）', 'Floating Memory', '手牌', '記憶區', '盟友', '增益 Buff'];
+function renderCtrs() {
+  $('#ctrList').innerHTML = ctrs.length ? ctrs.map(c => `
+    <div class="card" data-id="${c.id}">
+      <div class="ctr-head"><span class="nm">${esc(c.n)}</span><span><button data-act="reset">歸零</button><button data-act="del">移除</button></span></div>
+      <div class="ctr"><button class="pm" data-act="-">−</button><div class="n">${c.v}</div><button class="pm" data-act="+">+</button></div>
+    </div>`).join('') : '<p class="empty">沒有計數器，從下面新增一個。</p>';
+  $('#ctrPresets').innerHTML = PRESETS.map(p => `<button class="chip" data-p="${esc(p)}">${esc(p)}</button>`).join('');
+}
+$('#ctrList').onclick = e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const id = +b.closest('[data-id]').dataset.id, c = ctrs.find(x => x.id === id);
+  const a = b.dataset.act;
+  if (a === '+') c.v++; else if (a === '-') c.v--; else if (a === 'reset') c.v = 0;
+  else if (a === 'del') {
+    if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = '確認移除'; b.style.color = 'var(--bad)'; return; }
+    ctrs = ctrs.filter(x => x !== c);
+  }
+  buzz(); saveC(); renderCtrs();
+};
+const addCtr = n => { n = (n || '').trim(); if (!n) return; ctrs.push({ id: Date.now(), n, v: 0 }); saveC(); renderCtrs(); };
+$('#ctrPresets').onclick = e => { const b = e.target.closest('[data-p]'); if (b) addCtr(b.dataset.p); };
+$('#ctrAdd').onclick = () => { addCtr($('#ctrName').value); $('#ctrName').value = ''; };
+$('#ctrZero').onclick = () => { ctrs.forEach(c => c.v = 0); saveC(); renderCtrs(); };
+renderCtrs();
+
+// =====================================================================
+// 對手
+// =====================================================================
+let lastMatch = store.get('lastMatch', null), lastOpp = store.get('lastOpp', null);
+let oppScope = 'season', autoTimer = null, loading = false;
+$('#evInput').value = store.get('event', '');
+
+async function api(path) {
+  if (!apiBase()) throw new Error('還沒設定資料轉接網址，請按右上角齒輪。');
+  const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000);
+  try {
+    const r = await fetch(apiBase() + path, { signal: ctl.signal });
+    const j = await r.json().catch(() => ({ error: '回應格式錯誤（' + r.status + '）' }));
+    if (!r.ok || j.error) throw new Error(j.error || ('連線失敗 ' + r.status));
+    return j;
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('等太久沒有回應，請再試一次。');
+    if (e instanceof TypeError) throw new Error('連不到資料轉接網址，請檢查網路或設定。');
+    throw e;
+  } finally { clearTimeout(to); }
+}
+
+const STAGE = { swiss: '瑞士輪', 'single-elimination': '決賽淘汰賽' };
+function statusHTML(m) {
+  if (!m) return '';
+  const c = m.current;
+  if (!c) return `<div class="msg">${esc(m.event.name)}：還沒有你的配對（確認 GA 編號 ${esc(S.pid)} 是否正確，或等第一輪公布）。</div>`;
+  const rec = `${m.record.w}-${m.record.l}-${m.record.d}`;
+  let state = c.status === 'complete' ? '本輪已結束' : '進行中';
+  if (c.status === 'complete' && c.opp) state += c.me.status === 'winner' ? '（你贏）' : c.me.status === 'loser' ? '（你輸）' : '（平手）';
+  let timer = '';
+  // 用 Omnidex 伺服器時間校正手機時鐘；暫停中或超過 3 小時就不顯示
+  const tm = m.timer || {};
+  const te = tm.timerEnd ? new Date(tm.timerEnd).getTime() : NaN;
+  const skew = tm.serverTime ? new Date(tm.serverTime).getTime() - (m._recv || Date.now()) : 0;
+  if (!isNaN(te) && !tm.timerPaused && c.status !== 'complete' && te - Date.now() < 3 * 3600e3) timer = `<span>剩 <b data-end="${te - skew}"></b></span>`;
+  const t = new Date(m.fetchedAt).toTimeString().slice(0, 5);
+  return `<div style="font-weight:500">${esc(m.event.name)}</div>
+    <div class="status">
+      <span>${STAGE[c.stage] || c.stage} 第 <b>${c.round}</b> 輪</span>
+      <span>第 <b>${c.table}</b> 桌</span>
+      <span>你目前 <b>${rec}</b></span>
+      <span>${state}</span>${timer}
+    </div>
+    ${m._repaired ? '<div class="msg" style="color:var(--accent)">這一輪重新配對了，對手已更新。</div>' : ''}
+    <div class="muted small">${c.opp ? '' : '這一輪是輪空（BYE）。'}更新於 ${t}</div>`;
+}
+function tickTimers() {
+  document.querySelectorAll('[data-end]').forEach(el => {
+    const ms = +el.dataset.end - Date.now();
+    if (isNaN(ms)) return el.textContent = '–';
+    const s = Math.max(0, Math.round(ms / 1000));
+    el.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  });
+}
+setInterval(tickTimers, 1000);
+
+function elClass(e) { return ['Fire', 'Water', 'Wind', 'Norm'].includes(e) ? 'el-' + e : ''; }
+function guessEl(deck) { const w = (deck || '').split(' ')[0]; return elClass(w); }
+function pill(deck, el) { return `<span class="pill ${el ? elClass(el) : guessEl(deck)}"><i></i>${esc(deck || '未分類')}</span>`; }
+
+function oppHTML(p) {
+  if (!p) return '';
+  if (p.notFound) return `<div class="card"><p class="empty">在 grandarchivestats 找不到 GA 編號 ${esc(p.pid)} 的紀錄，可能是新玩家或還沒有正式賽事紀錄。</p></div>`;
+  if (p.error) return `<div class="card"><div class="msg err">${esc(p.error)}</div></div>`;
+  const all = p.events || [];
+  const evs = oppScope === 'season' ? all.filter(e => e.date >= S.season) : all;
+  const dist = {};
+  evs.forEach(e => { const k = e.deck || '未分類'; (dist[k] = dist[k] || { n: 0, el: e.element }).n++; });
+  const dl = Object.entries(dist).sort((a, b) => b[1].n - a[1].n);
+  const max = dl.length ? dl[0][1].n : 1;
+  const hi = p.elo != null && p.elo >= S.hiElo;
+  const bars = dl.length ? dl.map(([k, v]) => `
+    <div class="bar"><div class="lbl">${pill(k, v.el)}<span>${v.n} 場・${Math.round(100 * v.n / evs.length)}%</span></div>
+    <div class="track"><div class="fill ${elClass(v.el) || guessEl(k)}" style="width:${100 * v.n / max}%;background:var(--c,var(--other))"></div></div></div>`).join('')
+    : `<p class="empty">${oppScope === 'season' ? '本季沒有出賽紀錄，切到「全部」看看。' : '沒有出賽紀錄。'}</p>`;
+  const recent = all.slice(0, 12).map(e => `
+    <div class="ev"><span class="d">${esc(e.date.slice(5).replace('-', '/'))}</span>${pill(e.deck, e.element)}<span class="rec">${esc(e.rec)}</span>
+    <span class="nm">${esc(e.event)}</span><span class="cut">${esc(e.cut)}</span></div>`).join('');
+  const link = 'https://grandarchivestats.com/players/' + (p.slug || encodeURIComponent(p.name));
+  return `
+  <div class="card">
+    <div class="opp-head">
+      <div style="min-width:0"><div class="opp-name">${esc(p.name)}</div><div class="muted small">${p.pid ? 'GA #' + esc(p.pid) + '・' : ''}共 ${all.length} 場賽事紀錄</div></div>
+      <div class="elo"><b>${p.elo != null ? Math.round(p.elo) : '–'}</b><span class="muted small">ELO</span><br><span class="tier ${hi ? 'hi' : ''}">${hi ? '高手（前 25%）' : '一般'}</span></div>
+    </div>
+    ${all[0] ? `<div class="small muted">最近一次：${esc(all[0].date)} 用 ${pill(all[0].deck, all[0].element)}</div>` : ''}
+  </div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2>套牌分布</h2>
+      <div class="seg"><button data-sc="season" class="${oppScope === 'season' ? 'on' : ''}">本季</button><button data-sc="all" class="${oppScope === 'all' ? 'on' : ''}">全部</button></div></div>
+    <div class="muted small">${oppScope === 'season' ? S.season + ' 之後' : '全部紀錄'}，共 ${evs.length} 場賽事</div>
+    <div class="bars">${bars}</div>
+  </div>
+  <div class="card">
+    <h2>近期出賽</h2>
+    <div class="evs">${recent || '<p class="empty">沒有出賽紀錄。</p>'}</div>
+    <a class="small" style="color:var(--accent)" href="${esc(link)}" target="_blank" rel="noopener">在 grandarchivestats 開啟完整頁面 →</a>
+  </div>`;
+}
+function showSetup() { $('#setupCard').hidden = false; $('#setupPid').focus(); }
+function renderOpp() {
+  $('#setupCard').hidden = !!S.pid;
+  $('#evStatus').innerHTML = lastMatch ? statusHTML(lastMatch) : '比賽開始後，把 Omnidex 上這場賽事的網址貼進來，APP 會找出你這一輪的對手。';
+  $('#evStatus').className = lastMatch ? '' : 'empty';
+  $('#oppBox').innerHTML = oppHTML(lastOpp);
+  tickTimers();
+}
+$('#oppBox').onclick = e => { const b = e.target.closest('[data-sc]'); if (b) { oppScope = b.dataset.sc; renderOpp(); } };
+
+async function fetchMatch(quiet, fresh) {
+  const raw = $('#evInput').value.trim();
+  const m = raw.match(/(\d{3,})(?!.*\d{3,})/); // 網址裡最後一串數字
+  if (!m) { if (!quiet) { $('#evStatus').className = ''; $('#evStatus').innerHTML = '<div class="msg err">找不到賽事編號。請貼上 Omnidex 賽事網址，或直接輸入數字編號。</div>'; } return; }
+  if (!S.pid) { showSetup(); return; }
+  if (loading) return; loading = true;
+  store.set('event', raw);
+  const btn = fresh ? $('#evFresh') : $('#evGo'); const old = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>';
+  try {
+    const j = await api(`/api/match?event=${m[1]}&pid=${encodeURIComponent(S.pid)}${fresh ? '&fresh=1' : ''}`);
+    const pc = lastMatch && lastMatch.current, nc = j.current;
+    const prevOpp = pc && pc.opp && pc.opp.id;
+    // 同一輪對手變了 = 重新配對
+    j._repaired = !!(pc && nc && lastMatch.event.id === j.event.id && pc.stage === nc.stage && pc.round === nc.round && (pc.opp && pc.opp.id) !== (nc.opp && nc.opp.id));
+    j._recv = Date.now(); lastMatch = j; store.set('lastMatch', j);
+    if (j.opponent) { lastOpp = j.opponent; store.set('lastOpp', j.opponent); }
+    const newOpp = j.current && j.current.opp && j.current.opp.id;
+    if (newOpp && newOpp !== prevOpp) buzz();
+    renderOpp(); renderLife(); setAuto();
+  } catch (e) {
+    if (!quiet) { $('#evStatus').className = ''; $('#evStatus').innerHTML = (lastMatch ? statusHTML(lastMatch) : '') + `<div class="msg err">${esc(e.message)}</div>`; }
+  } finally { loading = false; btn.innerHTML = old; }
+}
+$('#evGo').onclick = () => fetchMatch(false);
+$('#evFresh').onclick = () => fetchMatch(false, true);
+$('#evInput').onkeydown = e => { if (e.key === 'Enter') fetchMatch(false); };
+$('#autoRef').checked = !!store.get('auto', false);
+// 等配對（本輪已結束或還沒配對）時 30 秒抓一次；對戰進行中 3 分鐘抓一次（防重新配對），省額度
+function setAuto() {
+  clearTimeout(autoTimer); store.set('auto', $('#autoRef').checked);
+  if (!$('#autoRef').checked) return;
+  const c = lastMatch && lastMatch.current;
+  const waiting = !c || c.status === 'complete' || !c.opp;
+  autoTimer = setTimeout(() => { if (document.visibilityState === 'visible') fetchMatch(true); else setAuto(); }, waiting ? 30000 : 180000);
+}
+$('#autoRef').onchange = setAuto; setAuto();
+
+async function manual() {
+  const q = $('#qInput').value.trim(); if (!q) return;
+  const out = $('#qOut'); out.innerHTML = '<p class="empty"><span class="spin"></span> 查詢中…</p>';
+  try {
+    if (/^#?\d+$/.test(q)) {
+      const p = await api('/api/player?pid=' + q.replace('#', ''));
+      out.innerHTML = '';
+      if (p.notFound) out.innerHTML = '<p class="empty">找不到這個 GA 編號。</p>';
+      else { lastOpp = p; store.set('lastOpp', p); renderOpp(); $('#oppBox').scrollIntoView({ behavior: 'smooth' }); }
+      return;
+    }
+    const hits = await api('/api/search?q=' + encodeURIComponent(q));
+    out.innerHTML = hits.length ? hits.slice(0, 15).map(h => `<button data-slug="${esc(h.slug)}"><span style="min-width:0"><b>${esc(h.name)}</b><br>${pill(h.deck)}</span><span class="muted small" style="text-align:right;flex:none">${h.elo ?? '–'} ELO<br>${h.events ?? 0} 場</span></button>`).join('') : '<p class="empty">找不到符合的玩家。</p>';
+  } catch (e) { out.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+}
+$('#qGo').onclick = manual;
+$('#qInput').onkeydown = e => { if (e.key === 'Enter') manual(); };
+$('#qOut').onclick = async e => {
+  const b = e.target.closest('[data-slug]'); if (!b) return;
+  b.style.opacity = .5;
+  try { const p = await api('/api/player?name=' + encodeURIComponent(decodeURIComponent(b.dataset.slug))); lastOpp = p; store.set('lastOpp', p); renderOpp(); $('#oppBox').scrollIntoView({ behavior: 'smooth' }); }
+  catch (err) { $('#qOut').innerHTML = `<div class="msg err">${esc(err.message)}</div>`; }
+};
+
+async function verifyPid(pid, msgEl) {
+  msgEl.innerHTML = '<p class="empty"><span class="spin"></span> 查詢中…</p>';
+  try {
+    const p = await api('/api/player?pid=' + pid);
+    if (p.notFound) { msgEl.innerHTML = '<div class="msg">grandarchivestats 上還沒有這個編號的紀錄，仍可使用配對功能。</div>'; return null; }
+    msgEl.innerHTML = `<div class="msg">找到：<b>${esc(p.name)}</b>${p.elo ? '，ELO ' + Math.round(p.elo) : ''}</div>`;
+    return p;
+  } catch (e) { msgEl.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return null; }
+}
+$('#setupGo').onclick = async () => {
+  const pid = $('#setupPid').value.replace(/\D/g, ''); if (!pid) return;
+  S.pid = pid; saveS();
+  const p = await verifyPid(pid, $('#setupMsg'));
+  if (p && !S.myName) { S.myName = p.name; saveS(); renderLife(); }
+  setTimeout(renderOpp, p ? 1200 : 2500);
+};
+function openSettings() {
+  sheet('設定', `
+    <h2>玩家設定</h2>
+    <label class="fld">我的 GA 編號（Omnidex 個人頁的 # 數字）<input id="sPid" inputmode="numeric" value="${esc(S.pid)}" placeholder="例如 3753"></label>
+    <label class="fld">計血器上顯示的名字<input id="sName" value="${esc(S.myName)}" placeholder="留空顯示「我」"></label>
+    <button class="btn" id="sCheck">用編號查我的資料</button>
+    <div id="sMsg"></div>
+    <h2 style="margin-top:6px">計血方式</h2>
+    ${modeSeg('sMode')}
+    <p class="muted small" style="margin:0">切換時會用英雄生命（沒選英雄就用起始血量 ${S.start}）換算目前的數字。</p>
+    <h2 style="margin-top:6px">資料</h2>
+    <label class="fld">本季開始日（套牌分布的「本季」）<input id="sSeason" type="date" value="${esc(S.season)}"></label>
+    <label class="fld">高手門檻 ELO<input id="sHi" type="number" inputmode="numeric" value="${esc(S.hiElo)}"></label>
+    <h2 style="margin-top:6px">進階</h2>
+    <label class="fld">資料轉接網址${CFG.api ? '（留空使用預設）' : ''}<input id="sApi" inputmode="url" value="${esc(S.api)}" placeholder="${esc(CFG.api || 'https://ga-helper.你的名稱.workers.dev')}"></label>
+    <button class="btn pri" id="sSave">儲存</button>`, (sb, close) => {
+    sb.querySelector('#sMode').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; setMode(b.dataset.m); sb.querySelectorAll('#sMode [data-m]').forEach(x => x.classList.toggle('on', x === b)); };
+    sb.querySelector('#sCheck').onclick = async () => {
+      const pid = sb.querySelector('#sPid').value.replace(/\D/g, ''); if (!pid) return;
+      const keep = S.api; S.api = sb.querySelector('#sApi').value.trim();
+      const p = await verifyPid(pid, sb.querySelector('#sMsg'));
+      S.api = keep;
+      if (p && !sb.querySelector('#sName').value) sb.querySelector('#sName').value = p.name;
+    };
+    sb.querySelector('#sSave').onclick = () => {
+      S.pid = sb.querySelector('#sPid').value.replace(/\D/g, '');
+      S.myName = sb.querySelector('#sName').value.trim();
+      S.api = sb.querySelector('#sApi').value.trim().replace(/\/+$/, '');
+      S.season = sb.querySelector('#sSeason').value || S.season;
+      S.hiElo = +sb.querySelector('#sHi').value || S.hiElo;
+      store.set('api', S.api); saveS(); renderOpp(); renderLife(); close();
+    };
+  });
+}
+$('#setBtn').onclick = openSettings;
+renderOpp();
+})();
+</script>
+</body>
+</html>
