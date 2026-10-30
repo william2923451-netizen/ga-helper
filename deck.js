@@ -30,8 +30,21 @@
   document.head.appendChild(css);
 
   // 英雄等級：用計血器已快取的英雄卡列表（沒有就照官方給的順序）
-  const levels = () => { const m = {}; for (const c of read('champs', []) || []) if (c && c.name) m[c.name] = c.level ?? 0; return m; };
-  const sortChamps = list => { const lv = levels(); return list.map((n, i) => ({ n, lv: lv[n], i })).sort((a, b) => ((a.lv ?? -1) - (b.lv ?? -1)) || (a.i - b.i)); };
+  // 英雄等級：用計血器快取的英雄卡列表；還沒有就向轉接 Worker 抓一次
+  let CH = null;
+  const levels = () => { const m = {}; for (const c of CH || read('champs', []) || []) if (c && c.name) m[c.name] = c.level ?? 0; return m; };
+  if (!(read('champs', []) || []).length) fetch(apiBase() + '/api/champions').then(r => r.json()).then(j => { if (Array.isArray(j)) { CH = j; paint(); } }).catch(() => {});
+  // 依等級分組：一套牌每個等級可能放好幾張英雄（例如郭嘉一套＋Lorraine 一等），
+  // 升級路線也可能跨名字（Lorraine Lv1 → Merlin Lv2 → Merlin, Kingslayer Lv3），所以不用名字分線。
+  function byLevel(list) {
+    const lv = levels(), g = {};
+    (list || []).forEach((n, i) => { const L = lv[n] ?? (/Spirit of /.test(n) ? 0 : null); const k = L == null ? '?' : L; (g[k] = g[k] || []).push({ n, lv: L, i }); });
+    const steps = Object.keys(g).filter(k => k !== '?').map(Number).sort((a, b) => a - b).map(L => ({ lv: L, cards: g[L] }));
+    if (g['?']) steps.push({ lv: null, cards: g['?'] });
+    const known = steps.filter(s => s.lv != null);
+    const top = known.length ? known[known.length - 1] : steps[steps.length - 1];
+    return { steps, top, ready: !g['?'] };
+  }
   const EL = { FIRE: ['Fire', '火'], WATER: ['Water', '水'], WIND: ['Wind', '風'], NORM: ['Norm', '無'] };
   const elInfo = els => { const basic = (els || []).map(e => EL[e]).filter(Boolean); const adv = (els || []).filter(e => !EL[e]); return { cls: basic[0] ? 'el-' + basic[0][0] : '', zh: basic.map(x => x[1]).concat(adv.map(e => e[0] + e.slice(1).toLowerCase())).join('・') }; };
   const short = n => String(n || '').split(',')[0];
@@ -61,15 +74,20 @@
   // ---------- 畫面 ----------
   function deckHTML(entry, oppName) {
     if (!entry) return '';
-    const ch = sortChamps(entry.champions || []);
+    const { steps, top } = byLevel(entry.champions);
     const el = elInfo(entry.elements);
     const elo = entry.initialElo != null ? `<span>開賽 ELO <b>${Math.round(entry.initialElo)}</b></span>` : '';
-    if (ch.length) {
-      const top = ch[ch.length - 1];
-      const path = ch.map((c, i) => `${i ? '<span class="gx-arrow">→</span>' : ''}${i === ch.length - 1
-        ? `<span class="pill ${el.cls} gx-top"><i></i>${esc(c.n)}</span>`
-        : `<span>${esc(short(c.n))}</span>`}${c.lv != null ? `<span class="gx-lv">Lv${c.lv}</span>` : ''}`).join('');
-      return `<div class="gx-deck" data-sig="${esc(top.n)}"><div class="gx-h">對手英雄</div><div class="gx-path">${path}</div>
+    if (steps.length) {
+      // 等級由低到高；同一等級有好幾張時用「／」隔開；最高等級寫全名並加粗
+      const path = steps.map((st, k) => {
+        const isTop = st === top;
+        const names = st.cards.map(c => isTop
+          ? `<span class="pill ${el.cls} gx-top"><i></i>${esc(c.n)}</span>`
+          : `<span>${esc(st.lv === 0 ? c.n : short(c.n))}</span>`).join('<span class="gx-arrow">／</span>');
+        return `${k ? '<span class="gx-arrow">→</span>' : ''}${names}<span class="gx-lv">${st.lv == null ? '' : 'Lv' + st.lv}</span>`;
+      }).join('');
+      const multi = steps.some(st => st.lv && st.cards.length > 1);
+      return `<div class="gx-deck" data-sig="${esc(entry.champions.join('|'))}"><div class="gx-h">對手英雄${multi ? '（同等級有多張可選）' : ''}</div><div class="gx-path">${path}</div>
         <div class="gx-meta">${el.zh ? `<span>屬性 ${esc(el.zh)}</span>` : ''}${elo}</div></div>`;
     }
     const msg = entry.submitted ? '對手已交牌表，官方還沒公開英雄。' : '對手還沒交牌表。';
@@ -108,9 +126,10 @@
           const e = d.players[row.id];
           const cell = tr.querySelector('td.nm'); if (!cell || cell.querySelector('.gx-ch')) return;
           if (!e || !(e.champions || []).length) return;
-          const ch = sortChamps(e.champions); const top = ch[ch.length - 1];
+          const { top, ready } = byLevel(e.champions); if (!top || !ready) return; // 等級還沒載入時先不加，避免標錯
           const el = elInfo(e.elements);
-          cell.insertAdjacentHTML('beforeend', `<span class="gx-ch ${el.cls}"><i></i>${esc(short(top.n))}</span>`);
+          const nm = [...new Set(top.cards.map(c => short(c.n)))].join('／');
+          cell.insertAdjacentHTML('beforeend', `<span class="gx-ch ${el.cls}"><i></i>${esc(nm)}</span>`);
         });
       }
     } finally { painting = false; }
