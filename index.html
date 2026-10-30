@@ -123,6 +123,29 @@ h2{font-size:13px;letter-spacing:.12em;color:var(--muted);margin:0;font-weight:5
 #oppBox{display:flex;flex-direction:column;gap:14px}
 #oppBox:empty{display:none}
 .status{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px}
+.mt{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.tableno{min-width:92px;padding:10px 12px;border-radius:14px;background:var(--accent);color:var(--accent-ink);text-align:center;line-height:1}
+.tableno small{display:block;font-size:12px;font-weight:700;letter-spacing:.12em;margin-bottom:4px}
+.tableno b{font-family:var(--num);font-size:52px;font-weight:700}
+.tableno.bye{background:var(--panel2);color:var(--muted)}
+.mt-info{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:13.5px}
+.mt-info .vs{font-size:18px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mt-info b{font-family:var(--num);font-size:17px;font-weight:600}
+/* 成績表：直向只顯示主要欄位，橫向（寬 ≥ 600px）顯示全部 */
+.stand-wrap{overflow-x:auto;margin-inline:-4px}
+table.stand{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+.stand th{font-weight:500;font-size:11.5px;color:var(--muted);text-align:right;padding:6px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.stand td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.stand th.l,.stand td.l{text-align:left}
+.stand td.nm{max-width:42vw;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.stand td.num{font-family:var(--num);font-size:16px}
+.stand tr.me td{background:rgba(217,179,91,.14)}
+.stand tr.me td.nm{color:var(--accent)}
+.stand tr.op td{background:rgba(226,104,90,.12)}
+.stand .x{display:none}
+.stand .tag{font-size:10.5px;padding:1px 6px;border-radius:999px;border:1px solid currentColor;margin-left:6px;vertical-align:1px}
+.stand .cutline td{border-bottom:2px dashed var(--accent)}
+@media (min-width:600px){.stand .x{display:table-cell}.stand td.nm{max-width:none}.land-hint{display:none}}
 .status b{font-family:var(--num);font-size:18px;font-weight:600}
 .opp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .opp-name{font-size:24px;font-weight:700;word-break:break-all;-webkit-user-select:text;user-select:text}
@@ -272,6 +295,11 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
         <div id="evStatus" class="empty">比賽開始後，把 Omnidex 上這場賽事的網址貼進來，APP 會找出你這一輪的對手。</div>
         <div class="toggle small"><span class="muted">自動更新配對（等配對時每 30 秒、對戰中每 3 分鐘）</span><input type="checkbox" id="autoRef" style="width:auto"></div>
       </div>
+      <div class="card" id="standCard">
+        <div class="row" style="justify-content:space-between"><h2>成績表</h2>
+          <div class="row"><button class="btn sm" id="standGo">抓成績表</button><button class="icon-btn" id="standFresh" aria-label="重新整理成績表" style="width:34px;height:34px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button></div></div>
+        <div id="standBox" class="empty">抓配對後按「抓成績表」，會顯示這場比賽目前的瑞士輪排名。</div>
+      </div>
       <div id="oppBox"></div>
       <div class="card">
         <h2>手動查詢</h2>
@@ -298,7 +326,7 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 <div id="sheetRoot"></div>
 <div id="rollFx" aria-live="polite"><div class="stage" id="rollStage"></div><div class="roll-res" id="rollRes"></div></div>
 
-<script src="config.js"></script>
+<script src="config.js?v=20261030b"></script>
 <script>
 (() => {
 'use strict';
@@ -313,7 +341,10 @@ const buzz = () => { try { navigator.vibrate && navigator.vibrate(8); } catch (e
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
 if (urlApi) store.set('api', urlApi.replace(/\/+$/, ''));
-const CFG = window.GA_CONFIG || {};
+// 內建的預設轉接網址：config.js 沒載入、被快取成舊版或還是範例時，用這個
+const BUILTIN_API = 'https://ga-helper.william2923451.workers.dev';
+const CFG = Object.assign({}, window.GA_CONFIG || {});
+if (!CFG.api || /你的名稱/.test(CFG.api)) CFG.api = BUILTIN_API;
 const S = Object.assign({ api: '', pid: '', myName: '', season: CFG.season || '2026-08-28', hiElo: CFG.hiElo || 1384, start: 15, flip: true, champ: [null, null] }, store.get('settings', {}));
 if (store.get('api')) S.api = store.get('api');
 const apiBase = () => { const u = (S.api || CFG.api || '').trim(); return /你的名稱/.test(u) ? '' : u.replace(/\/+$/, ''); };
@@ -730,12 +761,15 @@ function statusHTML(m) {
   const skew = tm.serverTime ? new Date(tm.serverTime).getTime() - (m._recv || Date.now()) : 0;
   if (!isNaN(te) && !tm.timerPaused && c.status !== 'complete' && te - Date.now() < 3 * 3600e3) timer = `<span>剩 <b data-end="${te - skew}"></b></span>`;
   const t = new Date(m.fetchedAt).toTimeString().slice(0, 5);
+  const oppName = c.opp ? (c.opp.name || (m.opponent && m.opponent.name) || '#' + c.opp.id) : '';
   return `<div style="font-weight:500">${esc(m.event.name)}</div>
-    <div class="status">
-      <span>${STAGE[c.stage] || c.stage} 第 <b>${c.round}</b> 輪</span>
-      <span>第 <b>${c.table}</b> 桌</span>
-      <span>你目前 <b>${rec}</b></span>
-      <span>${state}</span>${timer}
+    <div class="mt">
+      <div class="tableno ${c.opp ? '' : 'bye'}"><small>${c.opp ? '桌號' : '輪空'}</small><b>${c.opp ? esc(c.table) : 'BYE'}</b></div>
+      <div class="mt-info">
+        <div>${STAGE[c.stage] || c.stage} 第 <b>${c.round}</b> 輪・${state}</div>
+        ${c.opp ? `<div class="vs">vs ${esc(oppName)}</div>` : ''}
+        <div>你目前 <b>${rec}</b>${timer ? '・' + timer : ''}</div>
+      </div>
     </div>
     ${m._repaired ? '<div class="msg" style="color:var(--accent)">這一輪重新配對了，對手已更新。</div>' : ''}
     <div class="muted small">${c.opp ? '' : '這一輪是輪空（BYE）。'}更新於 ${t}</div>`;
@@ -821,11 +855,53 @@ async function fetchMatch(quiet, fresh) {
     if (j.opponent) { lastOpp = j.opponent; store.set('lastOpp', j.opponent); }
     const newOpp = j.current && j.current.opp && j.current.opp.id;
     if (newOpp && newOpp !== prevOpp) buzz();
-    renderOpp(); renderLife(); setAuto();
+    renderOpp(); renderLife(); renderStand(); setAuto();
   } catch (e) {
     if (!quiet) { $('#evStatus').className = ''; $('#evStatus').innerHTML = (lastMatch ? statusHTML(lastMatch) : '') + `<div class="msg err">${esc(e.message)}</div>`; }
   } finally { loading = false; btn.innerHTML = old; }
 }
+// ---------- 成績表 ----------
+let lastStand = store.get('lastStand', null);
+function eventIdFromInput() { const m = $('#evInput').value.trim().match(/(\d{3,})(?!.*\d{3,})/); return m ? m[1] : (lastMatch && lastMatch.event && lastMatch.event.id) || ''; }
+const pct = v => v == null ? '–' : (Math.round(v * 10) / 10).toFixed(1);
+function renderStand() {
+  const box = $('#standBox'), d = lastStand;
+  if (!d) return;
+  if (!d.rows || !d.rows.length) { box.className = 'empty'; box.textContent = '這場比賽還沒有排名資料（第一輪結束後才會有）。'; return; }
+  const me = +S.pid, opp = lastMatch && lastMatch.current && lastMatch.current.opp && lastMatch.current.opp.id;
+  const mine = d.rows.find(r => r.id === me);
+  const cut = d.event.cut;
+  const t = new Date(d.fetchedAt).toTimeString().slice(0, 5);
+  const rows = d.rows.map(r => {
+    const cls = [r.id === me ? 'me' : '', r.id === opp ? 'op' : '', cut && r.rank === cut ? 'cutline' : ''].join(' ');
+    const tag = r.id === me ? '<span class="tag">你</span>' : r.id === opp ? '<span class="tag">對手</span>' : '';
+    const drop = r.status === 'dropped' ? ' <span class="muted small">退賽</span>' : '';
+    return `<tr class="${cls}"><td class="num l">${r.rank}</td><td class="l nm">${esc(r.name)}${tag}${drop}</td>
+      <td class="num">${r.score}</td><td class="num">${r.w}-${r.l}-${r.t}${r.byes ? `<span class="muted small"> +${r.byes}B</span>` : ''}</td>
+      <td class="num">${pct(r.omw)}</td><td class="num x">${pct(r.gw)}</td><td class="num x">${pct(r.ogw)}</td>
+      <td class="x">${esc(r.country)}</td><td class="num x">${r.place ?? '–'}</td></tr>`;
+  }).join('');
+  const rd = d.rounds ? `第 ${d.rounds.latest} / ${d.rounds.total} 輪` : '';
+  box.className = '';
+  box.innerHTML = `<div class="small muted" style="margin-bottom:8px">${esc(d.event.name)}・瑞士輪 ${rd}・${d.rows.length} 人${cut ? `・前 ${cut} 名晉級（虛線）` : ''}・更新於 ${t}</div>
+    ${mine ? `<div class="small" style="margin-bottom:8px">你目前 <b style="font-family:var(--num);font-size:18px">第 ${mine.rank} 名</b>，積分 ${mine.score}</div>` : ''}
+    <div class="stand-wrap"><table class="stand"><thead><tr><th class="l">#</th><th class="l">玩家</th><th>積分</th><th>勝-敗-和</th><th>OMW%</th>
+      <th class="x">GW%</th><th class="x">OGW%</th><th class="x">國家</th><th class="x">最終名次</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="small muted land-hint" style="margin-top:8px">手機轉橫向可以看到 GW%、OGW%、國家、最終名次。B = 輪空。</div>`;
+  const row = box.querySelector('tr.me'); if (row && box.dataset.scrolled !== String(d.fetchedAt)) { box.dataset.scrolled = d.fetchedAt; }
+}
+async function fetchStand(fresh) {
+  const ev = eventIdFromInput();
+  const box = $('#standBox');
+  if (!ev) { box.className = ''; box.innerHTML = '<div class="msg err">先在上面貼上賽事網址。</div>'; return; }
+  const btn = fresh ? $('#standFresh') : $('#standGo'); const old = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>';
+  try { lastStand = await api(`/api/standings?event=${ev}${fresh ? '&fresh=1' : ''}`); store.set('lastStand', lastStand); renderStand(); }
+  catch (e) { box.className = ''; box.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+  finally { btn.innerHTML = old; }
+}
+$('#standGo').onclick = () => fetchStand(false);
+$('#standFresh').onclick = () => fetchStand(true);
+renderStand();
 $('#evGo').onclick = () => fetchMatch(false);
 $('#evFresh').onclick = () => fetchMatch(false, true);
 $('#evInput').onkeydown = e => { if (e.key === 'Enter') fetchMatch(false); };
