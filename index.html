@@ -42,7 +42,7 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);ou
 .scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(var(--safe-t) + 14px) max(16px,var(--safe-r)) 24px max(16px,var(--safe-l));display:flex;flex-direction:column;gap:14px}
 
 /* 底部分頁 */
-nav.tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--panel);border-top:1px solid var(--line);
+nav.tabs{display:grid;grid-template-columns:repeat(5,1fr);background:var(--panel);border-top:1px solid var(--line);
   padding:6px max(8px,var(--safe-r)) calc(6px + var(--safe-b)) max(8px,var(--safe-l))}
 nav.tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;color:var(--muted);font-size:12px;border-radius:10px}
 nav.tabs button svg{width:22px;height:22px}
@@ -172,6 +172,28 @@ h2{font-size:13px;letter-spacing:.12em;color:var(--muted);margin:0;font-weight:5
 .loglist .e .to{font-family:var(--num);font-size:18px;text-align:right}
 label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
 .toggle{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+/* 擲骰動畫（計血頁上層）：骰子素材全部用 CSS／SVG 畫 */
+#rollFx{position:fixed;inset:0;z-index:15;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;pointer-events:none;background:radial-gradient(circle at center,rgba(8,10,13,.72),rgba(8,10,13,.35) 70%);opacity:0;transition:opacity .25s}
+#rollFx.on{opacity:1}
+#rollFx .stage{display:flex;gap:34px;align-items:flex-end;justify-content:center;perspective:700px}
+#rollFx .unit{display:flex;flex-direction:column;align-items:center;gap:10px}
+#rollFx .tag{font-size:13px;letter-spacing:.12em;color:var(--fg);opacity:.8}
+.cube{width:84px;height:84px;position:relative;transform-style:preserve-3d}
+.cube .f{position:absolute;inset:0;border-radius:16px;background:linear-gradient(145deg,#fbf8f1,#e3ddcf);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.08),inset 0 -6px 12px rgba(0,0,0,.08);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:12px;backface-visibility:hidden}
+.cube .f i{width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#3a3a3a,#111);place-self:center}
+.cube .f.one i{background:radial-gradient(circle at 35% 35%,#e05a48,#a3261a);width:20px;height:20px}
+.f1{transform:translateZ(42px)}.f6{transform:rotateY(180deg) translateZ(42px)}
+.f2{transform:rotateY(90deg) translateZ(42px)}.f5{transform:rotateY(-90deg) translateZ(42px)}
+.f3{transform:rotateX(90deg) translateZ(42px)}.f4{transform:rotateX(-90deg) translateZ(42px)}
+.d20{width:120px;height:120px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.5))}
+.d20 text{font-family:var(--num);font-weight:700;fill:#1b1608}
+.coin{width:112px;height:112px;position:relative;transform-style:preserve-3d}
+.coin .s{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;font-size:42px;font-weight:700;color:#3b2a06;backface-visibility:hidden;
+  background:radial-gradient(circle at 35% 30%,#ffe9a8,#d9b35b 55%,#a9822f);box-shadow:inset 0 0 0 6px rgba(120,86,20,.45),inset 0 0 0 9px rgba(255,236,170,.5)}
+.coin .s.b{transform:rotateY(180deg)}
+.roll-res{font-family:var(--num);font-weight:700;font-size:44px;line-height:1;padding:12px 26px;border-radius:18px;background:rgba(23,27,33,.92);border:1px solid var(--accent);color:var(--fg);text-align:center;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;max-width:calc(100vw - 32px)}
+.roll-res small{display:block;font-family:var(--body);font-weight:500;font-size:14px;color:var(--muted);margin-top:6px}
+.roll-res.on{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -238,13 +260,11 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
     <div class="scroll" id="oppScroll">
       <div class="row" style="justify-content:space-between">
         <h1>對手</h1>
-        <button class="icon-btn" id="setBtn" aria-label="設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
       </div>
       <div class="card" id="setupCard" hidden>
-        <h2>玩家設定</h2>
-        <p class="empty" style="margin:0">輸入你的 GA 編號（Omnidex 個人頁上的 # 數字），APP 才知道哪一桌是你。</p>
-        <div class="row"><input id="setupPid" inputmode="numeric" placeholder="例如 3753"><button class="btn pri" id="setupGo">確認</button></div>
-        <div id="setupMsg"></div>
+        <h2>還沒設定 GA 編號</h2>
+        <p class="empty" style="margin:0">先到「設定」輸入你的 GA 編號（Omnidex 個人頁上的 # 數字），APP 才知道哪一桌是你。</p>
+        <button class="btn pri" data-goto="set">前往設定</button>
       </div>
       <div class="card">
         <h2>這場比賽</h2>
@@ -261,15 +281,22 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
     </div>
   </section>
 
+  <!-- 設定 -->
+  <section class="view" id="v-set">
+    <div class="scroll" id="setBody"></div>
+  </section>
+
   <nav class="tabs">
     <button class="on" data-v="life"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 21s-7-4.4-9.3-9A5.3 5.3 0 0112 6.6 5.3 5.3 0 0121.3 12C19 16.6 12 21 12 21z"/></svg>計血</button>
     <button data-v="dice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>骰子</button>
     <button data-v="ctr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h4M7 10v4M15 12h4M4 5h16v14H4z"/></svg>計數</button>
     <button data-v="opp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>對手</button>
+    <button data-v="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>設定</button>
   </nav>
 </div>
 
 <div id="sheetRoot"></div>
+<div id="rollFx" aria-live="polite"><div class="stage" id="rollStage"></div><div class="roll-res" id="rollRes"></div></div>
 
 <script src="config.js"></script>
 <script>
@@ -295,12 +322,15 @@ const saveS = () => store.set('settings', S);
 
 // ---------- 分頁 ----------
 let curView = 'life';
-document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('nav.tabs button').forEach(x => x.classList.toggle('on', x === b));
-  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + b.dataset.v));
-  curView = b.dataset.v;
-  if (curView === 'life') wake(true);
-});
+function goTab(v) {
+  document.querySelectorAll('nav.tabs button').forEach(x => x.classList.toggle('on', x.dataset.v === v));
+  document.querySelectorAll('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
+  curView = v;
+  if (v === 'life') wake(true);
+  if (v === 'set') renderSettings();
+}
+document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => goTab(b.dataset.v));
+document.addEventListener('click', e => { const g = e.target.closest('[data-goto]'); if (g) { const r = $('#sheetRoot'); if (r) r.innerHTML = ''; goTab(g.dataset.goto); } });
 
 // 計血時讓螢幕保持亮著（iOS 16.4 以上支援，失敗就算了）
 let lock = null;
@@ -399,7 +429,7 @@ function setMode(m) {
   [0, 1].forEach(i => { const life = lifeOf(i) ?? S.start; L.v[i] = life - L.v[i]; });
   L.mode = m; saveL(); renderLife();
 }
-const modeSeg = id => `<div class="seg" id="${id}" style="align-self:flex-start"><button data-m="life" class="${S.mode === 'life' ? 'on' : ''}">剩餘血量</button><button data-m="dmg" class="${S.mode === 'dmg' ? 'on' : ''}">傷害計數（從 0 開始）</button></div>`;
+const modeSeg = (id, cur = S.mode) => `<div class="seg" id="${id}" style="align-self:flex-start"><button data-m="life" class="${cur === 'life' ? 'on' : ''}">剩餘血量</button><button data-m="dmg" class="${cur === 'dmg' ? 'on' : ''}">傷害計數（從 0 開始）</button></div>`;
 document.querySelector('.life').addEventListener('click', e => {
   const b = e.target.closest('[data-d]'); if (b) return change(+b.dataset.i, +b.dataset.d);
   const v = e.target.closest('.val'); if (v) return lifeSheet(+v.id.slice(3));
@@ -472,9 +502,28 @@ $('#logBtn').onclick = () => {
 
 // ---------- 英雄（背景＋生命）----------
 let CHAMPS = store.get('champs', null), champsAt = store.get('champsAt', 0);
+// 有轉接網址就用轉接；沒有的話直接向 GA 官方卡片 API 讀
+async function champsDirect() {
+  const out = [];
+  for (let page = 1; page <= 10; page++) {
+    const r = await fetch('https://api.gatcg.com/cards/search?type=champion&page_size=50&page=' + page);
+    if (!r.ok) throw new Error('GA 卡片資料庫回應 ' + r.status);
+    const j = await r.json();
+    for (const c of j.data || []) {
+      const ed = (c.editions || []).find(e => e.uuid === c.default_edition) || (c.editions || [])[0] || {};
+      out.push({ name: c.name, level: c.level, life: c.life, element: c.element || '', image: ed.image ? 'https://api.gatcg.com' + ed.image : '' });
+    }
+    if (!j.has_more) break;
+  }
+  return out.sort((a, b) => a.name.localeCompare(b.name) || (a.level ?? 0) - (b.level ?? 0));
+}
 async function loadChamps() {
-  if (CHAMPS && Date.now() - champsAt < 7 * 864e5) return CHAMPS;
-  CHAMPS = await api('/api/champions'); champsAt = Date.now();
+  if (CHAMPS && CHAMPS.length && Date.now() - champsAt < 7 * 864e5) return CHAMPS;
+  let list = null, err = null;
+  if (apiBase()) { try { list = await api('/api/champions'); } catch (e) { err = e; } }
+  if (!list) { try { list = await champsDirect(); } catch (e) { err = err || e; } }
+  if (!list) throw new Error('讀不到英雄卡。' + (apiBase() ? (err && err.message || '') : '請到「設定」分頁填資料轉接網址。'));
+  CHAMPS = list; champsAt = Date.now();
   store.set('champs', CHAMPS); store.set('champsAt', champsAt);
   return CHAMPS;
 }
@@ -489,7 +538,7 @@ function champSheet(i) {
     const grid = sb.querySelector('#chGrid'), q = sb.querySelector('#chQ'), act = sb.querySelector('#chAct');
     sb.querySelector('#chNone').onclick = () => { S.champ[i] = null; saveS(); renderLife(); close(); };
     let list;
-    try { list = await loadChamps(); } catch (e) { grid.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
+    try { list = await loadChamps(); } catch (e) { grid.innerHTML = `<div class="msg err" style="grid-column:1/-1">${esc(e.message)}</div><button class="btn" data-goto="set" style="grid-column:1/-1">前往設定</button>`; return; }
     const cur = S.champ[i];
     // 預設先顯示目前英雄的同名系列
     q.value = cur ? cur.name.split(',')[0] : '';
@@ -537,16 +586,77 @@ function showDie(big, sub, tag) {
 function renderHist() {
   $('#dieHist').innerHTML = dieHist.length ? dieHist.map(h => `<span>${esc(h)}</span>`).join('') : '<span class="muted small" style="background:none;padding:0">還沒有紀錄</span>';
 }
+// ---------- 擲骰動畫 ----------
+const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
+const pipFace = n => PIPS[n].map(c => `<i style="grid-area:${Math.ceil(c / 3)}/${(c - 1) % 3 + 1}"></i>`).join('');
+const cubeHTML = () => `<div class="cube">${[1, 2, 3, 4, 5, 6].map(n => `<div class="f f${n} ${n === 1 ? 'one' : ''}">${pipFace(n)}</div>`).join('')}</div>`;
+// 讓第 n 面朝前的角度
+const FACE_ROT = { 1: [0, 0], 6: [0, 180], 2: [0, -90], 5: [0, 90], 3: [-90, 0], 4: [90, 0] };
+function d20SVG(label, color) {
+  // 正二十面體正視圖：外六角形＋中間三角形＋連線
+  const R = 56, c = 60, pt = k => [c + R * Math.cos(Math.PI / 3 * k - Math.PI / 2), c + R * Math.sin(Math.PI / 3 * k - Math.PI / 2)];
+  const H = [0, 1, 2, 3, 4, 5].map(pt);
+  const T = [[c, c - 30], [c + 26, c + 15], [c - 26, c + 15]];
+  const lines = [[0, 0], [0, 1], [0, 5], [1, 1], [1, 2], [1, 3], [2, 3], [2, 4], [2, 5]]
+    .map(([t, h]) => `<line x1="${T[t][0]}" y1="${T[t][1]}" x2="${H[h][0]}" y2="${H[h][1]}"/>`).join('');
+  return `<svg class="d20" viewBox="0 0 120 120"><polygon points="${H.map(p => p.join(',')).join(' ')}" fill="${color}" stroke="rgba(0,0,0,.35)" stroke-width="2"/>
+    <g stroke="rgba(0,0,0,.28)" stroke-width="1.5">${lines}</g><polygon points="${T.map(p => p.join(',')).join(' ')}" fill="rgba(255,255,255,.22)" stroke="rgba(0,0,0,.3)" stroke-width="1.5"/>
+    <text x="${c}" y="${c + 10}" text-anchor="middle" font-size="${String(label).length > 2 ? 18 : 24}" class="d20n">${label}</text></svg>`;
+}
+const coinHTML = () => `<div class="coin"><div class="s a">正</div><div class="s b">反</div></div>`;
+let fxTimer = null;
+function playRoll(kind, res) {
+  goTab('life');
+  const fx = $('#rollFx'), st = $('#rollStage'), out = $('#rollRes');
+  clearTimeout(fxTimer); out.classList.remove('on');
+  const units = kind === 'first' ? [{ t: '我', v: res.a }, { t: '對手', v: res.c }] : kind === '6x2' ? [{ v: res.a }, { v: res.c }] : [{ v: res.v }];
+  const isCube = kind === '6' || kind === '6x2', isCoin = kind === 'coin';
+  const color = kind === 'first' ? null : '#d9b35b';
+  st.innerHTML = units.map((u, i) => `<div class="unit">${isCube ? cubeHTML() : isCoin ? coinHTML() : d20SVG('?', kind === 'first' ? (i ? '#e2685a' : '#5bbf8a') : color)}${u.t ? `<span class="tag">${u.t}</span>` : ''}</div>`).join('');
+  fx.classList.add('on'); buzz();
+  const dur = reduceMotion() ? 0 : 1100;
+  const nodes = [...st.querySelectorAll('.cube,.coin,.d20')];
+  nodes.forEach((el, i) => {
+    const u = units[i];
+    if (dur === 0) {
+      if (isCube) el.style.transform = `rotateX(${FACE_ROT[u.v][0]}deg) rotateY(${FACE_ROT[u.v][1]}deg)`;
+      if (isCoin && u.v === 2) el.style.transform = 'rotateY(180deg)';
+      if (!isCube && !isCoin) el.querySelector('.d20n').textContent = u.v;
+      return;
+    }
+    const drop = [{ offset: 0, translate: '0 -160px' }, { offset: .55, translate: '0 0' }, { offset: .72, translate: '0 -26px' }, { offset: .86, translate: '0 0' }, { offset: .93, translate: '0 -6px' }, { offset: 1, translate: '0 0' }];
+    if (isCube) {
+      const [fx_, fy] = FACE_ROT[u.v], sx = 720 + 360 * (i + 1), sy = 1080 - 360 * i;
+      el.animate([{ transform: `rotateX(${fx_ + sx}deg) rotateY(${fy + sy}deg)` }, { transform: `rotateX(${fx_}deg) rotateY(${fy}deg)` }], { duration: dur, easing: 'cubic-bezier(.2,.7,.25,1)', fill: 'forwards' });
+      el.parentElement.animate(drop, { duration: dur, easing: 'ease-in' });
+    } else if (isCoin) {
+      const end = u.v === 2 ? 180 : 0;
+      el.animate([{ transform: 'rotateY(0deg)', translate: '0 0' }, { transform: `rotateY(${900 + end}deg)`, translate: '0 -150px', offset: .5 }, { transform: `rotateY(${1800 + end}deg)`, translate: '0 0' }], { duration: dur, easing: 'ease-in-out', fill: 'forwards' });
+    } else {
+      const n = el.querySelector('.d20n'), max = res.n || 20;
+      el.animate([{ transform: 'rotate(-540deg) scale(.4)' }, { transform: 'rotate(20deg) scale(1.08)', offset: .8 }, { transform: 'rotate(0) scale(1)' }], { duration: dur, easing: 'cubic-bezier(.2,.7,.25,1)', fill: 'forwards' });
+      el.parentElement.animate(drop, { duration: dur, easing: 'ease-in' });
+      const t0 = Date.now(), iv = setInterval(() => { n.textContent = rnd(max); if (Date.now() - t0 > dur - 120) { clearInterval(iv); n.textContent = u.v; } }, 70);
+    }
+  });
+  fxTimer = setTimeout(() => {
+    out.innerHTML = res.text + (res.sub ? `<small>${esc(res.sub)}</small>` : '');
+    out.classList.add('on'); buzz();
+    fxTimer = setTimeout(() => { fx.classList.remove('on'); out.classList.remove('on'); fxTimer = setTimeout(() => { st.innerHTML = ''; }, 300); }, 2000);
+  }, dur + 80);
+}
 document.querySelectorAll('[data-die]').forEach(b => b.onclick = () => {
   const k = b.dataset.die;
-  if (k === '6') { const r = rnd(6); showDie(r, 'D6', 'D6:' + r); }
-  else if (k === '6x2') { const a = rnd(6), c = rnd(6); showDie(a + c, `${a} + ${c}`, `2D6:${a + c}`); }
-  else if (k === '20') { const r = rnd(20); showDie(r, 'D20', 'D20:' + r); }
-  else if (k === 'coin') { const r = rnd(2); showDie(r === 1 ? '正' : '反', '擲硬幣', r === 1 ? '正面' : '反面'); }
+  if (k === '6') { const r = rnd(6); showDie(r, 'D6', 'D6:' + r); playRoll('6', { v: r, text: `D6　${r}` }); }
+  else if (k === '6x2') { const a = rnd(6), c = rnd(6); showDie(a + c, `${a} + ${c}`, `2D6:${a + c}`); playRoll('6x2', { a, c, text: `2D6　${a + c}`, sub: `${a} + ${c}` }); }
+  else if (k === '20') { const r = rnd(20); showDie(r, 'D20', 'D20:' + r); playRoll('20', { v: r, n: 20, text: `D20　${r}` }); }
+  else if (k === 'coin') { const r = rnd(2); showDie(r === 1 ? '正' : '反', '擲硬幣', r === 1 ? '正面' : '反面'); playRoll('coin', { v: r, text: r === 1 ? '正面' : '反面' }); }
   else if (k === 'first') {
     let a, c; do { a = rnd(20); c = rnd(20); } while (a === c);
-    showDie(`${a}:${c}`, a > c ? '我方點數大，由我方決定先後' : '對手點數大，由對手決定先後', `先後 ${a}:${c}`);
-  } else { const n = Math.max(2, Math.min(1000, parseInt($('#customInput').value, 10) || 10)); const r = rnd(n); showDie(r, 'D' + n, `D${n}:${r}`); }
+    const sub = a > c ? '我方點數大，由我方決定先後攻' : '對手點數大，由對手決定先後攻';
+    showDie(`${a}:${c}`, sub, `先後 ${a}:${c}`); playRoll('first', { a, c, n: 20, text: `我 ${a}　對手 ${c}`, sub });
+  } else { const n = Math.max(2, Math.min(1000, parseInt($('#customInput').value, 10) || 10)); const r = rnd(n); showDie(r, 'D' + n, `D${n}:${r}`); playRoll('custom', { v: r, n, text: `D${n}　${r}` }); }
 });
 $('#customInput').oninput = e => $('#customN').textContent = Math.max(2, parseInt(e.target.value, 10) || 10);
 $('#dieClear').onclick = () => { dieHist = []; store.set('dice', dieHist); renderHist(); };
@@ -591,7 +701,7 @@ let oppScope = 'season', autoTimer = null, loading = false;
 $('#evInput').value = store.get('event', '');
 
 async function api(path) {
-  if (!apiBase()) throw new Error('還沒設定資料轉接網址，請按右上角齒輪。');
+  if (!apiBase()) throw new Error('還沒設定資料轉接網址，請到「設定」分頁填寫。');
   const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000);
   try {
     const r = await fetch(apiBase() + path, { signal: ctl.signal });
@@ -683,7 +793,7 @@ function oppHTML(p) {
     <a class="small" style="color:var(--accent)" href="${esc(link)}" target="_blank" rel="noopener">在 grandarchivestats 開啟完整頁面 →</a>
   </div>`;
 }
-function showSetup() { $('#setupCard').hidden = false; $('#setupPid').focus(); }
+function showSetup() { $('#setupCard').hidden = false; $('#setupCard').scrollIntoView({ behavior: 'smooth' }); }
 function renderOpp() {
   $('#setupCard').hidden = !!S.pid;
   $('#evStatus').innerHTML = lastMatch ? statusHTML(lastMatch) : '比賽開始後，把 Omnidex 上這場賽事的網址貼進來，APP 會找出你這一輪的對手。';
@@ -763,48 +873,69 @@ async function verifyPid(pid, msgEl) {
     return p;
   } catch (e) { msgEl.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return null; }
 }
-$('#setupGo').onclick = async () => {
-  const pid = $('#setupPid').value.replace(/\D/g, ''); if (!pid) return;
-  S.pid = pid; saveS();
-  const p = await verifyPid(pid, $('#setupMsg'));
-  if (p && !S.myName) { S.myName = p.name; saveS(); renderLife(); }
-  setTimeout(renderOpp, p ? 1200 : 2500);
-};
-function openSettings() {
-  sheet('設定', `
-    <h2>玩家設定</h2>
-    <label class="fld">我的 GA 編號（Omnidex 個人頁的 # 數字）<input id="sPid" inputmode="numeric" value="${esc(S.pid)}" placeholder="例如 3753"></label>
-    <label class="fld">計血器上顯示的名字<input id="sName" value="${esc(S.myName)}" placeholder="留空顯示「我」"></label>
-    <button class="btn" id="sCheck">用編號查我的資料</button>
-    <div id="sMsg"></div>
-    <h2 style="margin-top:6px">計血方式</h2>
-    ${modeSeg('sMode')}
-    <p class="muted small" style="margin:0">切換時會用英雄生命（沒選英雄就用起始血量 ${S.start}）換算目前的數字。</p>
-    <h2 style="margin-top:6px">資料</h2>
-    <label class="fld">本季開始日（套牌分布的「本季」）<input id="sSeason" type="date" value="${esc(S.season)}"></label>
-    <label class="fld">高手門檻 ELO<input id="sHi" type="number" inputmode="numeric" value="${esc(S.hiElo)}"></label>
-    <h2 style="margin-top:6px">進階</h2>
-    <label class="fld">資料轉接網址${CFG.api ? '（留空使用預設）' : ''}<input id="sApi" inputmode="url" value="${esc(S.api)}" placeholder="${esc(CFG.api || 'https://ga-helper.你的名稱.workers.dev')}"></label>
-    <button class="btn pri" id="sSave">儲存</button>`, (sb, close) => {
-    sb.querySelector('#sMode').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; setMode(b.dataset.m); sb.querySelectorAll('#sMode [data-m]').forEach(x => x.classList.toggle('on', x === b)); };
-    sb.querySelector('#sCheck').onclick = async () => {
-      const pid = sb.querySelector('#sPid').value.replace(/\D/g, ''); if (!pid) return;
-      const keep = S.api; S.api = sb.querySelector('#sApi').value.trim();
-      const p = await verifyPid(pid, sb.querySelector('#sMsg'));
-      S.api = keep;
-      if (p && !sb.querySelector('#sName').value) sb.querySelector('#sName').value = p.name;
-    };
-    sb.querySelector('#sSave').onclick = () => {
-      S.pid = sb.querySelector('#sPid').value.replace(/\D/g, '');
-      S.myName = sb.querySelector('#sName').value.trim();
-      S.api = sb.querySelector('#sApi').value.trim().replace(/\/+$/, '');
-      S.season = sb.querySelector('#sSeason').value || S.season;
-      S.hiElo = +sb.querySelector('#sHi').value || S.hiElo;
-      store.set('api', S.api); saveS(); renderOpp(); renderLife(); close();
-    };
-  });
+
+// =====================================================================
+// 設定分頁（每一項改了就立即生效）
+// =====================================================================
+function renderSettings() {
+  const presets = [15, 19, 22, 25, 26, 27, 28, 30];
+  const dflt = CFG.api && !/你的名稱/.test(CFG.api) ? CFG.api : '';
+  $('#setBody').innerHTML = `
+    <h1>設定</h1>
+    <div class="card">
+      <h2>玩家</h2>
+      <label class="fld">我的 GA 編號（Omnidex 個人頁的 # 數字）<input id="sPid" inputmode="numeric" value="${esc(S.pid)}" placeholder="例如 3753"></label>
+      <label class="fld">計血器上顯示的名字<input id="sName" value="${esc(S.myName)}" placeholder="留空顯示「我」"></label>
+      <button class="btn" id="sCheck">用編號查我的資料</button>
+      <div id="sMsg"></div>
+    </div>
+    <div class="card">
+      <h2>計血</h2>
+      <div class="muted small">計血方式（立即套用到目前這局）</div>
+      ${modeSeg('sMode', L.mode)}
+      <p class="muted small" style="margin:0" id="sModeHint"></p>
+      <div class="muted small">起始血量（剩餘血量模式、新的一局用）</div>
+      <div class="chips" id="sStart">${presets.map(n => `<button class="chip ${n === S.start ? 'on' : ''}" data-n="${n}">${n}</button>`).join('')}</div>
+      <div class="toggle"><span>對手區倒過來（面對面）</span><input type="checkbox" id="sFlip" style="width:auto" ${S.flip ? 'checked' : ''}></div>
+    </div>
+    <div class="card">
+      <h2>對手資料</h2>
+      <label class="fld">本季開始日（套牌分布的「本季」）<input id="sSeason" type="date" value="${esc(S.season)}"></label>
+      <label class="fld">高手門檻 ELO<input id="sHi" type="number" inputmode="numeric" value="${esc(S.hiElo)}"></label>
+    </div>
+    <div class="card">
+      <h2>連線</h2>
+      <label class="fld">資料轉接網址（Cloudflare Worker）<input id="sApi" inputmode="url" value="${esc(S.api)}" placeholder="${esc(dflt || 'https://ga-helper.你的名稱.workers.dev')}"></label>
+      <div class="muted small">${dflt ? '留空會使用預設網址：' + esc(dflt) : '目前沒有預設網址（config.js 還沒改），請在這裡填入。'}</div>
+      <button class="btn" id="sTest">測試連線</button>
+      <div id="sApiMsg"></div>
+    </div>
+    <p class="muted small" style="text-align:center">所有設定改了就會儲存。</p>`;
+  const hint = () => { $('#sModeHint').textContent = (L.mode === 'dmg' ? '傷害計數：從 0 往上加。' : '剩餘血量：從起始血量往下扣。') + `切換時用英雄生命（沒選英雄就用起始血量 ${S.start}）換算目前的數字。`; };
+  hint();
+  $('#sMode').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; setMode(b.dataset.m); $('#sMode').querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b)); hint(); buzz(); };
+  $('#sStart').onclick = e => { const b = e.target.closest('[data-n]'); if (!b) return; S.start = +b.dataset.n; saveS(); $('#sStart').querySelectorAll('[data-n]').forEach(x => x.classList.toggle('on', x === b)); hint(); };
+  $('#sFlip').onchange = e => { S.flip = e.target.checked; saveS(); $('#side-1').classList.toggle('flip', S.flip); $('#flipBtn').classList.toggle('on', S.flip); };
+  $('#sPid').onchange = e => { S.pid = e.target.value.replace(/\D/g, ''); e.target.value = S.pid; saveS(); renderOpp(); };
+  $('#sName').onchange = e => { S.myName = e.target.value.trim(); saveS(); renderLife(); };
+  $('#sSeason').onchange = e => { if (e.target.value) { S.season = e.target.value; saveS(); renderOpp(); } };
+  $('#sHi').onchange = e => { const n = +e.target.value; if (n) { S.hiElo = n; saveS(); renderOpp(); } };
+  $('#sApi').onchange = e => { S.api = e.target.value.trim().replace(/\/+$/, ''); store.set('api', S.api); saveS(); CHAMPS = null; };
+  $('#sCheck').onclick = async () => {
+    S.pid = $('#sPid').value.replace(/\D/g, ''); saveS(); renderOpp();
+    if (!S.pid) return;
+    const p = await verifyPid(S.pid, $('#sMsg'));
+    if (p && !S.myName) { S.myName = p.name; $('#sName').value = p.name; saveS(); renderLife(); }
+  };
+  $('#sTest').onclick = async () => {
+    S.api = $('#sApi').value.trim().replace(/\/+$/, ''); store.set('api', S.api); saveS();
+    const m = $('#sApiMsg');
+    if (!apiBase()) { m.innerHTML = '<div class="msg err">請先填入轉接網址。</div>'; return; }
+    m.innerHTML = '<p class="empty"><span class="spin"></span> 測試中…</p>';
+    try { await api('/api/search?q=ab'); m.innerHTML = `<div class="msg">連線成功：${esc(apiBase())}</div>`; }
+    catch (e) { m.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+  };
 }
-$('#setBtn').onclick = openSettings;
 renderOpp();
 })();
 </script>
