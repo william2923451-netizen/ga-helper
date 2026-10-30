@@ -9,8 +9,9 @@ window.GA_CONFIG = {
 // 附加功能：主程式跑完後載入（不用改 index.html）
 // deck.js：對手英雄、屬性、開賽 ELO（2026-10-30）
 // ascent.js：晉級計算器的 Ascent Day 1 晉級線（2026-10-30）
+// display.js：設定裡的英雄背景亮度（2026-10-30）
 document.addEventListener('DOMContentLoaded', () => {
-  for (const f of ['deck.js?v=20261030d', 'ascent.js?v=20261030a']) {
+  for (const f of ['deck.js?v=20261030d', 'ascent.js?v=20261030a', 'display.js?v=20261030a']) {
     const s = document.createElement('script');
     s.src = f;
     document.body.appendChild(s);
