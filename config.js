@@ -5,3 +5,11 @@ window.GA_CONFIG = {
   season: '2026-08-28',   // 本季開始日
   hiElo: 1384,            // 高手門檻
 };
+
+// 附加功能：主程式跑完後載入（不用改 index.html）
+// deck.js：對手英雄、屬性、開賽 ELO（2026-10-30）
+document.addEventListener('DOMContentLoaded', () => {
+  const s = document.createElement('script');
+  s.src = 'deck.js?v=20261030c';
+  document.body.appendChild(s);
+});
