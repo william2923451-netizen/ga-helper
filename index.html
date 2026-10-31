@@ -283,6 +283,12 @@ table.stand{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nu
 .res-b.w{background:rgba(91,191,138,.18);color:var(--good)}.res-b.l{background:rgba(226,104,90,.16);color:var(--bad)}
 .res-b.d{background:rgba(163,169,175,.16);color:var(--fg)}.res-b.p{background:rgba(217,179,91,.16);color:var(--accent)}.res-b.b{background:var(--panel2);color:var(--muted)}
 .hrow .gs{font-family:var(--num);font-size:15px;color:var(--muted)}
+.hrow .oelo{margin-left:8px;font-family:var(--num);font-size:14px;font-weight:600;color:var(--muted);padding:1px 7px;border-radius:999px;border:1px solid var(--line);vertical-align:1px}
+.hrow .oelo.hi{color:var(--accent);border-color:rgba(217,179,91,.55)}
+.hrow .oelo::before{content:"ELO ";font-size:11px;font-weight:500;letter-spacing:.04em}
+.hrow .de{font-family:var(--num);font-size:14px;font-weight:600}
+.de.up,#histSum .up{color:var(--good)}.de.dn,#histSum .dn{color:var(--bad)}
+#histSum b{font-family:var(--num);font-size:15px}
 .hrow.now{background:rgba(217,179,91,.07);border-radius:10px;padding-inline:6px;margin-inline:-6px}
 .cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .cgrid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
@@ -377,9 +383,9 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </head>
 <body>
 <div id="splash" class="sp-l3" aria-hidden="true">
-  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261031e</div></div>
-  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261031e</div></div>
-  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261031e</div></div>
+  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261031f</div></div>
+  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261031f</div></div>
+  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261031f</div></div>
 </div>
 <script>try{var sp=(JSON.parse(localStorage.getItem('ga.settings')||'{}')||{}).splash||'l3';if(!/^(l[123]|off)$/.test(sp))sp='l3';document.getElementById('splash').className='sp-'+sp}catch(e){}</script>
 <div class="app">
@@ -519,7 +525,7 @@ const store = {
 };
 const buzz = () => { try { navigator.vibrate && navigator.vibrate(8); } catch (e) {} };
 // APP 主程式版本（改 index.html 或 sw.js 時往前推）
-const APP_VERSION = '20261031e';
+const APP_VERSION = '20261031f';
 
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
@@ -1274,7 +1280,11 @@ function renderRounds() {
   if (!m || !m.rounds) return;
   const rounds = m.rounds.slice();
   if (!rounds.length) { box.className = 'empty'; box.textContent = '這場比賽還沒有你的配對。'; sum.textContent = ''; return; }
-  sum.textContent = `${m.record.w}-${m.record.l}-${m.record.d}`;
+  const tot = rounds.reduce((a, r) => a + (r.me && r.me.elo != null && r.status === 'complete' ? r.me.elo : 0), 0);
+  const hasD = rounds.some(r => r.me && r.me.elo != null && r.status === 'complete');
+  const me0 = histDecks.ev === m.event.id && histDecks.data && histDecks.data.players && histDecks.data.players[+S.pid];
+  sum.innerHTML = `${m.record.w}-${m.record.l}-${m.record.d}` + (hasD ? `・ELO <b class="${tot >= 0 ? 'up' : 'dn'}">${tot >= 0 ? '+' : ''}${tot.toFixed(1)}</b>` : '')
+    + (me0 && me0.initialElo != null ? `<span class="muted">（開賽 ${Math.round(me0.initialElo)}）</span>` : '');
   const dd = histDecks.ev === m.event.id ? histDecks.data : null;
   const cur = m.current;
   box.className = 'rounds';
@@ -1292,7 +1302,11 @@ function renderRounds() {
     else if (r.me.status === 'loser') res = `<span class="res-b l">敗</span>`;
     else res = `<span class="res-b d">和</span>`;
     const gs = r.status === 'complete' && r.me.score != null ? `<span class="gs">${r.me.score}-${r.opp.score ?? 0}</span>` : '';
-    return `<div class="hrow${now}">${rd}<span class="nm">vs ${esc(r.opp.name || '#' + r.opp.id)}</span><span class="res">${res}${gs}</span><span class="hero">${heroTxt}</span></div>`;
+    // 對手開賽 ELO（牌表資料）＋我這一輪的 ELO 變化（輪次結束後才有）
+    const oe = e && e.initialElo != null ? Math.round(e.initialElo) : null;
+    const eloTag = oe != null ? `<span class="oelo ${oe >= S.hiElo ? 'hi' : ''}">${oe}</span>` : '';
+    const dl = r.me && r.me.elo != null && r.status === 'complete' ? `<span class="de ${r.me.elo >= 0 ? 'up' : 'dn'}">${r.me.elo >= 0 ? '+' : ''}${r.me.elo.toFixed(1)}</span>` : '';
+    return `<div class="hrow${now}">${rd}<span class="nm">vs ${esc(r.opp.name || '#' + r.opp.id)}${eloTag}</span><span class="res">${res}${gs}${dl}</span><span class="hero">${heroTxt}</span></div>`;
   }).reverse().join('');
   if (!(CHAMPS && CHAMPS.length) && !renderRounds.loading) { renderRounds.loading = true; loadChamps().then(() => renderRounds()).catch(() => {}); }
   // 英雄資料：同一場比賽 60 秒內不重抓

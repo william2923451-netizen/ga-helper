@@ -1,6 +1,6 @@
 // GA 比賽助手：離線與更新（Service Worker）
 // 改了 APP 檔案清單或這支程式時，把 VERSION 往前推，手機就會跳出「有新版本」。
-const VERSION = '20261031e';
+const VERSION = '20261031f';
 const SHELL = 'ga-shell-' + VERSION;   // APP 本身
 const RT = 'ga-runtime';               // 字型、英雄卡圖
 const FILES = ['./', 'index.html', 'config.js', 'deck.js', 'ascent.js', 'display.js', 'logo.webp', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
