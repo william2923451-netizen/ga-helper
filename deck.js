@@ -2,6 +2,7 @@
 // 由 config.js 在主程式之後載入，不需要改 index.html。
 // 資料來源：轉接 Worker 的 /api/decks?event=（Omnidex v2：每位參賽者的英雄、屬性、開賽 ELO）。
 // 顯示位置：「這場比賽」卡片的對手下方、成績表每位玩家名字後面。
+// 10/31：對手英雄改成完整顯示（每個等級一列：卡圖、全名、等級、生命）；成績表改用 data-id 對應玩家（簡易顯示會跳過部分名次）。
 (() => {
   'use strict';
   const $ = s => document.querySelector(s);
@@ -24,15 +25,22 @@
     .gx-deck .gx-lv{font-family:var(--num);font-size:13px;color:var(--muted);margin-left:2px}
     .gx-deck .gx-meta{display:flex;flex-wrap:wrap;gap:4px 12px;color:var(--muted);font-size:12.5px}
     .gx-deck .gx-meta b{font-family:var(--num);font-size:16px;color:var(--fg);font-weight:600}
+    .gx-full{display:flex;flex-direction:column;gap:6px}
+    .gx-card{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:6px;border-radius:10px;background:var(--panel)}
+    .gx-card img{width:40px;height:56px;object-fit:cover;border-radius:5px;background:var(--panel2)}
+    .gx-card .gx-n{font-size:14.5px;font-weight:500;line-height:1.25;min-width:0}
+    .gx-card .gx-s{font-family:var(--num);font-size:15px;color:var(--muted);text-align:right;white-space:nowrap}
+    .gx-card.gx-topc{outline:1px solid var(--c,var(--accent))}
+    .gx-card.gx-topc .gx-n{font-weight:700}
     .gx-ch{display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-size:11.5px;color:var(--muted);font-weight:400;vertical-align:1px}
     .gx-ch i{width:7px;height:7px;border-radius:50%;background:var(--c,var(--other));flex:none}
   `;
   document.head.appendChild(css);
 
-  // 英雄等級：用計血器已快取的英雄卡列表（沒有就照官方給的順序）
   // 英雄等級：用計血器快取的英雄卡列表；還沒有就向轉接 Worker 抓一次
   let CH = null;
   const levels = () => { const m = {}; for (const c of CH || read('champs', []) || []) if (c && c.name) m[c.name] = c.level ?? 0; return m; };
+  const cardInfo = () => { const m = {}; for (const c of CH || read('champs', []) || []) if (c && c.name) m[c.name] = c; return m; };
   if (!(read('champs', []) || []).length) fetch(apiBase() + '/api/champions').then(r => r.json()).then(j => { if (Array.isArray(j)) { CH = j; paint(); } }).catch(() => {});
   // 依等級分組：一套牌每個等級可能放好幾張英雄（例如郭嘉一套＋Lorraine 一等），
   // 升級路線也可能跨名字（Lorraine Lv1 → Merlin Lv2 → Merlin, Kingslayer Lv3），所以不用名字分線。
@@ -78,16 +86,15 @@
     const el = elInfo(entry.elements);
     const elo = entry.initialElo != null ? `<span>開賽 ELO <b>${Math.round(entry.initialElo)}</b></span>` : '';
     if (steps.length) {
-      // 等級由低到高；同一等級有好幾張時用「／」隔開；最高等級寫全名並加粗
-      const path = steps.map((st, k) => {
-        const isTop = st === top;
-        const names = st.cards.map(c => isTop
-          ? `<span class="pill ${el.cls} gx-top"><i></i>${esc(c.n)}</span>`
-          : `<span>${esc(st.lv === 0 ? c.n : short(c.n))}</span>`).join('<span class="gx-arrow">／</span>');
-        return `${k ? '<span class="gx-arrow">→</span>' : ''}${names}<span class="gx-lv">${st.lv == null ? '' : 'Lv' + st.lv}</span>`;
-      }).join('');
+      // 完整顯示：每張英雄一列（等級由低到高），最高等級加框
+      const info = cardInfo();
+      const rows = steps.map(st => st.cards.map(c => {
+        const ci = info[c.n] || {};
+        return `<div class="gx-card ${st === top ? 'gx-topc ' + el.cls : ''}">${ci.image ? `<img loading="lazy" alt="" src="${esc(ci.image)}">` : '<span></span>'}
+          <span class="gx-n">${esc(c.n)}</span><span class="gx-s">${st.lv == null ? '' : 'Lv' + st.lv}${ci.life != null ? '・生命 ' + ci.life : ''}</span></div>`;
+      }).join('')).join('');
       const multi = steps.some(st => st.lv && st.cards.length > 1);
-      return `<div class="gx-deck" data-sig="${esc(entry.champions.join('|'))}"><div class="gx-h">對手英雄${multi ? '（同等級有多張可選）' : ''}</div><div class="gx-path">${path}</div>
+      return `<div class="gx-deck" data-sig="${esc(entry.champions.join('|'))}"><div class="gx-h">對手英雄${multi ? '（同等級有多張可選）' : ''}</div><div class="gx-full">${rows}</div>
         <div class="gx-meta">${el.zh ? `<span>屬性 ${esc(el.zh)}</span>` : ''}${elo}</div></div>`;
     }
     const msg = entry.submitted ? '對手已交牌表，官方還沒公開英雄。' : '對手還沒交牌表。';
@@ -121,9 +128,9 @@
       const sb = $('#standBox');
       if (sb && st && st.rows && d && String(st.event && st.event.id) === String(d.event && d.event.id)) {
         const trs = sb.querySelectorAll('table.stand tbody tr');
-        trs.forEach((tr, i) => {
-          const row = st.rows[i]; if (!row) return;
-          const e = d.players[row.id];
+        trs.forEach(tr => {
+          const id = tr.dataset.id; if (!id) return;
+          const e = d.players[id];
           const cell = tr.querySelector('td.nm'); if (!cell || cell.querySelector('.gx-ch')) return;
           if (!e || !(e.champions || []).length) return;
           const { top, ready } = byLevel(e.champions); if (!top || !ready) return; // 等級還沒載入時先不加，避免標錯

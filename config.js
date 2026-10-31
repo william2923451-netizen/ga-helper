@@ -12,7 +12,7 @@ window.GA_CONFIG = {
 // display.js：設定裡的英雄背景亮度（2026-10-30）
 // 版本號：每次改版都要推進（日期＋英文字母），手機才不會卡在快取的舊版。
 // 後面再加「每 10 分鐘換一次」的數字當保險：忘了推進時，最多 10 分鐘也會抓到新版。
-const GA_VERSION = '20261031a';
+const GA_VERSION = '20261031b';
 document.addEventListener('DOMContentLoaded', () => {
   const v = GA_VERSION + '.' + Math.floor(Date.now() / 600000);
   for (const f of ['deck.js', 'ascent.js', 'display.js']) {
