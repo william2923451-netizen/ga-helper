@@ -92,6 +92,21 @@ nav.tabs button.on{color:var(--accent)}
 .mid .row{gap:6px}
 .score{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:48px;height:36px;padding:0 8px;border-radius:12px;border:1px solid var(--accent);color:var(--accent);line-height:1}
 .score small{font-size:10.5px;letter-spacing:.1em;opacity:.85}
+.score small.clock{font-family:var(--num);font-size:12px;letter-spacing:.02em;opacity:1;font-variant-numeric:tabular-nums}
+.score.warn{border-color:#f0a33a;color:#f0a33a}
+.score.over{border-color:var(--bad);color:var(--bad);background:rgba(226,104,90,.12)}
+/* 提醒條（任何分頁都會出現在最上面） */
+#alertBar{position:fixed;left:max(12px,var(--safe-l));right:max(12px,var(--safe-r));top:calc(var(--safe-t) + 10px);z-index:45;display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:16px;background:rgba(23,27,33,.97);border:1.5px solid var(--accent);box-shadow:0 14px 40px rgba(0,0,0,.55);transform:translateY(-130%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+#alertBar.on{transform:none}
+#alertBar.warn{border-color:#f0a33a}#alertBar.bad{border-color:var(--bad)}
+#alertBar .ab-t{font-size:17px;font-weight:700}
+#alertBar.warn .ab-t{color:#f0a33a}#alertBar.bad .ab-t{color:#ff7b6b}
+#alertBar .ab-s{font-size:14.5px;color:var(--fg);opacity:.9}
+#alertBar .ab-a{display:flex;gap:8px;justify-content:flex-end}
+.rep{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:14px}
+.rep b{font-family:var(--num);font-size:17px}
+.rep .tag{font-size:11.5px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.rep.done{color:var(--good)}.rep.wait{color:var(--accent)}.rep.act{color:#ff9e8f}
 .score b{font-family:var(--num);font-size:19px;font-weight:700}
 .life{-webkit-touch-callout:none}
 /* 計數小膠囊（每一側最下面）：點一下 +1，長按 −1 */
@@ -383,9 +398,9 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </head>
 <body>
 <div id="splash" class="sp-l3" aria-hidden="true">
-  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261031f</div></div>
-  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261031f</div></div>
-  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261031f</div></div>
+  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261102a</div></div>
+  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261102a</div></div>
+  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261102a</div></div>
 </div>
 <script>try{var sp=(JSON.parse(localStorage.getItem('ga.settings')||'{}')||{}).splash||'l3';if(!/^(l[123]|off)$/.test(sp))sp='l3';document.getElementById('splash').className='sp-'+sp}catch(e){}</script>
 <div class="app">
@@ -510,6 +525,7 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </div>
 
 <div id="sheetRoot"></div>
+<div id="alertBar" role="alert" aria-live="assertive"><div class="ab-t" id="abT"></div><div class="ab-s" id="abS"></div><div class="ab-a" id="abA"></div></div>
 <div id="updBar" hidden role="status"><span>有新版本</span><button class="btn sm pri" id="updGo">點一下更新</button><button class="btn sm" id="updLater">稍後</button></div>
 <div id="rollFx" aria-live="polite"><div class="stage" id="rollStage"></div><div class="roll-res" id="rollRes"></div></div>
 
@@ -524,8 +540,40 @@ const store = {
   set(k, v) { try { localStorage.setItem('ga.' + k, JSON.stringify(v)); } catch (e) {} },
 };
 const buzz = () => { try { navigator.vibrate && navigator.vibrate(8); } catch (e) {} };
+// 提示音：iPhone 要先點過畫面才允許出聲，所以第一次點畫面時先準備好
+let actx = null;
+function unlockAudio() { try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', unlockAudio, { capture: true });
+function beep(kind) {
+  if (typeof S !== 'undefined' && !S.sound) return;
+  try {
+    unlockAudio(); if (!actx) return;
+    const seq = kind === 'warn' ? [[880, 0], [880, .22], [880, .44]] : kind === 'end' ? [[660, 0], [660, .25], [440, .5], [440, .75]] : [[740, 0], [988, .16]];
+    const t0 = actx.currentTime + .02;
+    seq.forEach(([f, dt]) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t0 + dt); g.gain.linearRampToValueAtTime(.32, t0 + dt + .02); g.gain.exponentialRampToValueAtTime(.001, t0 + dt + .18);
+      o.connect(g).connect(actx.destination); o.start(t0 + dt); o.stop(t0 + dt + .2);
+    });
+  } catch (e) {}
+}
+let alertTimer = null;
+function showAlert({ title, sub = '', tone = '', sound = 'soft', ttl = 0, actions = [] }) {
+  const bar = document.querySelector('#alertBar');
+  bar.className = tone; document.querySelector('#abT').textContent = title; document.querySelector('#abS').textContent = sub;
+  const close = () => { bar.classList.remove('on'); clearTimeout(alertTimer); };
+  const box = document.querySelector('#abA'); box.innerHTML = '';
+  [...actions, { label: '知道了' }].forEach((a, k) => {
+    const b = document.createElement('button'); b.className = 'btn sm' + (k === 0 && actions.length ? ' pri' : ''); b.textContent = a.label;
+    b.onclick = () => { close(); a.run && a.run(); }; box.appendChild(b);
+  });
+  void bar.offsetWidth; bar.classList.add('on');
+  beep(sound); try { navigator.vibrate && navigator.vibrate(tone ? [120, 80, 120, 80, 200] : [80, 60, 80]); } catch (e) {}
+  clearTimeout(alertTimer); if (ttl) alertTimer = setTimeout(close, ttl);
+}
 // APP 主程式版本（改 index.html 或 sw.js 時往前推）
-const APP_VERSION = '20261031f';
+const APP_VERSION = '20261102a';
 
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
@@ -534,7 +582,7 @@ if (urlApi) store.set('api', urlApi.replace(/\/+$/, ''));
 const BUILTIN_API = 'https://ga-helper.william2923451.workers.dev';
 const CFG = Object.assign({}, window.GA_CONFIG || {});
 if (!CFG.api || /你的名稱/.test(CFG.api)) CFG.api = BUILTIN_API;
-const S = Object.assign({ api: '', pid: '', myName: '', season: CFG.season || '2026-08-28', hiElo: CFG.hiElo || 1384, start: 15, flip: true, champ: [null, null], standSimple: true, splash: 'l3', compact: false }, store.get('settings', {}));
+const S = Object.assign({ api: '', pid: '', myName: '', season: CFG.season || '2026-08-28', hiElo: CFG.hiElo || 1384, start: 15, flip: true, champ: [null, null], standSimple: true, splash: 'l3', compact: false, alertTime: true, alertMins: [10, 5, 0], alertPair: true, sound: true }, store.get('settings', {}));
 if (store.get('api')) S.api = store.get('api');
 const apiBase = () => { const u = (S.api || CFG.api || '').trim(); return /你的名稱/.test(u) ? '' : u.replace(/\/+$/, ''); };
 if (!Array.isArray(S.champ)) S.champ = [null, null];
@@ -806,6 +854,24 @@ if (!L.match) L.match = { w: 0, l: 0, d: 0, opp: null, res: [] };
 function renderScore() {
   const m = L.match, el = $('#scoreLbl'); if (!el) return;
   el.textContent = `${m.w}-${m.l}` + (m.d ? `-${m.d}` : '');
+  renderClock();
+}
+// 比分鈕上面那行小字：有回合計時時顯示剩餘時間，時間到後顯示延長回合
+function renderClock() {
+  const btn = $('#scoreBtn'); if (!btn) return;
+  let st = null; try { st = timerState(); } catch (e) { /* 配對資料還沒載入 */ }
+  const sm = btn.querySelector('small');
+  btn.classList.remove('warn', 'over'); sm.classList.remove('clock');
+  if (!st) { sm.textContent = '比分'; return; }
+  const rem = st.end - Date.now();
+  if (rem > 0) {
+    const sec = Math.ceil(rem / 1000);
+    sm.textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); sm.classList.add('clock');
+    if (rem <= 5 * 60000) btn.classList.add('warn');
+  } else {
+    const n = L.ot && L.ot.key === st.key ? Math.max(0, L.turn - L.ot.turn) : 0;
+    sm.textContent = n ? '延長+' + n : '時間到'; btn.classList.add('over');
+  }
 }
 function resetScore(opp) { L.match = { w: 0, l: 0, d: 0, opp: opp ?? null, res: [] }; saveL(); renderScore(); }
 function addResult(r) {
@@ -1164,6 +1230,7 @@ function statusHTML(m) {
         <div>你目前 <b>${rec}</b>${timer ? '・' + timer : ''}</div>
       </div>
     </div>
+    ${reportHTML(m)}
     ${m._repaired ? '<div class="msg" style="color:var(--accent)">這一輪重新配對了，對手已更新。</div>' : ''}
     <div class="muted small">${c.opp ? '' : '這一輪是輪空（BYE）。'}更新於 ${t}</div>`;
 }
@@ -1176,6 +1243,74 @@ function tickTimers() {
   });
 }
 setInterval(tickTimers, 1000);
+
+// ---------- 遊戲回報（Omnidex 這一桌的回報狀態，實驗中）----------
+const BO = n => n === 3 ? '三戰兩勝' : n === 1 ? '一戰定勝負' : n ? 'BO' + n : '';
+function repInfo(m) {
+  const c = m && m.current, r = m && m._report;
+  if (!c || !c.opp || !r || !r.me || r.none || r.round !== c.round || r.stage !== c.stage) return null;
+  const placed = x => !!(x && (x.placed || (x.status && x.status !== 'waiting')));
+  return { r, me: placed(r.me), op: placed(r.opp), done: r.status === 'complete' };
+}
+function reportHTML(m) {
+  const x = repInfo(m); if (!x) return '';
+  const { r } = x, sc = `<b>${r.me.score}-${r.opp ? r.opp.score : 0}</b>`;
+  const bo = BO(r.bestOf) ? `<span class="tag">${BO(r.bestOf)}</span>` : '';
+  if (x.done) { const res = r.me.status === 'winner' ? '你贏' : r.me.status === 'loser' ? '你輸' : '和局'; return `<div class="rep done">已確認 ${sc}（${res}）${bo}</div>`; }
+  if (x.me && x.op) return `<div class="rep wait">雙方都回報了 ${sc}，等系統確認 ${bo}</div>`;
+  if (x.me) return `<div class="rep wait">你已回報 ${sc}，等對手確認 ${bo}</div>`;
+  if (x.op) return `<div class="rep act">對手已回報 ${sc}，請到 Omnidex 確認 ${bo}</div>`;
+  return `<div class="rep">還沒回報 ${bo}</div>`;
+}
+async function fetchReport(m, fresh) {
+  const c = m && m.current; if (!c || !c.opp || c.status === 'complete') return;
+  try {
+    const r = await api(`/api/report?event=${m.event.id}&pid=${encodeURIComponent(S.pid)}${fresh ? '&fresh=1' : ''}`);
+    if (!r || (!r.me && !r.none)) return; // Worker 還沒更新
+    const before = repInfo(lastMatch);
+    if (lastMatch !== m) return;
+    m._report = r; store.set('lastMatch', m);
+    const after = repInfo(m);
+    if (after && !after.done && after.op && !after.me && !(before && before.op) && S.alertPair)
+      showAlert({ title: '對手回報了這一輪的結果', sub: `${r.me.score}-${r.opp.score}，請到 Omnidex 確認`, tone: 'warn', actions: [{ label: '看比賽', run: () => goTab('match') }] });
+    renderOpp();
+  } catch (e) {}
+}
+
+// ---------- 回合時間提醒 ----------
+function timerState() {
+  const m = lastMatch, c = m && m.current;
+  if (!c || !c.opp || c.status === 'complete') return null;
+  const tm = m.timer || {}, te = tm.timerEnd ? new Date(tm.timerEnd).getTime() : NaN;
+  if (isNaN(te) || tm.timerPaused) return null;
+  const skew = tm.serverTime ? new Date(tm.serverTime).getTime() - (m._recv || Date.now()) : 0;
+  const end = te - skew;
+  if (end - Date.now() > 3 * 3600e3 || Date.now() - end > 2 * 3600e3) return null; // 太舊或太遠的不算
+  return { end, key: m.event.id + ':' + c.stage + ':' + c.round, round: c.round };
+}
+let fired = store.get('fired', {});
+function checkTimerAlerts() {
+  renderClock();
+  const st = timerState(); if (!st) return;
+  const rem = st.end - Date.now();
+  // 時間到：從現在的回合開始算延長
+  if (rem <= 0 && (!L.ot || L.ot.key !== st.key)) { L.ot = { key: st.key, turn: L.turn }; saveL(); }
+  if (!S.alertTime) return;
+  const done = fired[st.key] || [];
+  for (const mins of (S.alertMins || []).slice().sort((a, b) => b - a)) {
+    const at = mins * 60000;
+    // 只在剛跨過門檻的 2 分鐘內提醒，避免重開 APP 時補發舊的
+    if (rem <= at && rem > at - 120000 && !done.includes(mins)) {
+      done.push(mins); fired[st.key] = done;
+      const keys = Object.keys(fired); if (keys.length > 30) delete fired[keys[0]];
+      store.set('fired', fired);
+      if (mins === 0) showAlert({ title: `第 ${st.round} 輪時間到`, sub: '計血頁的比分鈕會開始數延長回合（按「下一回合」加一）。', tone: 'bad', sound: 'end', ttl: 15000 });
+      else showAlert({ title: `第 ${st.round} 輪剩 ${mins} 分鐘`, sub: mins <= 5 ? '注意時間，準備收尾。' : '', tone: 'warn', sound: 'warn', ttl: 8000 });
+      break;
+    }
+  }
+}
+setInterval(checkTimerAlerts, 1000);
 
 function elClass(e) { return ['Fire', 'Water', 'Wind', 'Norm'].includes(e) ? 'el-' + e : ''; }
 function guessEl(deck) { const w = (deck || '').split(' ')[0]; return elClass(w); }
@@ -1240,7 +1375,7 @@ async function fetchMatch(quiet, fresh) {
   const btn = fresh ? $('#evFresh') : $('#evGo'); const old = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>';
   try {
     const j = await api(`/api/match?event=${m[1]}&pid=${encodeURIComponent(S.pid)}${fresh ? '&fresh=1' : ''}`);
-    const pc = lastMatch && lastMatch.current, nc = j.current;
+    const pc = lastMatch && lastMatch.current, nc = j.current, prevEv = lastMatch && lastMatch.event && lastMatch.event.id;
     const prevOpp = pc && pc.opp && pc.opp.id;
     // 同一輪對手變了 = 重新配對
     j._repaired = !!(pc && nc && lastMatch.event.id === j.event.id && pc.stage === nc.stage && pc.round === nc.round && (pc.opp && pc.opp.id) !== (nc.opp && nc.opp.id));
@@ -1248,7 +1383,18 @@ async function fetchMatch(quiet, fresh) {
     if (j.opponent) { lastOpp = j.opponent; store.set('lastOpp', j.opponent); }
     const newOpp = j.current && j.current.opp && j.current.opp.id;
     if (newOpp && newOpp !== prevOpp) { buzz(); if (typeof setFold === 'function') setFold('opp', false); if (L.match.opp !== newOpp) resetScore(newOpp); }
+    // 新配對提醒：自動更新時發現新的一輪（或重新配對）
+    const newRound = nc && (!pc || prevEv !== j.event.id || pc.round !== nc.round || pc.stage !== nc.stage);
+    if (quiet && S.alertPair && nc && nc.status !== 'complete' && (newRound || j._repaired)) {
+      const nm = nc.opp ? (nc.opp.name || (j.opponent && j.opponent.name) || '#' + nc.opp.id) : '';
+      showAlert({
+        title: j._repaired ? `第 ${nc.round} 輪重新配對` : `第 ${nc.round} 輪配對出來了`,
+        sub: nc.opp ? `第 ${nc.table} 桌・vs ${nm}` : '這一輪你輪空',
+        actions: [{ label: '看比賽', run: () => goTab('match') }],
+      });
+    }
     renderOpp(); renderLife(); renderStand(); renderRounds(); setAuto();
+    fetchReport(j, fresh);
   } catch (e) {
     if (!quiet) { $('#evStatus').className = ''; $('#evStatus').innerHTML = (lastMatch ? statusHTML(lastMatch) : '') + `<div class="msg err">${esc(e.message)}</div>`; }
   } finally { loading = false; btn.innerHTML = old; }
@@ -1476,7 +1622,7 @@ renderStand();
 $('#evGo').onclick = () => fetchMatch(false);
 $('#evFresh').onclick = () => fetchMatch(false, true);
 $('#evInput').onkeydown = e => { if (e.key === 'Enter') fetchMatch(false); };
-$('#autoRef').checked = !!store.get('auto', false);
+$('#autoRef').checked = !!store.get('auto', !!S.alertPair);
 // 等配對（本輪已結束或還沒配對）時 30 秒抓一次；對戰進行中 3 分鐘抓一次（防重新配對），省額度
 function setAuto() {
   clearTimeout(autoTimer); store.set('auto', $('#autoRef').checked);
@@ -1559,6 +1705,16 @@ function renderSettings() {
       <div id="sApiMsg"></div>
     </div>
     <div class="card">
+      <h2>提醒</h2>
+      <div class="toggle"><span>回合時間提醒</span><input type="checkbox" id="sAlT" style="width:auto" ${S.alertTime ? 'checked' : ''}></div>
+      <div class="muted small">剩幾分鐘時提醒（可複選）</div>
+      <div class="chips" id="sAlM">${[15, 10, 5, 0].map(n => `<button class="chip ${(S.alertMins || []).includes(n) ? 'on' : ''}" data-m="${n}">${n ? '剩 ' + n + ' 分' : '時間到'}</button>`).join('')}</div>
+      <div class="toggle"><span>新配對與回報提醒（會一起打開自動更新配對）</span><input type="checkbox" id="sAlP" style="width:auto" ${S.alertPair ? 'checked' : ''}></div>
+      <div class="toggle"><span>提示音</span><input type="checkbox" id="sSnd" style="width:auto" ${S.sound ? 'checked' : ''}></div>
+      <button class="btn" id="sAlTry">試一下提醒</button>
+      <p class="muted small" style="margin:0">APP 要開著才會提醒（螢幕關掉或切到別的 APP 時不會響）。iPhone 不支援震動，只有畫面和聲音；靜音模式下可能沒有聲音。</p>
+    </div>
+    <div class="card">
       <h2>開場畫面</h2>
       <div class="splash-pick" id="sSplash">${[['l1', '經典'], ['l2', '星光'], ['l3', '簡約'], ['off', '不顯示']].map(([k, t]) => `<button data-sp="${k}" class="${S.splash === k ? 'on' : ''}">${t}</button>`).join('')}</div>
       <button class="btn" id="sSplashTry">預覽開場畫面</button>
@@ -1575,6 +1731,11 @@ function renderSettings() {
     </div>
     <p class="muted small" style="text-align:center">所有設定改了就會儲存。</p>
     <div class="credit">by 塵世迷途小書僮</div>`;
+  $('#sAlT').onchange = e => { S.alertTime = e.target.checked; saveS(); };
+  $('#sAlM').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; const n = +b.dataset.m; const L2 = new Set(S.alertMins || []); L2.has(n) ? L2.delete(n) : L2.add(n); S.alertMins = [...L2]; saveS(); b.classList.toggle('on', L2.has(n)); };
+  $('#sAlP').onchange = e => { S.alertPair = e.target.checked; saveS(); if (S.alertPair && !$('#autoRef').checked) { $('#autoRef').checked = true; setAuto(); } };
+  $('#sSnd').onchange = e => { S.sound = e.target.checked; saveS(); if (S.sound) beep('soft'); };
+  $('#sAlTry').onclick = () => showAlert({ title: '第 4 輪配對出來了', sub: '第 7 桌・vs 範例對手（這是測試）', actions: [{ label: '看比賽', run: () => goTab('match') }] });
   $('#sSplash').onclick = e => { const b = e.target.closest('[data-sp]'); if (!b) return; S.splash = b.dataset.sp; saveS(); $('#sSplash').querySelectorAll('[data-sp]').forEach(x => x.classList.toggle('on', x === b)); playSplash(); };
   $('#sSplashTry').onclick = playSplash;
   swStatus();
