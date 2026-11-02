@@ -232,6 +232,36 @@ body.compact.at-life .side.me{padding-bottom:var(--safe-b)}
 #intro .ob-go{min-width:120px}
 .credit{text-align:center;font-size:13.5px;color:var(--muted);letter-spacing:.08em;padding:8px 0 4px}
 /* 邀請碼 */
+.adm-sum b.g{color:var(--good)}
+.adm-mk{background:var(--panel2);border-radius:12px;padding:0 12px}
+.adm-mk summary{list-style:none;display:flex;align-items:baseline;gap:8px;padding:12px 0;cursor:pointer}.adm-mk summary::-webkit-details-marker{display:none}
+.adm-mk summary span{font-weight:700;color:var(--accent)}.adm-mk summary small{color:var(--muted);font-size:12px}
+.adm-mk[open]{padding-bottom:12px}.adm-mk[open]>*+*{margin-top:10px}
+.adm-bar{display:flex;gap:8px;align-items:center}
+.adm-bar .seg{flex:1;display:flex;background:var(--panel2);border-radius:11px;padding:3px}
+.adm-bar .seg button{flex:1;padding:7px 2px;border-radius:9px;font-size:13px;color:var(--muted);background:none;border:0;white-space:nowrap}
+.adm-bar .seg button small{margin-left:3px;font-family:var(--num);font-size:12px;opacity:.8}
+.adm-bar .seg button.on{background:var(--panel);color:var(--fg);font-weight:700}
+.adm-q{width:100%}
+.mlist{gap:8px}
+.mr{display:flex;flex-direction:column;gap:5px;padding:11px 12px;border-radius:12px;background:var(--panel2);border:1px solid transparent}
+.mr.open{border-color:var(--line)}.mr.off{opacity:.55}
+.mr-top{display:flex;align-items:center;gap:8px;cursor:pointer}
+.mr-dot{width:9px;height:9px;border-radius:50%;background:var(--line);flex:none}.mr.live .mr-dot{background:var(--good);box-shadow:0 0 0 3px rgba(91,191,138,.18)}.mr.off .mr-dot{background:var(--bad)}
+.mr-n{flex:1;min-width:0;font-weight:700;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mr-id{font-family:var(--num);font-weight:500;color:var(--muted);margin-left:1px}
+.mr-st{font-size:12.5px;color:var(--muted);flex:none}.mr.live .mr-st{color:var(--good)}
+.mr-sub{font-size:13px;color:var(--accent);padding-left:17px}
+.mr-meta{display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--muted);padding-left:17px}.mr-meta .code{font-size:13px;color:var(--fg);letter-spacing:.08em}
+.mr-use{display:flex;gap:12px;align-items:center;font-size:12.5px;color:var(--muted);padding-left:17px}.mr-use b{font-family:var(--num);font-size:15px;color:var(--fg);font-weight:600}
+.mr-more{margin-left:auto;font-size:12.5px;padding:4px 10px;border-radius:8px;background:var(--panel);border:1px solid var(--line);color:var(--fg)}
+.sp-h{font-size:13px;color:var(--muted);margin-top:4px}.sp-h b{font-family:var(--num);color:var(--fg)}
+.sp-list{display:flex;flex-direction:column;background:var(--panel2);border-radius:12px;padding:2px 10px}
+.sp-r{display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}.sp-list .sp-r:last-child{border:0}
+.sp-r .code{font-size:14.5px;letter-spacing:.1em}.sp-nt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm-new .sp-r .code{color:var(--good);font-size:16px;flex:1}
+.sp-r button{font-size:12.5px;padding:4px 9px;border-radius:8px;background:var(--panel);border:1px solid var(--line);color:var(--fg);flex:none}.sp-r button.dz{color:var(--bad)}.sp-r button.arm{background:var(--bad);color:#fff;border-color:var(--bad)}
+
 .vs .vs-id{font-family:var(--num);font-weight:500;color:var(--muted);margin-left:1px}.vs-nick{font-size:13px;color:var(--accent)}
 #memBox,#admBox,#admKeyBox{display:flex;flex-direction:column;gap:10px}#admKeyBox[hidden]{display:none}
 .gate{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:14px;background:var(--panel2);border:1px solid var(--accent)}
@@ -336,6 +366,8 @@ table.stand{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nu
 .chev{width:20px;height:20px;flex:none;color:var(--muted);transition:transform .2s}
 .folded .chev{transform:rotate(-90deg)}
 [data-fold].folded > :not(.fold-head){display:none!important}
+.afold > :not(.fold-head){display:none!important}.afold .chev{transform:rotate(-90deg)}
+#admHead h2{flex:none}#admSum{flex:1;font-family:var(--num)}
 .sec-head{display:flex;align-items:center;justify-content:space-between;width:100%;padding:4px 4px 0;text-align:left}
 .sec-head h2{flex:1}
 #oppBox.folded{display:none!important}
@@ -462,9 +494,9 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </head>
 <body>
 <div id="splash" class="sp-l3" aria-hidden="true">
-  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261102e</div></div>
-  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261102e</div></div>
-  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261102e</div></div>
+  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261102f</div></div>
+  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261102f</div></div>
+  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261102f</div></div>
 </div>
 <script>try{var sp=(JSON.parse(localStorage.getItem('ga.settings')||'{}')||{}).splash||'l3';if(!/^(l[123]|off)$/.test(sp))sp='l3';document.getElementById('splash').className='sp-'+sp}catch(e){}</script>
 <div class="app">
@@ -680,7 +712,7 @@ function showAlert({ title, sub = '', tone = '', sound = 'soft', ttl = 0, action
   clearTimeout(alertTimer); if (ttl) alertTimer = setTimeout(close, ttl);
 }
 // APP 主程式版本（改 index.html 或 sw.js 時往前推）
-const APP_VERSION = '20261102e';
+const APP_VERSION = '20261102f';
 
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
@@ -1885,8 +1917,8 @@ function renderSettings() {
         <div id="sAdmMsg"></div>
       </div>
     </div>
-    <div class="card" id="admCard" hidden>
-      <h2>會員管理</h2>
+    <div class="card ${store.get('admFold', false) ? 'afold' : ''}" id="admCard" hidden>
+      <div class="fold-head" id="admHead"><h2>會員管理</h2><span class="muted small" id="admSum"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
       <div id="admBox"></div>
     </div>
     <div class="card">
@@ -1976,6 +2008,7 @@ function renderSettings() {
     catch (e) { store.set('admin', ''); msg.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; $('#admCard').hidden = true; }
   };
   $('#sAdmOut').onclick = () => { store.set('admin', ''); $('#sAdm').value = ''; $('#sAdmMsg').innerHTML = '<div class="msg">已登出管理員。</div>'; $('#admCard').hidden = true; renderMember(); };
+  $('#admHead').onclick = () => { const c = $('#admCard'); c.classList.toggle('afold'); store.set('admFold', c.classList.contains('afold')); };
   renderMember();
 }
 // ---------- 會員（邀請碼）----------
@@ -2026,19 +2059,33 @@ async function renderAdmin(reload = true) {
     catch (e) { box.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
   }
   const L2 = ADM.list, td = new Date().toDateString();
-  const bound = L2.filter(m => m.pid).length, off = L2.filter(m => m.disabled).length;
-  const act = L2.filter(m => m.today > 0 || (m.seen && new Date(m.seen).toDateString() === td)).length;
+  const isToday = m => m.today > 0 || (m.seen && new Date(m.seen).toDateString() === td);
+  const used = L2.filter(m => m.pid), unused = L2.filter(m => !m.pid && !m.disabled), off = L2.filter(m => m.disabled);
+  const act = used.filter(m => !m.disabled && isToday(m)).length;
   const made = (ADM.made || []).map(c => L2.find(m => m.code === c)).filter(Boolean);
+  const f = ADM.f || 'all', q = (ADM.q || '').trim().toLowerCase();
+  const hit = m => !q || [m.gaName, m.name, m.note, m.code, m.pid].some(v => String(v || '').toLowerCase().includes(q));
+  let rows = used.filter(m => (f === 'all' || (f === 'on' && !m.disabled) || (f === 'off' && m.disabled)) && hit(m));
+  rows.sort((x, y) => (x.disabled - y.disabled) || String(y.seen || y.bound || '').localeCompare(String(x.seen || x.bound || '')));
+  const spare = (f === 'all' || f === 'new') ? unused.filter(hit) : [];
+  const sumEl = $('#admSum'); if (sumEl) sumEl.textContent = `${used.length} 人・今天 ${act}`;
+  const lim = ADM.lim || 10, more = rows.length - lim; if (!q && more > 0) rows = rows.slice(0, lim);
+  const seg = [['all', '全部', L2.length], ['on', '使用中', used.length - off.filter(m => m.pid).length], ['new', '還沒用', unused.length], ['off', '停用', off.length]];
   box.innerHTML = `
-    <div class="adm-sum"><div><b>${L2.length}</b><span>邀請碼</span></div><div><b>${bound}</b><span>已綁定</span></div><div><b>${act}</b><span>今天有用</span></div><div><b>${off}</b><span>停用</span></div></div>
-    <div class="muted small">一次產生幾組（對方加入時自己填暱稱和 GA 編號）</div>
-    <div class="row"><div class="chips" id="admN" style="flex:1">${[1, 5, 10].map(n => `<button class="chip ${ADM.n === n ? 'on' : ''}" data-n="${n}">${n} 組</button>`).join('')}<input id="admNum" type="number" inputmode="numeric" min="1" max="20" placeholder="自訂" value="${[1, 5, 10].includes(ADM.n) ? '' : ADM.n}" style="width:76px"></div>
-      <button class="btn pri" id="admMake" style="flex:none">產生</button></div>
-    ${made.length ? `<div class="adm-new"><div class="muted small">剛產生的 ${made.length} 組邀請碼</div>
-      ${made.map(m => `<div class="mi-c"><span class="code">${esc(m.code)}</span><button data-cp="${esc(m.code)}">複製</button><button data-inv="${esc(m.code)}">邀請訊息</button></div>`).join('')}
-      ${made.length > 1 ? `<button class="btn" data-cpall="1">複製全部 ${made.length} 組</button>` : ''}</div>` : ''}
-    <div class="row" style="justify-content:space-between;align-items:center"><span class="muted small">次數每 50 次或 30 分鐘寫回一次，會稍微慢一點。</span><button class="btn" id="admRe" style="flex:none">重新整理</button></div>
-    <div class="mlist">${L2.length ? L2.map(memItem).join('') : '<p class="empty">還沒有邀請碼。</p>'}</div>`;
+    <div class="adm-sum"><div><b>${used.length}</b><span>已加入</span></div><div><b class="g">${act}</b><span>今天有用</span></div><div><b>${unused.length}</b><span>還沒用</span></div><div><b>${off.length}</b><span>停用</span></div></div>
+    <details class="adm-mk" ${made.length || !L2.length ? 'open' : ''}><summary><span>＋ 產生邀請碼</span><small>對方加入時自己填暱稱和 GA 編號</small></summary>
+      <div class="row"><div class="chips" id="admN" style="flex:1">${[1, 5, 10].map(n => `<button class="chip ${ADM.n === n ? 'on' : ''}" data-n="${n}">${n} 組</button>`).join('')}<input id="admNum" type="number" inputmode="numeric" min="1" max="20" placeholder="自訂" value="${[1, 5, 10].includes(ADM.n) ? '' : ADM.n}" style="width:72px"></div>
+        <button class="btn pri" id="admMake" style="flex:none">產生</button></div>
+      ${made.length ? `<div class="adm-new"><div class="muted small">剛產生的 ${made.length} 組</div>
+        ${made.map(m => `<div class="sp-r"><span class="code">${esc(m.code)}</span><button data-cp="${esc(m.code)}">複製</button><button data-inv="${esc(m.code)}">邀請訊息</button></div>`).join('')}
+        ${made.length > 1 ? `<button class="btn" data-cpall="1">複製全部 ${made.length} 組</button>` : ''}</div>` : ''}
+    </details>
+    <div class="adm-bar"><div class="seg" id="admF">${seg.map(([k, t, n]) => `<button class="${f === k ? 'on' : ''}" data-f="${k}">${t}<small>${n}</small></button>`).join('')}</div>
+      <button class="icon-btn" id="admRe" aria-label="重新整理" title="重新整理"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button></div>
+    <input id="admQ" class="adm-q" placeholder="搜尋名字、GA 編號、暱稱、邀請碼" value="${esc(ADM.q || '')}">
+    ${f !== 'new' ? `<div class="mlist">${rows.length ? rows.map(memRow).join('') : `<p class="empty">${q ? '找不到符合的會員。' : f === 'off' ? '沒有停用的邀請碼。' : '還沒有人加入。'}</p>`}${!q && more > 0 ? `<button class="btn" id="admMore">再顯示 ${Math.min(more, 10)} 位（還有 ${more} 位）</button>` : ''}</div>` : ''}
+    ${spare.length ? `<div class="sp-h">還沒用的邀請碼 <b>${spare.length}</b></div><div class="sp-list">${spare.map(m => `<div class="sp-r" data-code="${esc(m.code)}"><span class="code">${esc(m.code)}</span>${m.note ? `<span class="muted small sp-nt">${esc(m.note)}</span>` : '<span class="sp-nt"></span>'}<button data-cp="${esc(m.code)}">複製</button><button data-inv="${esc(m.code)}">邀請</button><button data-act="del" class="dz">刪除</button></div>`).join('')}</div>` : ''}
+    <p class="muted small" style="margin:0">使用次數每 50 次或 30 分鐘寫回一次，會比實際晚一點。</p>`;
   $('#admN').onclick = e => { const c = e.target.closest('[data-n]'); if (!c) return; ADM.n = +c.dataset.n; $('#admNum').value = ''; $('#admN').querySelectorAll('[data-n]').forEach(x => x.classList.toggle('on', x === c)); };
   $('#admNum').oninput = e => { const v = parseInt(e.target.value, 10); if (v) { ADM.n = Math.max(1, Math.min(20, v)); $('#admN').querySelectorAll('[data-n]').forEach(x => x.classList.remove('on')); } };
   $('#admMake').onclick = async () => {
@@ -2047,22 +2094,34 @@ async function renderAdmin(reload = true) {
     catch (e) { alertMsg(e.message); }
     finally { b.disabled = false; }
   };
+  $('#admF').onclick = e => { const c = e.target.closest('[data-f]'); if (!c) return; ADM.f = c.dataset.f; ADM.lim = 10; renderAdmin(false); };
+  $('#admQ').oninput = e => { ADM.q = e.target.value; clearTimeout(ADM.qt); ADM.qt = setTimeout(() => { renderAdmin(false); const i = $('#admQ'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 250); };
   $('#admRe').onclick = () => renderAdmin(true);
+  const mb = $('#admMore'); if (mb) mb.onclick = () => { ADM.lim = (ADM.lim || 10) + 10; renderAdmin(false); };
 }
-function memItem(m) {
-  const st = m.disabled ? '<span class="tag no">停用</span>' : m.pid ? '<span class="tag on">使用中</span>' : '<span class="tag">還沒用</span>';
-  return `<div class="mi ${m.disabled ? 'off' : ''}" data-code="${esc(m.code)}">
-    <div class="mi-h"><span class="nt">${m.name ? esc(m.name) : '<span class="muted" style="font-weight:400">還沒有人加入</span>'}${m.note ? `<span class="muted small" style="font-weight:400">・${esc(m.note)}</span>` : ''}</span>${st}</div>
-    <div class="mi-c"><span class="code">${esc(m.code)}</span><button data-cp="${esc(m.code)}">複製</button><button data-inv="${esc(m.code)}">邀請訊息</button></div>
-    ${m.pid ? `<div class="who">GA <b>#${esc(m.pid)}</b><span class="muted small">・${fmtT(m.bound)} 加入</span></div>` : ''}
-    ${m.pid ? `<div class="use">最後使用 <b>${fmtT(m.seen)}</b></div>
-    <div class="use">今天 <b>${m.today}</b> 次・累計 <b>${m.total}</b> 次・裝置 <b>${m.devices}</b>/3 支</div>` : ''}
-    <div class="mi-a">
+// 會員一列：GA 名字#編號、暱稱與備註、邀請碼與時間、使用量；點一下展開操作
+function memRow(m) {
+  const td = new Date().toDateString(), live = m.today > 0 || (m.seen && new Date(m.seen).toDateString() === td);
+  const st = m.disabled ? 'off' : live ? 'live' : '';
+  const who = m.gaName || m.name || '';
+  const sub = [m.gaName && m.name && m.name !== m.gaName ? `暱稱 ${esc(m.name)}` : '', m.note ? `備註 ${esc(m.note)}` : ''].filter(Boolean).join('・');
+  const open = ADM.open === m.code;
+  return `<div class="mr ${st} ${open ? 'open' : ''}" data-code="${esc(m.code)}">
+    <div class="mr-top" data-act="toggle">
+      <span class="mr-dot" title="${m.disabled ? '停用' : live ? '今天有用' : ''}"></span>
+      <span class="mr-n">${esc(who)}<span class="mr-id">#${esc(m.pid)}</span></span>
+      <span class="mr-st">${m.disabled ? '停用' : live ? '今天 ' + fmtT(m.seen).replace('今天 ', '') : fmtT(m.seen)}</span>
+    </div>
+    ${sub ? `<div class="mr-sub">${sub}</div>` : ''}
+    <div class="mr-meta"><span class="code">${esc(m.code)}</span><span>${fmtT(m.bound)} 加入</span></div>
+    <div class="mr-use"><span>今天 <b>${m.today}</b></span><span>累計 <b>${m.total}</b></span><span>手機 <b>${m.devices}</b>/3</span><button class="mr-more" data-act="toggle" aria-label="更多">${open ? '收起' : '管理'}</button></div>
+    ${open ? `<div class="mi-a">
       <button data-act="${m.disabled ? 'enable' : 'disable'}">${m.disabled ? '啟用' : '停用'}</button>
       <button data-act="note">備註</button>
-      ${m.pid ? '<button data-act="unbind">解除綁定</button>' : ''}
+      <button data-act="unbind">解除綁定</button>
       <button data-act="del" class="dz">刪除</button>
-    </div></div>`;
+    </div>` : ''}
+  </div>`;
 }
 function alertMsg(t) { showAlert({ title: t, tone: 'bad', ttl: 5000, sound: '' }); }
 async function copyText(t) {
@@ -2077,9 +2136,10 @@ document.addEventListener('click', async e => {
     const t = cp.textContent; cp.textContent = ok ? '已複製' : '複製失敗'; setTimeout(() => { cp.textContent = t; }, 1500); return;
   }
   const b = e.target.closest('#admBox [data-act]'); if (!b) return;
-  const code = b.closest('.mi').dataset.code, act = b.dataset.act;
+  const code = b.closest('[data-code]').dataset.code, act = b.dataset.act;
+  if (act === 'toggle') { ADM.open = ADM.open === code ? null : code; renderAdmin(false); return; }
   if (act === 'note') { // 備註：在這張卡片裡直接改
-    const mi = b.closest('.mi'); if (mi.querySelector('.mi-note')) return;
+    const mi = b.closest('[data-code]'); if (mi.querySelector('.mi-note')) return;
     const cur = (ADM.list.find(m => m.code === code) || {}).note || '';
     mi.insertAdjacentHTML('beforeend', `<div class="row mi-note"><input maxlength="40" value="${esc(cur)}" placeholder="備註（只有你看得到）"><button class="btn pri" data-act="notesave" style="flex:none">存</button></div>`);
     mi.querySelector('.mi-note input').focus(); return;
