@@ -2,6 +2,7 @@
 // 由 config.js 在主程式之後載入，不需要改 index.html。
 // 資料來源：轉接 Worker 的 /api/decks?event=（Omnidex v2：每位參賽者的英雄、屬性、開賽 ELO）。
 // 顯示位置：「這場比賽」卡片的對手下方、成績表每位玩家名字後面。
+// 11/02：/api/decks 帶邀請碼金鑰（X-GA-Key / X-GA-Admin）；成績表依英雄鍊標出所有屬性（基本＋高階），對手英雄每列標屬性色點。
 // 10/31：對手英雄改成完整顯示（每個等級一列：卡圖、全名、等級、生命）；成績表改用 data-id 對應玩家（簡易顯示會跳過部分名次）。
 (() => {
   'use strict';
@@ -33,7 +34,11 @@
     .gx-card.gx-topc{outline:1px solid var(--c,var(--accent))}
     .gx-card.gx-topc .gx-n{font-weight:700}
     .gx-ch{display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-size:11.5px;color:var(--muted);font-weight:400;vertical-align:1px}
-    .gx-ch i{width:7px;height:7px;border-radius:50%;background:var(--c,var(--other));flex:none}
+    .gx-ch .eds{display:inline-flex;gap:3px}
+    @media (max-width:600px){.stand td.nm .gx-ch{display:flex;margin:3px 0 0;font-size:12px}}
+    .gx-ch .ed{width:8px;height:8px;border-radius:50%;background:var(--c);display:inline-block}
+    .gx-ch .ed.EXALTED,.gx-card .ed.EXALTED{background:#fff;box-shadow:0 0 0 1.5px var(--exalted)}
+    .gx-card .gx-n .ed{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:5px;vertical-align:1px}
   `;
   document.head.appendChild(css);
 
@@ -56,6 +61,9 @@
   const EL = { FIRE: ['Fire', '火'], WATER: ['Water', '水'], WIND: ['Wind', '風'], NORM: ['Norm', '無'] };
   const elInfo = els => { const basic = (els || []).map(e => EL[e]).filter(Boolean); const adv = (els || []).filter(e => !EL[e]); return { cls: basic[0] ? 'el-' + basic[0][0] : '', zh: basic.map(x => x[1]).concat(adv.map(e => e[0] + e.slice(1).toLowerCase())).join('・') }; };
   const short = n => String(n || '').split(',')[0];
+  // 屬性：主程式提供（index.html 的 GA_EL）；沒有就不標
+  const GEL = window.GA_EL || { heroEl: () => '', elDot: () => '' };
+  const chainEls = steps => { const out = []; steps.forEach(st => st.cards.forEach(c => { const e = GEL.heroEl(c.n); if (e && !out.includes(e)) out.push(e); })); return out; };
 
   // ---------- 資料 ----------
   const D = { event: null, data: null, at: 0, err: null, busy: null, seen: null };
@@ -66,7 +74,9 @@
     D.event = eventId;
     D.busy = (async () => {
       try {
-        const r = await fetch(apiBase() + '/api/decks?event=' + eventId + (force ? '&fresh=1' : ''));
+        // 11/02：邀請碼制，帶上會員金鑰／管理員金鑰
+        const h = {}; const t = read('member', ''), a = read('admin', ''); if (t) h['X-GA-Key'] = t; if (a) h['X-GA-Admin'] = a;
+        const r = await fetch(apiBase() + '/api/decks?event=' + eventId + (force ? '&fresh=1' : ''), { headers: h });
         const j = await r.json();
         if (!r.ok || j.error) throw new Error(j.error || ('連線失敗 ' + r.status));
         if (!j.players) throw new Error('轉接 Worker 還沒更新（沒有 /api/decks）');
@@ -91,7 +101,7 @@
       const rows = steps.map(st => st.cards.map(c => {
         const ci = info[c.n] || {};
         return `<div class="gx-card ${st === top ? 'gx-topc ' + el.cls : ''}">${ci.image ? `<img loading="lazy" alt="" src="${esc(ci.image)}">` : '<span></span>'}
-          <span class="gx-n">${esc(c.n)}</span><span class="gx-s">${st.lv == null ? '' : 'Lv' + st.lv}${ci.life != null ? '・生命 ' + ci.life : ''}</span></div>`;
+          <span class="gx-n">${GEL.elDot(GEL.heroEl(c.n))}${esc(c.n)}</span><span class="gx-s">${st.lv == null ? '' : 'Lv' + st.lv}${ci.life != null ? '・生命 ' + ci.life : ''}</span></div>`;
       }).join('')).join('');
       const multi = steps.some(st => st.lv && st.cards.length > 1);
       return `<div class="gx-deck" data-sig="${esc(entry.champions.join('|'))}"><div class="gx-h">對手英雄${multi ? '（同等級有多張可選）' : ''}</div><div class="gx-full">${rows}</div>
@@ -133,10 +143,10 @@
           const e = d.players[id];
           const cell = tr.querySelector('td.nm'); if (!cell || cell.querySelector('.gx-ch')) return;
           if (!e || !(e.champions || []).length) return;
-          const { top, ready } = byLevel(e.champions); if (!top || !ready) return; // 等級還沒載入時先不加，避免標錯
-          const el = elInfo(e.elements);
+          const { steps, top, ready } = byLevel(e.champions); if (!top || !ready) return; // 等級還沒載入時先不加，避免標錯
           const nm = [...new Set(top.cards.map(c => short(c.n)))].join('／');
-          cell.insertAdjacentHTML('beforeend', `<span class="gx-ch ${el.cls}"><i></i>${esc(nm)}</span>`);
+          const dots = chainEls(steps).map(GEL.elDot).join('');
+          cell.insertAdjacentHTML('beforeend', `<span class="gx-ch">${dots ? `<span class="eds">${dots}</span>` : ''}${esc(nm)}</span>`);
         });
       }
     } finally { painting = false; }
