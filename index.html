@@ -21,8 +21,7 @@
   --bg:#0f1216; --panel:#171b21; --panel2:#1f242c; --line:#2b313a;
   --fg:#ece9e2; --muted:#a3a9af; --accent:#d9b35b; --accent-ink:#1b1608;
   --good:#5bbf8a; --bad:#e2685a;
-  --fire:#e5484d; --water:#3ba0f0; --wind:#3ec74f; --norm:#a9a196; --other:#9b86c9;
-  --tera:#4fb486; --luxem:#ffd43b; --neos:#c39a3a; --umbra:#a56ee6; --astra:#7353d6; --arcane:#3f6ae8; --crux:#8fb5dc; --exia:#a8323d; --exalted:#d4ad5c;
+  --fire:#e0623f; --water:#4b95dc; --wind:#4fb486; --norm:#a9a196; --other:#9b86c9;
   --num:"Barlow Condensed","Noto Sans TC",system-ui,sans-serif;
   --body:"Noto Sans TC",-apple-system,"PingFang TC","Heiti TC",system-ui,sans-serif;
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
@@ -93,21 +92,6 @@ nav.tabs button.on{color:var(--accent)}
 .mid .row{gap:6px}
 .score{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:48px;height:36px;padding:0 8px;border-radius:12px;border:1px solid var(--accent);color:var(--accent);line-height:1}
 .score small{font-size:10.5px;letter-spacing:.1em;opacity:.85}
-.score small.clock{font-family:var(--num);font-size:12px;letter-spacing:.02em;opacity:1;font-variant-numeric:tabular-nums}
-.score.warn{border-color:#f0a33a;color:#f0a33a}
-.score.over{border-color:var(--bad);color:var(--bad);background:rgba(226,104,90,.12)}
-/* 提醒條（任何分頁都會出現在最上面） */
-#alertBar{position:fixed;left:max(12px,var(--safe-l));right:max(12px,var(--safe-r));top:calc(var(--safe-t) + 10px);z-index:45;display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:16px;background:rgba(23,27,33,.97);border:1.5px solid var(--accent);box-shadow:0 14px 40px rgba(0,0,0,.55);transform:translateY(-130%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
-#alertBar.on{transform:none}
-#alertBar.warn{border-color:#f0a33a}#alertBar.bad{border-color:var(--bad)}
-#alertBar .ab-t{font-size:17px;font-weight:700}
-#alertBar.warn .ab-t{color:#f0a33a}#alertBar.bad .ab-t{color:#ff7b6b}
-#alertBar .ab-s{font-size:14.5px;color:var(--fg);opacity:.9}
-#alertBar .ab-a{display:flex;gap:8px;justify-content:flex-end}
-.rep{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:14px}
-.rep b{font-family:var(--num);font-size:17px}
-.rep .tag{font-size:11.5px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
-.rep.done{color:var(--good)}.rep.wait{color:var(--accent)}.rep.act{color:#ff9e8f}
 .score b{font-family:var(--num);font-size:19px;font-weight:700}
 .life{-webkit-touch-callout:none}
 /* 計數小膠囊（每一側最下面）：點一下 +1，長按 −1 */
@@ -194,120 +178,9 @@ body.compact.at-life .side.me{padding-bottom:var(--safe-b)}
 .loglist .e.dice{grid-template-columns:1fr auto auto}
 .loglist .e.dice .dt{font-family:var(--num);font-size:17px;text-align:right}
 .loglist .e.dice.cheat .dt{color:var(--bad)}
-.loglist .e.none{grid-template-columns:1fr}
-.loglist .e.dice.long{grid-template-columns:46px 1fr}.loglist .e.dice.long .dt{grid-column:1/-1;text-align:left;font-size:15px}
 /* 成績表：簡易顯示 */
 .stand tr.gap td{padding:2px 6px;color:var(--muted);text-align:center;font-size:12px;border-bottom:1px solid var(--line)}
-/* 第一次打開的介紹（11/02）*/
-#intro{position:fixed;inset:0;z-index:90;background:radial-gradient(120% 55% at 50% 0%,#1b2230 0%,var(--bg) 60%);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
-#intro[hidden]{display:none}
-#intro .ob-track{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;min-height:0}
-#intro .ob-track::-webkit-scrollbar{display:none}
-#intro .ob-sl{flex:0 0 100%;scroll-snap-align:center;overflow-y:auto;padding:26px 20px 18px;display:flex;flex-direction:column;gap:13px}
-#intro .ob-hd{display:flex;flex-direction:column;align-items:center;gap:4px}
-#intro .ob-hd img{width:min(200px,55vw)}#intro .ob-hd .t{font-size:24px;font-weight:900;letter-spacing:.18em}
-#intro .ob-k{font-size:11.5px;letter-spacing:.3em;color:var(--accent);font-weight:700}
-#intro h3{margin:0;font-size:23px;font-weight:900;display:flex;align-items:baseline;gap:10px}
-#intro h3 .n{font-size:12.5px;color:var(--accent-ink);background:var(--accent);border-radius:99px;padding:3px 9px;font-weight:700}
-#intro .ob-lead{color:var(--muted);font-size:14px;line-height:1.6;margin:0;text-align:center}
-#intro .ob-step{display:grid;grid-template-columns:34px 1fr;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px}
-#intro .ob-step .no{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:900;font-size:17px;display:grid;place-items:center}
-#intro .ob-step b,#intro .ob-tab b{font-size:16px}#intro .ob-step p,#intro .ob-tab p{margin:3px 0 0;color:var(--muted);font-size:13.5px;line-height:1.55}
-#intro .ob-note{background:rgba(217,179,91,.1);border:1px solid rgba(217,179,91,.45);border-radius:14px;padding:11px 13px;font-size:13.5px;line-height:1.6}
-#intro .ob-tab{display:grid;grid-template-columns:46px 1fr;gap:12px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 13px}
-#intro .ob-ic{width:46px;height:46px;border-radius:13px;background:var(--panel2);display:grid;place-items:center}
-#intro .ob-ic svg{width:25px;height:25px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#intro .ob-dots{display:flex;flex-wrap:wrap;gap:6px 13px;font-size:13px;color:var(--muted);margin-top:7px}
-#intro .ob-dots span{display:flex;align-items:center;gap:6px}#intro .ob-dots i{width:10px;height:10px;border-radius:50%;background:var(--c)}
-#intro .ob-tl{position:relative;display:flex;flex-direction:column;gap:11px;padding-left:22px}
-#intro .ob-tl:before{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:linear-gradient(var(--accent),rgba(217,179,91,.15))}
-#intro .ob-tl div{position:relative;font-size:14px;line-height:1.55}#intro .ob-tl div:before{content:"";position:absolute;left:-20px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--accent)}
-#intro .ob-tl b{display:block;font-size:15.5px}#intro .ob-tl span{color:var(--muted);font-size:13.5px}
-#intro .ob-clock{display:flex;gap:7px}#intro .ob-clock div{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center;font-size:11.5px;color:var(--muted)}
-#intro .ob-clock b{display:block;font-family:var(--num);font-size:16px;color:#f0a24a}#intro .ob-clock .o b{color:var(--fire)}
-#intro .ob-tips{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
-#intro .ob-tips li{background:var(--panel);border-radius:12px;padding:9px 12px;font-size:13.5px;line-height:1.55;color:var(--muted)}#intro .ob-tips li b{color:var(--fg)}
-#intro .ob-bar{display:flex;align-items:center;gap:12px;padding:12px 20px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:rgba(15,18,22,.92)}
-#intro .ob-pg{display:flex;gap:7px;flex:1}#intro .ob-pg i{width:8px;height:8px;border-radius:99px;background:var(--line);transition:all .25s}#intro .ob-pg i.on{width:22px;background:var(--accent)}
-#intro .ob-go{min-width:120px}
 .credit{text-align:center;font-size:13.5px;color:var(--muted);letter-spacing:.08em;padding:8px 0 4px}
-.cl{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
-.cl-h{font-weight:900;font-size:17px;display:flex;align-items:baseline;gap:8px}.cl-h span{font-family:var(--num);font-size:12px;color:var(--muted);font-weight:500}
-.cl-i{display:grid;grid-template-columns:34px 1fr;gap:10px;background:var(--panel2);border-radius:13px;padding:11px 12px}
-.cl-ic{width:34px;height:34px;border-radius:10px;background:var(--panel);display:grid;place-items:center;font-size:18px}
-.cl-i b{font-size:15.5px}.cl-i p{margin:3px 0 0;color:var(--muted);font-size:13.5px;line-height:1.55}
-/* 自動找比賽（11/04）*/
-#evFind:empty{display:none}
-.fd{display:flex;flex-direction:column;gap:8px;padding:12px 13px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}
-.fd.ok{border-color:rgba(91,191,138,.55);background:rgba(91,191,138,.08)}.fd.wait{border-color:rgba(217,179,91,.45)}
-.fd-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px}.fd-h .sp{flex:none}
-.fd-h small{margin-left:auto;font-weight:400;color:var(--muted);font-size:12px}
-.fd-ev{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;padding:9px 11px;border-radius:11px;background:var(--panel);border:1px solid var(--line);text-align:left;width:100%;color:var(--fg)}
-.fd-ev b{font-size:15px;line-height:1.3}.fd-ev span{font-size:12.5px;color:var(--muted)}.fd-ev .st{grid-row:1/3;grid-column:2;font-size:12px;padding:3px 9px;border-radius:99px;border:1px solid var(--line)}
-.fd-ev .st.on{color:var(--good);border-color:var(--good)}
-.fd-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.fd-row .btn{padding:8px 12px;font-size:13.5px}
-.fd-loc{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}.fd-loc button{background:none;border:0;color:var(--accent);font-size:12.5px;padding:0;text-decoration:underline}
-.fd-cd{font-family:var(--num);color:var(--accent)}
-.idx-cc{display:flex;flex-wrap:wrap;gap:6px;font-size:12.5px;color:var(--muted)}.idx-cc span{background:var(--panel2);border-radius:99px;padding:4px 10px}.idx-cc b{font-family:var(--num);color:var(--fg);font-weight:600}
-#idxBox{display:flex;flex-direction:column;gap:10px}
-.idx-bar{height:8px;border-radius:99px;background:var(--panel);overflow:hidden}.idx-bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
-/* 邀請碼 */
-.adm-sum b.g{color:var(--good)}
-.adm-mk{background:var(--panel2);border-radius:12px;padding:0 12px}
-.adm-mk summary{list-style:none;display:flex;align-items:baseline;gap:8px;padding:12px 0;cursor:pointer}.adm-mk summary::-webkit-details-marker{display:none}
-.adm-mk summary span{font-weight:700;color:var(--accent)}.adm-mk summary small{color:var(--muted);font-size:12px}
-.adm-mk[open]{padding-bottom:12px}.adm-mk[open]>*+*{margin-top:10px}
-.adm-bar{display:flex;gap:8px;align-items:center}
-.adm-bar .seg{flex:1;display:flex;background:var(--panel2);border-radius:11px;padding:3px}
-.adm-bar .seg button{flex:1;padding:7px 2px;border-radius:9px;font-size:13px;color:var(--muted);background:none;border:0;white-space:nowrap}
-.adm-bar .seg button small{margin-left:3px;font-family:var(--num);font-size:12px;opacity:.8}
-.adm-bar .seg button.on{background:var(--panel);color:var(--fg);font-weight:700}
-.adm-q{width:100%}
-.mlist{gap:8px}
-.mr{display:flex;flex-direction:column;gap:5px;padding:11px 12px;border-radius:12px;background:var(--panel2);border:1px solid transparent}
-.mr.open{border-color:var(--line)}.mr.off{opacity:.55}
-.mr-top{display:flex;align-items:center;gap:8px;cursor:pointer}
-.mr-dot{width:9px;height:9px;border-radius:50%;background:var(--line);flex:none}.mr.live .mr-dot{background:var(--good);box-shadow:0 0 0 3px rgba(91,191,138,.18)}.mr.off .mr-dot{background:var(--bad)}
-.mr-n{flex:1;min-width:0;font-weight:700;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mr-id{font-family:var(--num);font-weight:500;color:var(--muted);margin-left:1px}
-.mr-st{font-size:12.5px;color:var(--muted);flex:none}.mr.live .mr-st{color:var(--good)}
-.mr-sub{font-size:13px;color:var(--accent);padding-left:17px}
-.mr-meta{display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--muted);padding-left:17px}.mr-meta .code{font-size:13px;color:var(--fg);letter-spacing:.08em}
-.mr-use{display:flex;gap:12px;align-items:center;font-size:12.5px;color:var(--muted);padding-left:17px}.mr-use b{font-family:var(--num);font-size:15px;color:var(--fg);font-weight:600}
-.mr-more{margin-left:auto;font-size:12.5px;padding:4px 10px;border-radius:8px;background:var(--panel);border:1px solid var(--line);color:var(--fg)}
-.sp-h{font-size:13px;color:var(--muted);margin-top:4px}.sp-h b{font-family:var(--num);color:var(--fg)}
-.sp-list{display:flex;flex-direction:column;background:var(--panel2);border-radius:12px;padding:2px 10px}
-.sp-r{display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--line)}.sp-list .sp-r:last-child{border:0}
-.sp-r .code{font-size:14.5px;letter-spacing:.1em}.sp-nt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.adm-new .sp-r .code{color:var(--good);font-size:16px;flex:1}
-.sp-r button{font-size:12.5px;padding:4px 9px;border-radius:8px;background:var(--panel);border:1px solid var(--line);color:var(--fg);flex:none}.sp-r button.dz{color:var(--bad)}.sp-r button.arm{background:var(--bad);color:#fff;border-color:var(--bad)}
-
-.vs .vs-id{font-family:var(--num);font-weight:500;color:var(--muted);margin-left:1px}.vs-nick{font-size:13px;color:var(--accent)}
-#memBox,#admBox,#admKeyBox{display:flex;flex-direction:column;gap:10px}#admKeyBox[hidden]{display:none}
-.gate{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:14px;background:var(--panel2);border:1px solid var(--accent)}
-.gate-t{font-weight:700;font-size:16px;color:var(--accent)}
-.gate-row{display:flex;gap:8px}.gate-row .fld{min-width:0}
-.gate-in{font-family:var(--num);letter-spacing:.12em;text-transform:uppercase}
-.mem-st{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}.mem-st span{color:var(--muted)}
-.mem-st b{font-weight:600;min-width:0;overflow-wrap:anywhere}
-.code{font-family:var(--num);letter-spacing:.12em;font-weight:700}
-.adm-link{background:none;border:0;color:var(--muted);font-size:13px;text-decoration:underline;padding:4px 0;align-self:flex-start}
-.adm-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
-.adm-sum div{background:var(--panel2);border-radius:10px;padding:8px 2px}.adm-sum b{display:block;font-family:var(--num);font-size:22px;font-weight:600}.adm-sum span{font-size:11.5px;color:var(--muted)}
-.adm-new{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:12px;background:var(--panel2);border:1px solid var(--good)}
-.adm-new .code{font-size:24px;color:var(--good)}
-.mlist{display:flex;flex-direction:column;gap:8px}
-.mi{display:flex;flex-direction:column;gap:5px;padding:11px 12px;border-radius:12px;background:var(--panel2)}
-.mi.off{opacity:.55}
-.mi-h{display:flex;align-items:center;gap:8px}.mi-h .nt{font-weight:700;font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tag{font-size:11.5px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);flex:none}
-.tag.on{color:var(--good);border-color:var(--good)}.tag.no{color:var(--bad);border-color:var(--bad)}
-.mi-c{display:flex;align-items:center;gap:8px}.mi-c .code{font-size:16px}
-.mi-c button{font-size:12.5px;padding:3px 9px;border-radius:8px;background:var(--panel);border:1px solid var(--line)}
-.mi .who{font-size:14px}.mi .who b{font-family:var(--num);font-weight:600}
-.mi .use{font-size:12.5px;color:var(--muted)}.mi .use b{color:var(--fg);font-family:var(--num);font-weight:600}
-.mi-a{display:flex;gap:6px;margin-top:3px}.mi-a button{flex:1;font-size:13px;padding:7px 4px;border-radius:9px;background:var(--panel);border:1px solid var(--line)}
-.mi-a button.dz{color:var(--bad)}.mi-a button.arm{background:var(--bad);color:#fff;border-color:var(--bad)}
 /* 新版本提示 */
 #updBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + var(--safe-b));z-index:30;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-radius:14px;background:var(--panel2);border:1px solid var(--accent);box-shadow:0 10px 30px rgba(0,0,0,.45);font-size:14px;max-width:calc(100vw - 32px);white-space:nowrap}
 .vinfo{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}
@@ -386,8 +259,6 @@ table.stand{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nu
 .chev{width:20px;height:20px;flex:none;color:var(--muted);transition:transform .2s}
 .folded .chev{transform:rotate(-90deg)}
 [data-fold].folded > :not(.fold-head){display:none!important}
-.afold > :not(.fold-head){display:none!important}.afold .chev{transform:rotate(-90deg)}
-#admHead h2{flex:none}#admSum{flex:1;font-family:var(--num)}
 .sec-head{display:flex;align-items:center;justify-content:space-between;width:100%;padding:4px 4px 0;text-align:left}
 .sec-head h2{flex:1}
 #oppBox.folded{display:none!important}
@@ -405,9 +276,7 @@ table.stand{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nu
 .chain .lv{font-family:var(--num);font-size:12.5px;color:var(--muted);margin-right:3px}
 .chain .c{color:var(--fg);opacity:.8}
 .chain .c.top{opacity:1;font-weight:700;color:var(--fg)}
-.ed{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:5px;vertical-align:1px;flex:none}
-.ed.EXALTED{background:#fff;box-shadow:0 0 0 1.5px var(--exalted)}
-.eds{display:inline-flex;gap:3px;margin-right:4px;vertical-align:1px}.eds .ed{margin:0}
+.chain .c.top::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c,var(--other));margin-right:5px;vertical-align:1px}
 .hrow .hero .pill{font-size:13.5px}
 .hrow .res{grid-row:span 2;grid-column:3;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .res-b{min-width:44px;padding:3px 9px;border-radius:999px;font-size:13.5px;font-weight:700;text-align:center}
@@ -514,9 +383,9 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </head>
 <body>
 <div id="splash" class="sp-l3" aria-hidden="true">
-  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261104b</div></div>
-  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261104b</div></div>
-  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261104b</div></div>
+  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261031f</div></div>
+  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261031f</div></div>
+  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261031f</div></div>
 </div>
 <script>try{var sp=(JSON.parse(localStorage.getItem('ga.settings')||'{}')||{}).splash||'l3';if(!/^(l[123]|off)$/.test(sp))sp='l3';document.getElementById('splash').className='sp-'+sp}catch(e){}</script>
 <div class="app">
@@ -579,7 +448,6 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
       </div>
       <div class="card" data-fold="match">
         <div class="fold-head"><h2>這場比賽</h2></div>
-        <div id="evFind"></div>
         <div class="row"><input id="evInput" inputmode="url" placeholder="貼上 Omnidex 賽事網址或編號"><button class="btn pri" id="evGo">抓配對</button><button class="icon-btn" id="evFresh" aria-label="重新整理配對" title="重新整理（跳過快取）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button></div>
         <div id="evStatus" class="empty">比賽開始後，把 Omnidex 上這場賽事的網址貼進來，APP 會找出你這一輪的對手。</div>
         <div class="toggle small"><span class="muted">自動更新配對（等配對時每 30 秒、對戰中每 3 分鐘）</span><input type="checkbox" id="autoRef" style="width:auto"></div>
@@ -641,51 +509,7 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
   </nav>
 </div>
 
-<div id="intro" hidden>
-  <div class="ob-track">
-    <section class="ob-sl">
-      <div class="ob-hd"><img src="logo.webp" alt="Grand Archive"><div class="t">比賽助手</div></div>
-      <p class="ob-lead">打 Grand Archive 比賽用的手機 APP<br>計血、骰子、Omnidex 配對、成績表、對手資料</p>
-      <div class="ob-k" style="margin-top:4px">STEP BY STEP</div>
-      <h3>開始之前<span class="n">1 分鐘</span></h3>
-      <div class="ob-step"><div class="no">1</div><div><b>分享 → 加入主畫面</b><p>還沒加的話，用 Safari 的「分享」加到主畫面，之後從圖示打開，像一般 APP 一樣全螢幕。</p></div></div>
-      <div class="ob-step"><div class="no">2</div><div><b>設定 → 填 GA 編號</b><p>Omnidex 個人頁 # 後面的數字。</p></div></div>
-      <div class="ob-step"><div class="no">3</div><div><b>設定 → 會員 → 輸入邀請碼</b><p>填邀請碼、暱稱、GA 編號，按「加入」。這支手機之後不用再輸入。</p></div></div>
-      <div class="ob-note">邀請碼一人一組，第一次加入就綁定你的 GA 編號，請不要轉給別人。同一組最多 3 支手機。</div>
-    </section>
-    <section class="ob-sl">
-      <div class="ob-k">FEATURES</div>
-      <h3>五個分頁</h3>
-      <div class="ob-tab"><div class="ob-ic"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg></div><div><b>計血</b><p>上半 +1、下半 −1、左右 ±5，按住連續加減。英雄背景、指示物、狀態（會自動解除）、回合、比分、對局紀錄。</p></div></div>
-      <div class="ob-tab"><div class="ob-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3"/><circle cx="15.5" cy="15.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/></svg></div><div><b>骰子</b><p>D6、2D6、D20、硬幣、先後攻、自訂面數，結果寫進對局紀錄。</p></div></div>
-      <div class="ob-tab"><div class="ob-ic"><svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></div><div><b>比賽</b><p>貼 Omnidex 賽事網址：大字桌號、對手、剩餘時間、回報狀態；晉級計算器、成績表、每一輪的對手英雄與 ELO。</p></div></div>
-      <div class="ob-tab"><div class="ob-ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div><div><b>對手</b><p>這輪對手的 ELO、本季套牌分布、近期出賽；也能查任何玩家。</p></div></div>
-      <div class="ob-tab"><div class="ob-ic"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></div><div><b>設定</b><p>GA 編號、會員、計血方式、起始血量、提醒、檢查更新。</p></div></div>
-      <div class="ob-note"><b>英雄色點＝屬性</b>
-        <div class="ob-dots"><span><i style="--c:var(--fire)"></i>火</span><span><i style="--c:var(--water)"></i>水</span><span><i style="--c:var(--wind)"></i>風</span><span><i style="--c:var(--luxem)"></i>LUXEM</span><span><i style="--c:var(--umbra)"></i>UMBRA</span><span><i style="--c:var(--astra)"></i>ASTRA</span><span><i style="--c:var(--arcane)"></i>ARCANE</span><span><i style="--c:var(--crux)"></i>CRUX</span><span><i style="--c:var(--tera)"></i>TERA</span><span><i style="--c:var(--exia)"></i>EXIA</span><span><i style="--c:var(--neos)"></i>NEOS</span><span><i style="--c:#fff;box-shadow:0 0 0 1.5px var(--exalted)"></i>EXALTED</span></div></div>
-    </section>
-    <section class="ob-sl">
-      <div class="ob-k">GAME DAY</div>
-      <h3>比賽當天</h3>
-      <div class="ob-tl">
-        <div><b>貼賽事網址，按「抓配對」</b><span>勾「自動更新配對」，之後 APP 自己跟著每一輪更新。</span></div>
-        <div><b>新配對跳提醒</b><span>告訴你第幾桌、對手是誰，點一下直接看。</span></div>
-        <div><b>到桌切到「計血」</b><span>開打前可以擲先後攻，結果會記下來。</span></div>
-        <div><b>注意時間</b><span>比分鈕上的小字就是這輪剩餘時間。</span></div>
-      </div>
-      <div class="ob-clock"><div><b>10・5 分</b>剩餘提醒</div><div class="o"><b>延長 5:00</b>時間到後倒數</div><div class="o"><b>比賽結束</b>延長倒數完</div></div>
-      <div class="ob-tl"><div><b>打完記勝負</b><span>按「新的一局」記誰贏；對手先在 Omnidex 回報時會提醒你確認。</span></div></div>
-      <ul class="ob-tips">
-        <li><b>沒網路也能開</b>：計血、骰子、指示物照常用；配對、成績表要上網。</li>
-        <li><b>APP 要開著才會提醒</b>：iPhone 不支援震動，靜音時可能沒聲音。</li>
-        <li><b>對手英雄</b>要等官方公開牌表才看得到。時間與回報以 Omnidex 和裁判為準。</li>
-      </ul>
-    </section>
-  </div>
-  <div class="ob-bar"><div class="ob-pg"><i class="on"></i><i></i><i></i></div><button class="btn pri ob-go">下一步</button></div>
-</div>
 <div id="sheetRoot"></div>
-<div id="alertBar" role="alert" aria-live="assertive"><div class="ab-t" id="abT"></div><div class="ab-s" id="abS"></div><div class="ab-a" id="abA"></div></div>
 <div id="updBar" hidden role="status"><span>有新版本</span><button class="btn sm pri" id="updGo">點一下更新</button><button class="btn sm" id="updLater">稍後</button></div>
 <div id="rollFx" aria-live="polite"><div class="stage" id="rollStage"></div><div class="roll-res" id="rollRes"></div></div>
 
@@ -700,40 +524,8 @@ const store = {
   set(k, v) { try { localStorage.setItem('ga.' + k, JSON.stringify(v)); } catch (e) {} },
 };
 const buzz = () => { try { navigator.vibrate && navigator.vibrate(8); } catch (e) {} };
-// 提示音：iPhone 要先點過畫面才允許出聲，所以第一次點畫面時先準備好
-let actx = null;
-function unlockAudio() { try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
-document.addEventListener('pointerdown', unlockAudio, { capture: true });
-function beep(kind) {
-  if (typeof S !== 'undefined' && !S.sound) return;
-  try {
-    unlockAudio(); if (!actx) return;
-    const seq = kind === 'warn' ? [[880, 0], [880, .22], [880, .44]] : kind === 'end' ? [[660, 0], [660, .25], [440, .5], [440, .75]] : [[740, 0], [988, .16]];
-    const t0 = actx.currentTime + .02;
-    seq.forEach(([f, dt]) => {
-      const o = actx.createOscillator(), g = actx.createGain();
-      o.type = 'sine'; o.frequency.value = f;
-      g.gain.setValueAtTime(0, t0 + dt); g.gain.linearRampToValueAtTime(.32, t0 + dt + .02); g.gain.exponentialRampToValueAtTime(.001, t0 + dt + .18);
-      o.connect(g).connect(actx.destination); o.start(t0 + dt); o.stop(t0 + dt + .2);
-    });
-  } catch (e) {}
-}
-let alertTimer = null;
-function showAlert({ title, sub = '', tone = '', sound = 'soft', ttl = 0, actions = [] }) {
-  const bar = document.querySelector('#alertBar');
-  bar.className = tone; document.querySelector('#abT').textContent = title; document.querySelector('#abS').textContent = sub;
-  const close = () => { bar.classList.remove('on'); clearTimeout(alertTimer); };
-  const box = document.querySelector('#abA'); box.innerHTML = '';
-  [...actions, { label: '知道了' }].forEach((a, k) => {
-    const b = document.createElement('button'); b.className = 'btn sm' + (k === 0 && actions.length ? ' pri' : ''); b.textContent = a.label;
-    b.onclick = () => { close(); a.run && a.run(); }; box.appendChild(b);
-  });
-  void bar.offsetWidth; bar.classList.add('on');
-  if (sound) beep(sound); try { navigator.vibrate && navigator.vibrate(tone ? [120, 80, 120, 80, 200] : [80, 60, 80]); } catch (e) {}
-  clearTimeout(alertTimer); if (ttl) alertTimer = setTimeout(close, ttl);
-}
 // APP 主程式版本（改 index.html 或 sw.js 時往前推）
-const APP_VERSION = '20261104b';
+const APP_VERSION = '20261031f';
 
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
@@ -742,11 +534,11 @@ if (urlApi) store.set('api', urlApi.replace(/\/+$/, ''));
 const BUILTIN_API = 'https://ga-helper.william2923451.workers.dev';
 const CFG = Object.assign({}, window.GA_CONFIG || {});
 if (!CFG.api || /你的名稱/.test(CFG.api)) CFG.api = BUILTIN_API;
-const S = Object.assign({ api: '', pid: '', myName: '', season: CFG.season || '2026-08-28', hiElo: CFG.hiElo || 1384, start: 15, flip: true, champ: [null, null], standSimple: true, splash: 'l3', compact: false, alertTime: true, alertMins: [10, 5, 0], alertPair: true, sound: true }, store.get('settings', {}));
+const S = Object.assign({ api: '', pid: '', myName: '', season: CFG.season || '2026-08-28', hiElo: CFG.hiElo || 1384, start: 15, flip: true, champ: [null, null], standSimple: true, splash: 'l3', compact: false }, store.get('settings', {}));
 if (store.get('api')) S.api = store.get('api');
 const apiBase = () => { const u = (S.api || CFG.api || '').trim(); return /你的名稱/.test(u) ? '' : u.replace(/\/+$/, ''); };
 if (!Array.isArray(S.champ)) S.champ = [null, null];
-S.splash = 'l3'; // 11/02：開場畫面固定簡約款（設定拿掉了）
+if (!/^(l[123]|off)$/.test(S.splash || '')) S.splash = 'l3';
 const saveS = () => store.set('settings', S);
 
 // ---------- 分頁 ----------
@@ -1014,24 +806,6 @@ if (!L.match) L.match = { w: 0, l: 0, d: 0, opp: null, res: [] };
 function renderScore() {
   const m = L.match, el = $('#scoreLbl'); if (!el) return;
   el.textContent = `${m.w}-${m.l}` + (m.d ? `-${m.d}` : '');
-  renderClock();
-}
-// 比分鈕上面那行小字：有回合計時時顯示剩餘時間；時間到後倒數 5 分鐘延長，延長結束顯示比賽結束（11/02）
-const OT_MS = 5 * 60000;
-const mmss = ms => { const sec = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); };
-function renderClock() {
-  const btn = $('#scoreBtn'); if (!btn) return;
-  let st = null; try { st = timerState(); } catch (e) { /* 配對資料還沒載入 */ }
-  const sm = btn.querySelector('small');
-  btn.classList.remove('warn', 'over'); sm.classList.remove('clock');
-  if (!st) { sm.textContent = '比分'; return; }
-  const rem = st.end - Date.now();
-  if (rem > 0) {
-    sm.textContent = mmss(rem); sm.classList.add('clock');
-    if (rem <= 5 * 60000) btn.classList.add('warn');
-  } else if (rem > -OT_MS) {
-    sm.textContent = '延長 ' + mmss(rem + OT_MS); sm.classList.add('clock'); btn.classList.add('over');
-  } else { sm.textContent = '比賽結束'; btn.classList.add('over'); }
 }
 function resetScore(opp) { L.match = { w: 0, l: 0, d: 0, opp: opp ?? null, res: [] }; saveL(); renderScore(); }
 function addResult(r) {
@@ -1121,17 +895,11 @@ $('#logBtn').onclick = () => {
     // 同一回合放在同一個色塊，回合之間換顏色
     const turns = [];
     for (const e of rows) { const last = turns[turns.length - 1]; if (last && last.t === e.t) last.list.push(e); else turns.push({ t: e.t, list: [e] }); }
-    // 沒有血量變動的回合也列出來（11/02）
-    const maxT = Math.max(g === L.game ? L.turn : 1, ...rows.map(e => e.t || 1));
-    const byT = {}; turns.forEach(tg => { byT[tg.t] = tg; });
-    const all = []; for (let t = maxT; t >= 1; t--) all.push(byT[t] || { t, list: [] });
-    turns.filter(tg => !(tg.t >= 1 && tg.t <= maxT)).forEach(tg => all.push(tg));
-    for (const tg of all) {
+    for (const tg of turns) {
       out += `<div class="tgrp tc${tg.t % 2}"><div class="tg-h">T${tg.t}</div>`;
-      if (!tg.list.some(e => !e.dice)) out += `<div class="e none"><span class="muted">血量無變動</span></div>`;
       for (const e of tg.list) {
         const tm = new Date(e.at).toTimeString().slice(0, 5);
-        if (e.dice) { out += `<div class="e dice ${e.cheat ? 'cheat' : ''} ${String(e.text).length > 10 ? 'long' : ''}"><span>${e.cheat ? '灌鉛' : '骰子'}</span><span class="muted small">${tm}</span><span class="dt">${esc(e.text)}</span></div>`; continue; }
+        if (e.dice) { out += `<div class="e dice ${e.cheat ? 'cheat' : ''}"><span>骰子${e.cheat ? '（灌鉛）' : ''}</span><span class="muted small">${tm}</span><span class="dt">${esc(e.text)}</span></div>`; continue; }
         out += `<div class="e"><span>${e.s === 0 ? '我' : '對手'}${e.m === 'dmg' ? '・傷害' : ''}${e.set ? '（設定）' : ''}</span><span class="muted small">${tm}</span><span class="dl" style="color:${(e.d < 0) !== (e.m === 'dmg') ? 'var(--bad)' : 'var(--good)'}">${e.d > 0 ? '+' : ''}${e.d}</span><span class="to">${e.from}→${e.to}</span></div>`;
       }
       out += `</div>`;
@@ -1322,7 +1090,7 @@ function playRoll(kind, res) {
   });
   out.classList.remove('cheat');
   fxTimer = setTimeout(() => {
-    if (res.cheat) { out.classList.add('cheat'); out.innerHTML = 'Judge Judge<br>他作弊'; try { navigator.vibrate && navigator.vibrate([60, 40, 60, 40, 120]); } catch (e) {} }
+    if (res.cheat) { out.classList.add('cheat'); out.innerHTML = '[ Judge Judge<br>他作弊 ]'; try { navigator.vibrate && navigator.vibrate([60, 40, 60, 40, 120]); } catch (e) {} }
     else out.innerHTML = res.text + (res.sub ? `<small>${esc(res.sub)}</small>` : '');
     out.classList.add('on'); buzz();
     fxTimer = setTimeout(() => { fx.classList.remove('on'); out.classList.remove('on'); fxTimer = setTimeout(() => { st.innerHTML = ''; out.classList.remove('cheat'); }, 300); }, res.cheat ? 4000 : 2000);
@@ -1337,11 +1105,11 @@ document.querySelectorAll('[data-die]').forEach(b => b.onclick = () => {
   else if (k === 'first') {
     let a, c; do { a = rnd(20); c = rnd(20); } while (a === c);
     const sub = a > c ? '我方點數大，由我方決定先後攻' : '對手點數大，由對手決定先後攻';
-    showDie(`${a}:${c}`, sub, `先後攻 ${a}:${c}・${a > c ? '我方先攻' : '對手先攻'}`); playRoll('first', { a, c, n: 20, text: `我 ${a}　對手 ${c}`, sub });
+    showDie(`${a}:${c}`, sub, `先後 ${a}:${c}`); playRoll('first', { a, c, n: 20, text: `我 ${a}　對手 ${c}`, sub });
   } else if (k === 'cheat') {
     // 灌鉛：一定是我方點數大
     const a = 12 + rnd(9), c = rnd(a - 1);
-    showDie(`${a}:${c}`, '灌鉛骰子：我方點數大', `先後攻 ${a}:${c}・我方先攻（開玩笑的，不要認真）`, true);
+    showDie(`${a}:${c}`, '灌鉛骰子：我方點數大', `灌鉛 ${a}:${c}`, true);
     playRoll('first', { a, c, n: 20, cheat: true });
   } else { const n = Math.max(2, Math.min(1000, parseInt($('#customInput').value, 10) || 10)); const r = rnd(n); showDie(r, 'D' + n, `D${n}:${r}`); playRoll('custom', { v: r, n, text: `D${n}　${r}` }); }
 });
@@ -1356,22 +1124,13 @@ let lastMatch = store.get('lastMatch', null), lastOpp = store.get('lastOpp', nul
 let oppScope = 'season', autoTimer = null, loading = false;
 $('#evInput').value = store.get('event', '');
 
-// 邀請碼：會員金鑰（加入後 Worker 發的）與管理員金鑰都存在這支手機
-const authHeaders = () => { const h = {}; const t = store.get('member', ''), a = store.get('admin', ''); if (t) h['X-GA-Key'] = t; if (a) h['X-GA-Admin'] = a; return h; };
-async function api(path, opt = {}) {
+async function api(path) {
   if (!apiBase()) throw new Error('還沒設定資料轉接網址，請到「設定」分頁填寫。');
   const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000);
   try {
-    const init = { signal: ctl.signal, headers: authHeaders() };
-    if (opt.body !== undefined) { init.method = 'POST'; init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(opt.body); }
-    const r = await fetch(apiBase() + path, init);
+    const r = await fetch(apiBase() + path, { signal: ctl.signal });
     const j = await r.json().catch(() => ({ error: '回應格式錯誤（' + r.status + '）' }));
-    if (!r.ok || j.error) {
-      const err = new Error(j.error || ('連線失敗 ' + r.status)); err.code = j.code || '';
-      if (err.code === 'need-invite') { store.set('needInvite', true); }
-      if (err.code === 'pid-locked' && j.pid) { S.pid = String(j.pid); store.set('lockPid', S.pid); saveS(); err.message += `。已改回 #${j.pid}，請再按一次。`; }
-      throw err;
-    }
+    if (!r.ok || j.error) throw new Error(j.error || ('連線失敗 ' + r.status));
     return j;
   } catch (e) {
     if (e.name === 'AbortError') throw new Error('等太久沒有回應，請再試一次。');
@@ -1379,44 +1138,6 @@ async function api(path, opt = {}) {
     throw e;
   } finally { clearTimeout(to); }
 }
-// 錯誤訊息：需要邀請碼時直接給輸入框
-function errHTML(e) {
-  if (e && e.code === 'need-invite') return joinGateHTML();
-  return `<div class="msg err">${esc(e && e.message || e)}</div>`;
-}
-function joinGateHTML(msg) {
-  return `<div class="gate">
-    <div class="gate-t">需要邀請碼</div>
-    <div class="muted small">這個 APP 目前只開放受邀的朋友使用。填上管理員給你的邀請碼、你的暱稱和 GA 編號，這支手機之後就不用再輸入。加入後 GA 編號會鎖定；暱稱會顯示給同樣用這個 APP 的對手。</div>
-    <label class="fld">邀請碼<input class="gate-in" placeholder="XXXX-XXXX" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="12"></label>
-    <div class="gate-row"><label class="fld" style="flex:1.2">暱稱<input class="gate-nm" maxlength="40" value="${esc(S.myName || '')}" placeholder="管理員看到的名字"></label>
-      <label class="fld" style="flex:1">GA 編號<input class="gate-pid" inputmode="numeric" value="${esc(S.pid || '')}" placeholder="例如 3753"></label></div>
-    <button class="btn pri gate-go">加入</button>
-    <div class="gate-msg">${msg || ''}</div>
-  </div>`;
-}
-async function joinWith(code, name, pid, msgEl) {
-  code = String(code || '').trim(); name = String(name || '').trim(); pid = String(pid || '').replace(/\D/g, '');
-  if (!code) { msgEl.innerHTML = '<div class="msg err">請輸入邀請碼。</div>'; return false; }
-  if (!name) { msgEl.innerHTML = '<div class="msg err">請填暱稱。</div>'; return false; }
-  if (!pid) { msgEl.innerHTML = '<div class="msg err">請填 GA 編號（Omnidex 個人頁的 # 數字）。</div>'; return false; }
-  msgEl.innerHTML = '<p class="empty"><span class="spin"></span> 確認中…</p>';
-  try {
-    const j = await api('/api/join', { body: { code, pid, name } });
-    if (j.open) { msgEl.innerHTML = '<div class="msg">目前不需要邀請碼，直接用就可以。</div>'; return true; }
-    store.set('member', j.token); store.set('memberInfo', j.member); store.set('needInvite', false);
-    // 設定還沒填的話，順便帶入
-    S.pid = String(j.member.pid || pid); store.set('lockPid', S.pid); if (!S.myName) S.myName = name; saveS(); // 綁定後 GA 編號鎖住
-    msgEl.innerHTML = `<div class="msg">加入成功，歡迎 ${esc(name)}！</div>`;
-    return true;
-  } catch (e) { msgEl.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return false; }
-}
-// 任何地方的「加入」按鈕
-document.addEventListener('click', async e => {
-  const b = e.target.closest('.gate-go'); if (!b) return;
-  const g = b.closest('.gate'); const ok = await joinWith(g.querySelector('.gate-in').value, g.querySelector('.gate-nm').value, g.querySelector('.gate-pid').value, g.querySelector('.gate-msg'));
-  if (ok) setTimeout(() => { renderOpp(); renderLife(); if ($('#evInput').value.trim()) fetchMatch(); if (typeof renderSettings === 'function' && curView === 'set') renderSettings(); }, 700);
-});
 
 const STAGE = { swiss: '瑞士輪', 'single-elimination': '決賽淘汰賽' };
 function statusHTML(m) {
@@ -1431,7 +1152,7 @@ function statusHTML(m) {
   const tm = m.timer || {};
   const te = tm.timerEnd ? new Date(tm.timerEnd).getTime() : NaN;
   const skew = tm.serverTime ? new Date(tm.serverTime).getTime() - (m._recv || Date.now()) : 0;
-  if (!isNaN(te) && !tm.timerPaused && c.status !== 'complete' && te - Date.now() < 3 * 3600e3) timer = `<span data-endw="1">剩 <b data-end="${te - skew}"></b></span>`;
+  if (!isNaN(te) && !tm.timerPaused && c.status !== 'complete' && te - Date.now() < 3 * 3600e3) timer = `<span>剩 <b data-end="${te - skew}"></b></span>`;
   const t = new Date(m.fetchedAt).toTimeString().slice(0, 5);
   const oppName = c.opp ? (c.opp.name || (m.opponent && m.opponent.name) || '#' + c.opp.id) : '';
   return `<div style="font-weight:500">${esc(m.event.name)}</div>
@@ -1439,11 +1160,10 @@ function statusHTML(m) {
       <div class="tableno ${c.opp ? '' : 'bye'}"><small>${c.opp ? '桌號' : '輪空'}</small><b>${c.opp ? esc(c.table) : 'BYE'}</b></div>
       <div class="mt-info">
         <div>${STAGE[c.stage] || c.stage} 第 <b>${c.round}</b> 輪・${state}</div>
-        ${c.opp ? `<div class="vs">vs ${esc(oppName)}<span class="vs-id">#${esc(c.opp.id)}</span></div>${c.opp.nick ? `<div class="vs-nick">APP 暱稱：${esc(c.opp.nick)}</div>` : ''}` : ''}
+        ${c.opp ? `<div class="vs">vs ${esc(oppName)}</div>` : ''}
         <div>你目前 <b>${rec}</b>${timer ? '・' + timer : ''}</div>
       </div>
     </div>
-    ${reportHTML(m)}
     ${m._repaired ? '<div class="msg" style="color:var(--accent)">這一輪重新配對了，對手已更新。</div>' : ''}
     <div class="muted small">${c.opp ? '' : '這一輪是輪空（BYE）。'}更新於 ${t}</div>`;
 }
@@ -1451,81 +1171,11 @@ function tickTimers() {
   document.querySelectorAll('[data-end]').forEach(el => {
     const ms = +el.dataset.end - Date.now();
     if (isNaN(ms)) return el.textContent = '–';
-    const w = el.closest('[data-endw]');
-    if (w && ms <= 0) { // 時間到之後：延長 5 分鐘倒數，再來是比賽結束
-      const lab = w.firstChild; if (lab && lab.nodeType === 3) lab.textContent = ms > -OT_MS ? '延長 ' : '';
-      el.textContent = ms > -OT_MS ? mmss(ms + OT_MS) : '比賽結束'; el.style.color = 'var(--bad)'; return;
-    }
-    el.textContent = mmss(ms);
+    const s = Math.max(0, Math.round(ms / 1000));
+    el.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
   });
 }
 setInterval(tickTimers, 1000);
-
-// ---------- 遊戲回報（Omnidex 這一桌的回報狀態，實驗中）----------
-const BO = n => n === 3 ? '三戰兩勝' : n === 1 ? '一戰定勝負' : n ? 'BO' + n : '';
-function repInfo(m) {
-  const c = m && m.current, r = m && m._report;
-  if (!c || !c.opp || !r || !r.me || r.none || r.round !== c.round || r.stage !== c.stage) return null;
-  const placed = x => !!(x && (x.placed || (x.status && x.status !== 'waiting')));
-  return { r, me: placed(r.me), op: placed(r.opp), done: r.status === 'complete' };
-}
-function reportHTML(m) {
-  const x = repInfo(m); if (!x) return '';
-  const { r } = x, sc = `<b>${r.me.score}-${r.opp ? r.opp.score : 0}</b>`;
-  const bo = BO(r.bestOf) ? `<span class="tag">${BO(r.bestOf)}</span>` : '';
-  if (x.done) { const res = r.me.status === 'winner' ? '你贏' : r.me.status === 'loser' ? '你輸' : '和局'; return `<div class="rep done">已確認 ${sc}（${res}）${bo}</div>`; }
-  if (x.me && x.op) return `<div class="rep wait">雙方都回報了 ${sc}，等系統確認 ${bo}</div>`;
-  if (x.me) return `<div class="rep wait">你已回報 ${sc}，等對手確認 ${bo}</div>`;
-  if (x.op) return `<div class="rep act">對手已回報 ${sc}，請到 Omnidex 確認 ${bo}</div>`;
-  return `<div class="rep">還沒回報 ${bo}</div>`;
-}
-async function fetchReport(m, fresh) {
-  const c = m && m.current; if (!c || !c.opp || c.status === 'complete') return;
-  try {
-    const r = await api(`/api/report?event=${m.event.id}&pid=${encodeURIComponent(S.pid)}${fresh ? '&fresh=1' : ''}`);
-    if (!r || (!r.me && !r.none)) return; // Worker 還沒更新
-    const before = repInfo(lastMatch);
-    if (lastMatch !== m) return;
-    m._report = r; store.set('lastMatch', m);
-    const after = repInfo(m);
-    if (after && !after.done && after.op && !after.me && !(before && before.op) && S.alertPair)
-      showAlert({ title: '對手回報了這一輪的結果', sub: `${r.me.score}-${r.opp.score}，請到 Omnidex 確認`, tone: 'warn', actions: [{ label: '看比賽', run: () => goTab('match') }] });
-    renderOpp();
-  } catch (e) {}
-}
-
-// ---------- 回合時間提醒 ----------
-function timerState() {
-  const m = lastMatch, c = m && m.current;
-  if (!c || !c.opp || c.status === 'complete') return null;
-  const tm = m.timer || {}, te = tm.timerEnd ? new Date(tm.timerEnd).getTime() : NaN;
-  if (isNaN(te) || tm.timerPaused) return null;
-  const skew = tm.serverTime ? new Date(tm.serverTime).getTime() - (m._recv || Date.now()) : 0;
-  const end = te - skew;
-  if (end - Date.now() > 3 * 3600e3 || Date.now() - end > 2 * 3600e3) return null; // 太舊或太遠的不算
-  return { end, key: m.event.id + ':' + c.stage + ':' + c.round, round: c.round };
-}
-let fired = store.get('fired', {});
-function checkTimerAlerts() {
-  renderClock();
-  const st = timerState(); if (!st) return;
-  const rem = st.end - Date.now();
-  if (!S.alertTime) return;
-  const done = fired[st.key] || [];
-  const fire = (k, a) => { done.push(k); fired[st.key] = done; const keys = Object.keys(fired); if (keys.length > 30) delete fired[keys[0]]; store.set('fired', fired); showAlert(a); };
-  // 延長 5 分鐘：剩 1 分鐘、結束（只在剛跨過的 2 分鐘內提醒，避免重開 APP 時補發舊的）
-  const near = at => rem <= at && rem > at - 120000;
-  if (near(-OT_MS) && !done.includes('end')) return fire('end', { title: `第 ${st.round} 輪比賽結束`, sub: '延長的 5 分鐘到了，比賽結束。', tone: 'bad', sound: 'end', ttl: 20000 });
-  if (near(-OT_MS + 60000) && !done.includes('ot1')) return fire('ot1', { title: '延長剩 1 分鐘', sub: '準備結束這一局。', tone: 'warn', sound: 'warn', ttl: 8000 });
-  for (const mins of (S.alertMins || []).slice().sort((a, b) => b - a)) {
-    if (near(mins * 60000) && !done.includes(mins)) {
-      if (mins === 0) fire(0, { title: `第 ${st.round} 輪時間到`, sub: '開始延長 5 分鐘，計血頁的比分鈕會倒數。', tone: 'bad', sound: 'end', ttl: 15000 });
-      else fire(mins, { title: `第 ${st.round} 輪剩 ${mins} 分鐘`, sub: mins <= 5 ? '注意時間，準備收尾。' : '', tone: 'warn', sound: 'warn', ttl: 8000 });
-      break;
-    }
-  }
-}
-setInterval(checkTimerAlerts, 1000);
 
 function elClass(e) { return ['Fire', 'Water', 'Wind', 'Norm'].includes(e) ? 'el-' + e : ''; }
 function guessEl(deck) { const w = (deck || '').split(' ')[0]; return elClass(w); }
@@ -1590,7 +1240,7 @@ async function fetchMatch(quiet, fresh) {
   const btn = fresh ? $('#evFresh') : $('#evGo'); const old = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>';
   try {
     const j = await api(`/api/match?event=${m[1]}&pid=${encodeURIComponent(S.pid)}${fresh ? '&fresh=1' : ''}`);
-    const pc = lastMatch && lastMatch.current, nc = j.current, prevEv = lastMatch && lastMatch.event && lastMatch.event.id;
+    const pc = lastMatch && lastMatch.current, nc = j.current;
     const prevOpp = pc && pc.opp && pc.opp.id;
     // 同一輪對手變了 = 重新配對
     j._repaired = !!(pc && nc && lastMatch.event.id === j.event.id && pc.stage === nc.stage && pc.round === nc.round && (pc.opp && pc.opp.id) !== (nc.opp && nc.opp.id));
@@ -1598,54 +1248,13 @@ async function fetchMatch(quiet, fresh) {
     if (j.opponent) { lastOpp = j.opponent; store.set('lastOpp', j.opponent); }
     const newOpp = j.current && j.current.opp && j.current.opp.id;
     if (newOpp && newOpp !== prevOpp) { buzz(); if (typeof setFold === 'function') setFold('opp', false); if (L.match.opp !== newOpp) resetScore(newOpp); }
-    // 新配對提醒：自動更新時發現新的一輪（或重新配對）
-    const newRound = nc && (!pc || prevEv !== j.event.id || pc.round !== nc.round || pc.stage !== nc.stage);
-    if (quiet && S.alertPair && nc && nc.status !== 'complete' && (newRound || j._repaired)) {
-      const nm = nc.opp ? (nc.opp.name || (j.opponent && j.opponent.name) || '#' + nc.opp.id) : '';
-      showAlert({
-        title: j._repaired ? `第 ${nc.round} 輪重新配對` : `第 ${nc.round} 輪配對出來了`,
-        sub: nc.opp ? `第 ${nc.table} 桌・vs ${nm}` : '這一輪你輪空',
-        actions: [{ label: '看比賽', run: () => goTab('match') }],
-      });
-    }
     renderOpp(); renderLife(); renderStand(); renderRounds(); setAuto();
-    fetchReport(j, fresh);
   } catch (e) {
-    if (!quiet) { $('#evStatus').className = ''; $('#evStatus').innerHTML = (lastMatch ? statusHTML(lastMatch) : '') + errHTML(e); }
+    if (!quiet) { $('#evStatus').className = ''; $('#evStatus').innerHTML = (lastMatch ? statusHTML(lastMatch) : '') + `<div class="msg err">${esc(e.message)}</div>`; }
   } finally { loading = false; btn.innerHTML = old; }
 }
 // ---------- 對局過程：每一輪的對手、英雄、結果 ----------
 let histDecks = { ev: null, at: 0, data: null, busy: false };
-// ---------- 英雄屬性（11/02）----------
-// 顏色：基本屬性＋高階屬性，無屬性不標。英雄卡資料抓不到時用下面內建表（官方卡片資料 11/02 整理）。
-const EL_COLOR = { FIRE: 'var(--fire)', WATER: 'var(--water)', WIND: 'var(--wind)', TERA: 'var(--tera)', LUXEM: 'var(--luxem)', NEOS: 'var(--neos)', UMBRA: 'var(--umbra)', ASTRA: 'var(--astra)', ARCANE: 'var(--arcane)', CRUX: 'var(--crux)', EXIA: 'var(--exia)', EXALTED: 'var(--exalted)' };
-const EL_BUILTIN = (() => {
-  const t = {
-    LUXEM: ['Zander, Blinding Steel', "Zander, Corhazi's Chosen", "Guo Jia, Heaven's Favored", 'Mordred, Aurelian Regent'],
-    UMBRA: ["Ciel, Mirage's Grave", 'Tristan, Shadowdancer', 'Tristan, Shadowreaver', 'Diana, Cursebreaker', 'Diana, Duskstalker', 'Alice, Phantom Monarch'],
-    ASTRA: ['Arisanna, Astral Zenith', 'Arisanna, Lucent Arbiter', 'Diana, Moonpiercer'],
-    ARCANE: ['Lorraine, Arclight Saber', 'Rai, Storm Seer', 'Rai, Mana Weaver'],
-    CRUX: ['Lorraine, Crux Knight', 'Lorraine, Spirit Ruler', 'Merlin, Kingslayer', 'Merlin, Brilliant Vestige'],
-    EXIA: ['Dante, Hemomancer', 'Dante, Hematic Overdrive', 'Jin, Undying Resolve'],
-    TERA: ['Diao Chan, Idyll Corsage', 'Kongming, Fel Eidolon', 'Silvie, Slime Sovereign', 'Silvie, Loved by All', "Silvie, Earth's Tune", 'Lu Bu, Indomitable Titan'],
-    NEOS: ["Tonoris, Creation's Will", 'Tonoris, Genesis Aegis'],
-    EXALTED: ['Mordred, Fated Luminary', "Alice, Trifle's Royalty"],
-    FIRE: ['Polkhawk, Boisterous Riot', 'Polkhawk, Bombastic Shot', 'Aithne, Spirit of Fire', 'Hanabi, Spirit of Fire', 'Vyra, Spirit of Fire'],
-    WATER: ['Nico, Rapture\'s Embrace', 'Nico, Whiplash Allure', 'Mordred, Burnished Avenger', 'Flawless Spirit of Mordred', 'Miao, Spirit of Water', 'Sabrina, Spirit of Water', 'Minthe, Spirit of Water'],
-    WIND: ['Vanitas, Obliviate Schemer', 'Vanitas, Convergent Ruin', 'Vanitas, Dominus Rex', 'Kaze, Spirit of Wind', 'Gwendolyn, Spirit of Wind', 'Brissa, Spirit of Wind'],
-  };
-  const m = {}; for (const k in t) t[k].forEach(n => { m[n] = k; }); return m;
-})();
-function heroEl(name) {
-  const c = (CHAMPS || store.get('champs', []) || []).find(x => x && x.name === name);
-  let e = c && c.element ? String(c.element).toUpperCase() : '';
-  if (!e || e === 'NORM') e = EL_BUILTIN[name] || e;
-  if (!e || e === 'NORM') { const m = /Spirit of .*?(Fire|Water|Wind)$/.exec(name); if (m) e = m[1].toUpperCase(); }
-  return EL_COLOR[e] ? e : '';
-}
-const elDot = e => e ? `<i class="ed ${e}" style="--c:${EL_COLOR[e]}"></i>` : '';
-window.GA_EL = { heroEl, elDot, EL_COLOR }; // 給 deck.js 用
-
 // 完整英雄鍊：依等級排序，同等級用「／」，最高等級加粗＋屬性色點
 function heroChain(e) {
   const info = {}; (CHAMPS || store.get('champs', []) || []).forEach(c => { if (c && c.name) info[c.name] = c; });
@@ -1657,7 +1266,7 @@ function heroChain(e) {
   list.forEach(x => { const g = groups[groups.length - 1]; if (g && g.lv === x.lv && x.lv != null) g.cards.push(x); else groups.push({ lv: x.lv, cards: [x] }); });
   const cls = EL_CLS[(e.elements || [])[0]] || '';
   return `<span class="chain ${cls}">${groups.map((g, k) => `${k ? '<span class="ar">→</span>' : ''}<span>${g.lv != null ? `<span class="lv">Lv${g.lv}</span>` : ''}${g.cards.map(x =>
-    `<span class="c ${known && x.lv === maxLv && maxLv > 0 ? 'top' : ''}">${elDot(heroEl(x.n))}${esc(x.n)}</span>`).join('<span class="sl">／</span>')}</span>`).join('')}</span>`;
+    `<span class="c ${known && x.lv === maxLv && maxLv > 0 ? 'top' : ''}">${esc(x.n)}</span>`).join('<span class="sl">／</span>')}</span>`).join('')}</span>`;
 }
 function topHero(list) {
   const lv = {}; (CHAMPS || store.get('champs', []) || []).forEach(c => { if (c && c.name) lv[c.name] = c.level ?? 0; });
@@ -1753,7 +1362,7 @@ async function fetchStand(fresh) {
   if (!ev) { box.className = ''; box.innerHTML = '<div class="msg err">先在上面貼上賽事網址。</div>'; return; }
   const btn = fresh ? $('#standFresh') : $('#standGo'); const old = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>';
   try { lastStand = await api(`/api/standings?event=${ev}${fresh ? '&fresh=1' : ''}`); store.set('lastStand', lastStand); renderStand(); }
-  catch (e) { box.className = ''; box.innerHTML = errHTML(e); }
+  catch (e) { box.className = ''; box.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
   finally { btn.innerHTML = old; }
 }
 // ---------- 晉級計算器（瑞士輪模擬）----------
@@ -1867,7 +1476,7 @@ renderStand();
 $('#evGo').onclick = () => fetchMatch(false);
 $('#evFresh').onclick = () => fetchMatch(false, true);
 $('#evInput').onkeydown = e => { if (e.key === 'Enter') fetchMatch(false); };
-$('#autoRef').checked = !!store.get('auto', !!S.alertPair);
+$('#autoRef').checked = !!store.get('auto', false);
 // 等配對（本輪已結束或還沒配對）時 30 秒抓一次；對戰進行中 3 分鐘抓一次（防重新配對），省額度
 function setAuto() {
   clearTimeout(autoTimer); store.set('auto', $('#autoRef').checked);
@@ -1891,7 +1500,7 @@ async function manual() {
     }
     const hits = await api('/api/search?q=' + encodeURIComponent(q));
     out.innerHTML = hits.length ? hits.slice(0, 15).map(h => `<button data-slug="${esc(h.slug)}"><span style="min-width:0"><b>${esc(h.name)}</b><br>${pill(h.deck)}</span><span class="muted small" style="text-align:right;flex:none">${h.elo ?? '–'} ELO<br>${h.events ?? 0} 場</span></button>`).join('') : '<p class="empty">找不到符合的玩家。</p>';
-  } catch (e) { out.innerHTML = errHTML(e); }
+  } catch (e) { out.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
 }
 $('#qGo').onclick = manual;
 $('#qInput').onkeydown = e => { if (e.key === 'Enter') manual(); };
@@ -1922,29 +1531,10 @@ function renderSettings() {
     <h1>設定</h1>
     <div class="card">
       <h2>玩家</h2>
-      <label class="fld">我的 GA 編號（Omnidex 個人頁的 # 數字）<input id="sPid" inputmode="numeric" value="${esc(S.pid)}" placeholder="例如 3753" ${store.get('lockPid', '') ? 'readonly' : ''}></label>
-      <div class="muted small" id="sPidLock" ${store.get('lockPid', '') ? '' : 'hidden'}>🔒 已跟邀請碼綁定，要更改請找管理員。</div>
+      <label class="fld">我的 GA 編號（Omnidex 個人頁的 # 數字）<input id="sPid" inputmode="numeric" value="${esc(S.pid)}" placeholder="例如 3753"></label>
       <label class="fld">計血器上顯示的名字<input id="sName" value="${esc(S.myName)}" placeholder="留空顯示「我」"></label>
       <button class="btn" id="sCheck">用編號查我的資料</button>
       <div id="sMsg"></div>
-    </div>
-    <div class="card" id="memCard">
-      <h2>會員</h2>
-      <div id="memBox"><p class="empty"><span class="spin"></span> 檢查中…</p></div>
-      <button class="adm-link" id="admToggle">${store.get('admin', '') ? '管理員設定' : '我是管理員'}</button>
-      <div id="admKeyBox" hidden>
-        <label class="fld">管理員金鑰（Cloudflare 裡設定的 ADMIN_KEY）<input id="sAdm" type="password" autocomplete="off" value="${esc(store.get('admin', ''))}" placeholder="只存在這支手機"></label>
-        <div class="row"><button class="btn pri" id="sAdmSave" style="flex:1">登入</button><button class="btn" id="sAdmOut" style="flex:1">登出管理員</button></div>
-        <div id="sAdmMsg"></div>
-      </div>
-    </div>
-    <div class="card ${store.get('admFold', false) ? 'afold' : ''}" id="admCard" hidden>
-      <div class="fold-head" id="admHead"><h2>會員管理</h2><span class="muted small" id="admSum"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
-      <div id="admBox"></div>
-    </div>
-    <div class="card" id="idxCard" hidden>
-      <h2>賽事索引（自動找比賽用）</h2>
-      <div id="idxBox"></div>
     </div>
     <div class="card">
       <h2>計血</h2>
@@ -1969,14 +1559,9 @@ function renderSettings() {
       <div id="sApiMsg"></div>
     </div>
     <div class="card">
-      <h2>提醒</h2>
-      <div class="toggle"><span>回合時間提醒</span><input type="checkbox" id="sAlT" style="width:auto" ${S.alertTime ? 'checked' : ''}></div>
-      <div class="muted small">剩幾分鐘時提醒（可複選）</div>
-      <div class="chips" id="sAlM">${[15, 10, 5, 0].map(n => `<button class="chip ${(S.alertMins || []).includes(n) ? 'on' : ''}" data-m="${n}">${n ? '剩 ' + n + ' 分' : '時間到'}</button>`).join('')}</div>
-      <div class="toggle"><span>新配對與回報提醒（會一起打開自動更新配對）</span><input type="checkbox" id="sAlP" style="width:auto" ${S.alertPair ? 'checked' : ''}></div>
-      <div class="toggle"><span>提示音</span><input type="checkbox" id="sSnd" style="width:auto" ${S.sound ? 'checked' : ''}></div>
-      <button class="btn" id="sAlTry">試一下提醒</button>
-      <p class="muted small" style="margin:0">APP 要開著才會提醒（螢幕關掉或切到別的 APP 時不會響）。iPhone 不支援震動，只有畫面和聲音；靜音模式下可能沒有聲音。</p>
+      <h2>開場畫面</h2>
+      <div class="splash-pick" id="sSplash">${[['l1', '經典'], ['l2', '星光'], ['l3', '簡約'], ['off', '不顯示']].map(([k, t]) => `<button data-sp="${k}" class="${S.splash === k ? 'on' : ''}">${t}</button>`).join('')}</div>
+      <button class="btn" id="sSplashTry">預覽開場畫面</button>
     </div>
     <div class="card">
       <h2>版本</h2>
@@ -1986,34 +1571,27 @@ function renderSettings() {
         <span>離線可用</span><span id="swState">檢查中…</span>
       </div>
       <button class="btn" id="sUpd">檢查更新</button>
-      <button class="btn" id="sChg">更新紀錄</button>
-      <button class="btn" id="sIntro">再看一次使用介紹</button>
       <div id="sUpdMsg"></div>
     </div>
     <p class="muted small" style="text-align:center">所有設定改了就會儲存。</p>
     <div class="credit">by 塵世迷途小書僮</div>`;
-  $('#sAlT').onchange = e => { S.alertTime = e.target.checked; saveS(); };
-  $('#sAlM').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; const n = +b.dataset.m; const L2 = new Set(S.alertMins || []); L2.has(n) ? L2.delete(n) : L2.add(n); S.alertMins = [...L2]; saveS(); b.classList.toggle('on', L2.has(n)); };
-  $('#sAlP').onchange = e => { S.alertPair = e.target.checked; saveS(); if (S.alertPair && !$('#autoRef').checked) { $('#autoRef').checked = true; setAuto(); } };
-  $('#sSnd').onchange = e => { S.sound = e.target.checked; saveS(); if (S.sound) beep('soft'); };
-  $('#sAlTry').onclick = () => showAlert({ title: '第 4 輪配對出來了', sub: '第 7 桌・vs 範例對手（這是測試）', actions: [{ label: '看比賽', run: () => goTab('match') }] });
+  $('#sSplash').onclick = e => { const b = e.target.closest('[data-sp]'); if (!b) return; S.splash = b.dataset.sp; saveS(); $('#sSplash').querySelectorAll('[data-sp]').forEach(x => x.classList.toggle('on', x === b)); playSplash(); };
+  $('#sSplashTry').onclick = playSplash;
   swStatus();
   $('#sUpd').onclick = checkUpdate;
-  $('#sIntro').onclick = () => showIntro();
-  $('#sChg').onclick = () => showChanges(true);
   const hint = () => { $('#sModeHint').textContent = (L.mode === 'dmg' ? '傷害計數：從 0 往上加。' : '剩餘血量：從起始血量往下扣。') + `切換時用英雄生命（沒選英雄就用起始血量 ${S.start}）換算目前的數字。`; };
   hint();
   $('#sMode').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; setMode(b.dataset.m); $('#sMode').querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b)); hint(); buzz(); };
   $('#sStart').onclick = e => { const b = e.target.closest('[data-n]'); if (!b) return; S.start = +b.dataset.n; saveS(); $('#sStart').querySelectorAll('[data-n]').forEach(x => x.classList.toggle('on', x === b)); hint(); };
   $('#sFlip').onchange = e => { S.flip = e.target.checked; saveS(); $('#side-1').classList.toggle('flip', S.flip); };
   $('#sCompact').onchange = e => { S.compact = e.target.checked; saveS(); applyCompact(); };
-  $('#sPid').onchange = e => { if (store.get('lockPid', '')) { e.target.value = S.pid; return; } S.pid = e.target.value.replace(/\D/g, ''); e.target.value = S.pid; saveS(); renderOpp(); };
+  $('#sPid').onchange = e => { S.pid = e.target.value.replace(/\D/g, ''); e.target.value = S.pid; saveS(); renderOpp(); };
   $('#sName').onchange = e => { S.myName = e.target.value.trim(); saveS(); renderLife(); };
   $('#sSeason').onchange = e => { if (e.target.value) { S.season = e.target.value; saveS(); renderOpp(); } };
   $('#sHi').onchange = e => { const n = +e.target.value; if (n) { S.hiElo = n; saveS(); renderOpp(); } };
   $('#sApi').onchange = e => { S.api = e.target.value.trim().replace(/\/+$/, ''); store.set('api', S.api); saveS(); CHAMPS = null; };
   $('#sCheck').onclick = async () => {
-    if (!store.get('lockPid', '')) { S.pid = $('#sPid').value.replace(/\D/g, ''); saveS(); renderOpp(); }
+    S.pid = $('#sPid').value.replace(/\D/g, ''); saveS(); renderOpp();
     if (!S.pid) return;
     const p = await verifyPid(S.pid, $('#sMsg'));
     if (p && !S.myName) { S.myName = p.name; $('#sName').value = p.name; saveS(); renderLife(); }
@@ -2026,173 +1604,7 @@ function renderSettings() {
     try { await api('/api/search?q=ab'); m.innerHTML = `<div class="msg">連線成功：${esc(apiBase())}</div>`; }
     catch (e) { m.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
   };
-  $('#admToggle').onclick = () => { const b = $('#admKeyBox'); b.hidden = !b.hidden; };
-  $('#sAdmSave').onclick = async () => {
-    const k = $('#sAdm').value.trim(); const msg = $('#sAdmMsg');
-    if (!k) { msg.innerHTML = '<div class="msg err">請輸入管理員金鑰。</div>'; return; }
-    store.set('admin', k); msg.innerHTML = '<p class="empty"><span class="spin"></span> 確認中…</p>';
-    try { await api('/api/admin/list'); msg.innerHTML = '<div class="msg">管理員登入成功。</div>'; $('#admKeyBox').hidden = true; renderMember(); }
-    catch (e) { store.set('admin', ''); msg.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; $('#admCard').hidden = true; }
-  };
-  $('#sAdmOut').onclick = () => { store.set('admin', ''); $('#sAdm').value = ''; $('#sAdmMsg').innerHTML = '<div class="msg">已登出管理員。</div>'; $('#admCard').hidden = true; $('#idxCard').hidden = true; renderMember(); };
-  $('#admHead').onclick = () => { const c = $('#admCard'); c.classList.toggle('afold'); store.set('admFold', c.classList.contains('afold')); };
-  renderMember();
 }
-// ---------- 會員（邀請碼）----------
-const fmtT = iso => { if (!iso) return '—'; const d = new Date(iso); if (isNaN(d)) return '—'; const p = n => String(n).padStart(2, '0'); const today = new Date().toDateString() === d.toDateString(); return today ? `今天 ${p(d.getHours())}:${p(d.getMinutes())}` : `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
-// GA 編號鎖定：會員只能用邀請碼綁定的編號（伺服器也會檢查）；管理員或開放模式不鎖
-function setPidLock(pid) {
-  pid = pid ? String(pid) : ''; store.set('lockPid', pid);
-  if (pid && S.pid !== pid) { S.pid = pid; saveS(); renderOpp(); }
-  const inp = $('#sPid'); if (!inp) return;
-  inp.readOnly = !!pid; if (pid) inp.value = pid;
-  const h = $('#sPidLock'); if (h) h.hidden = !pid;
-}
-async function renderMember() {
-  const box = $('#memBox'); if (!box) return;
-  try {
-    const j = await api('/api/me');
-    if (!$('#memBox')) return;
-    if (j.open || j.admin) setPidLock('');
-    if (j.open) { box.innerHTML = '<p class="muted small" style="margin:0">目前所有人都能用，不需要邀請碼。</p>'; $('#admCard').hidden = true; return; }
-    if (j.admin) {
-      box.innerHTML = '<div class="mem-st"><span>身分</span><b>管理員（這支手機）</b></div>';
-      $('#admCard').hidden = false; renderAdmin(); $('#idxCard').hidden = false; renderIndex(); return;
-    }
-    const m = j.member; store.set('memberInfo', m); store.set('needInvite', false); setPidLock(m.pid);
-    box.innerHTML = `<div class="mem-st">
-        <span>狀態</span><b style="color:var(--good)">已加入</b>
-        <span>邀請碼</span><b class="code">${esc(m.code)}</b>
-        <span>綁定</span><b>GA #${esc(m.pid)}${m.name ? '・' + esc(m.name) : ''}</b>
-        <span>裝置</span><b>${m.devices} / 3 支</b>
-      </div>
-      <button class="btn" id="memOut">這支手機登出</button>
-      <p class="muted small" style="margin:0">同一組邀請碼最多 3 支手機；換手機時在新手機輸入同一組就好，最舊的那支會自動登出。</p>`;
-    $('#memOut').onclick = () => { store.set('member', ''); store.set('memberInfo', null); setPidLock(''); renderMember(); };
-  } catch (e) {
-    if (!$('#memBox')) return;
-    if (e.code === 'need-invite') {
-      box.innerHTML = joinGateHTML(store.get('member', '') ? '<div class="msg err">原本的會員金鑰失效了（邀請碼可能被停用或解除綁定），請重新輸入。</div>' : '');
-      if (store.get('member', '')) store.set('member', '');
-    } else box.innerHTML = `<div class="msg err">${esc(e.message)}</div>`;
-  }
-}
-const ADM = { list: null, made: [], n: 1 };
-async function renderAdmin(reload = true) {
-  const box = $('#admBox'); if (!box) return;
-  if (reload || !ADM.list) {
-    if (!ADM.list) box.innerHTML = '<p class="empty"><span class="spin"></span> 載入中…</p>';
-    try { ADM.list = (await api('/api/admin/list')).members || []; }
-    catch (e) { box.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
-  }
-  const L2 = ADM.list, td = new Date().toDateString();
-  const isToday = m => m.today > 0 || (m.seen && new Date(m.seen).toDateString() === td);
-  const used = L2.filter(m => m.pid), unused = L2.filter(m => !m.pid && !m.disabled), off = L2.filter(m => m.disabled);
-  const act = used.filter(m => !m.disabled && isToday(m)).length;
-  const made = (ADM.made || []).map(c => L2.find(m => m.code === c)).filter(Boolean);
-  const f = ADM.f || 'all', q = (ADM.q || '').trim().toLowerCase();
-  const hit = m => !q || [m.gaName, m.name, m.note, m.code, m.pid].some(v => String(v || '').toLowerCase().includes(q));
-  let rows = used.filter(m => (f === 'all' || (f === 'on' && !m.disabled) || (f === 'off' && m.disabled)) && hit(m));
-  rows.sort((x, y) => (x.disabled - y.disabled) || String(y.seen || y.bound || '').localeCompare(String(x.seen || x.bound || '')));
-  const spare = (f === 'all' || f === 'new') ? unused.filter(hit) : [];
-  const sumEl = $('#admSum'); if (sumEl) sumEl.textContent = `${used.length} 人・今天 ${act}`;
-  const lim = ADM.lim || 10, more = rows.length - lim; if (!q && more > 0) rows = rows.slice(0, lim);
-  const seg = [['all', '全部', L2.length], ['on', '使用中', used.length - off.filter(m => m.pid).length], ['new', '還沒用', unused.length], ['off', '停用', off.length]];
-  box.innerHTML = `
-    <div class="adm-sum"><div><b>${used.length}</b><span>已加入</span></div><div><b class="g">${act}</b><span>今天有用</span></div><div><b>${unused.length}</b><span>還沒用</span></div><div><b>${off.length}</b><span>停用</span></div></div>
-    <details class="adm-mk" ${made.length || !L2.length ? 'open' : ''}><summary><span>＋ 產生邀請碼</span><small>對方加入時自己填暱稱和 GA 編號</small></summary>
-      <div class="row"><div class="chips" id="admN" style="flex:1">${[1, 5, 10].map(n => `<button class="chip ${ADM.n === n ? 'on' : ''}" data-n="${n}">${n} 組</button>`).join('')}<input id="admNum" type="number" inputmode="numeric" min="1" max="20" placeholder="自訂" value="${[1, 5, 10].includes(ADM.n) ? '' : ADM.n}" style="width:72px"></div>
-        <button class="btn pri" id="admMake" style="flex:none">產生</button></div>
-      ${made.length ? `<div class="adm-new"><div class="muted small">剛產生的 ${made.length} 組</div>
-        ${made.map(m => `<div class="sp-r"><span class="code">${esc(m.code)}</span><button data-cp="${esc(m.code)}">複製</button><button data-inv="${esc(m.code)}">邀請訊息</button></div>`).join('')}
-        ${made.length > 1 ? `<button class="btn" data-cpall="1">複製全部 ${made.length} 組</button>` : ''}</div>` : ''}
-    </details>
-    <div class="adm-bar"><div class="seg" id="admF">${seg.map(([k, t, n]) => `<button class="${f === k ? 'on' : ''}" data-f="${k}">${t}<small>${n}</small></button>`).join('')}</div>
-      <button class="icon-btn" id="admRe" aria-label="重新整理" title="重新整理"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button></div>
-    <input id="admQ" class="adm-q" placeholder="搜尋名字、GA 編號、暱稱、邀請碼" value="${esc(ADM.q || '')}">
-    ${f !== 'new' ? `<div class="mlist">${rows.length ? rows.map(memRow).join('') : `<p class="empty">${q ? '找不到符合的會員。' : f === 'off' ? '沒有停用的邀請碼。' : '還沒有人加入。'}</p>`}${!q && more > 0 ? `<button class="btn" id="admMore">再顯示 ${Math.min(more, 10)} 位（還有 ${more} 位）</button>` : ''}</div>` : ''}
-    ${spare.length ? `<div class="sp-h">還沒用的邀請碼 <b>${spare.length}</b></div><div class="sp-list">${spare.map(m => `<div class="sp-r" data-code="${esc(m.code)}"><span class="code">${esc(m.code)}</span>${m.note ? `<span class="muted small sp-nt">${esc(m.note)}</span>` : '<span class="sp-nt"></span>'}<button data-cp="${esc(m.code)}">複製</button><button data-inv="${esc(m.code)}">邀請</button><button data-act="del" class="dz">刪除</button></div>`).join('')}</div>` : ''}
-    <p class="muted small" style="margin:0">使用次數每 50 次或 30 分鐘寫回一次，會比實際晚一點。</p>`;
-  $('#admN').onclick = e => { const c = e.target.closest('[data-n]'); if (!c) return; ADM.n = +c.dataset.n; $('#admNum').value = ''; $('#admN').querySelectorAll('[data-n]').forEach(x => x.classList.toggle('on', x === c)); };
-  $('#admNum').oninput = e => { const v = parseInt(e.target.value, 10); if (v) { ADM.n = Math.max(1, Math.min(20, v)); $('#admN').querySelectorAll('[data-n]').forEach(x => x.classList.remove('on')); } };
-  $('#admMake').onclick = async () => {
-    const b = $('#admMake'); b.disabled = true;
-    try { const j = await api('/api/admin/create', { body: { count: ADM.n } }); const list = j.members || [j.member]; ADM.made = list.map(m => m.code); ADM.list.unshift(...list); renderAdmin(false); }
-    catch (e) { alertMsg(e.message); }
-    finally { b.disabled = false; }
-  };
-  $('#admF').onclick = e => { const c = e.target.closest('[data-f]'); if (!c) return; ADM.f = c.dataset.f; ADM.lim = 10; renderAdmin(false); };
-  $('#admQ').oninput = e => { ADM.q = e.target.value; clearTimeout(ADM.qt); ADM.qt = setTimeout(() => { renderAdmin(false); const i = $('#admQ'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 250); };
-  $('#admRe').onclick = () => renderAdmin(true);
-  const mb = $('#admMore'); if (mb) mb.onclick = () => { ADM.lim = (ADM.lim || 10) + 10; renderAdmin(false); };
-}
-// 會員一列：GA 名字#編號、暱稱與備註、邀請碼與時間、使用量；點一下展開操作
-function memRow(m) {
-  const td = new Date().toDateString(), live = m.today > 0 || (m.seen && new Date(m.seen).toDateString() === td);
-  const st = m.disabled ? 'off' : live ? 'live' : '';
-  const who = m.gaName || m.name || '';
-  const sub = [m.gaName && m.name && m.name !== m.gaName ? `暱稱 ${esc(m.name)}` : '', m.note ? `備註 ${esc(m.note)}` : ''].filter(Boolean).join('・');
-  const open = ADM.open === m.code;
-  return `<div class="mr ${st} ${open ? 'open' : ''}" data-code="${esc(m.code)}">
-    <div class="mr-top" data-act="toggle">
-      <span class="mr-dot" title="${m.disabled ? '停用' : live ? '今天有用' : ''}"></span>
-      <span class="mr-n">${esc(who)}<span class="mr-id">#${esc(m.pid)}</span></span>
-      <span class="mr-st">${m.disabled ? '停用' : live ? '今天 ' + fmtT(m.seen).replace('今天 ', '') : fmtT(m.seen)}</span>
-    </div>
-    ${sub ? `<div class="mr-sub">${sub}</div>` : ''}
-    <div class="mr-meta"><span class="code">${esc(m.code)}</span><span>${fmtT(m.bound)} 加入</span></div>
-    <div class="mr-use"><span>今天 <b>${m.today}</b></span><span>累計 <b>${m.total}</b></span><span>手機 <b>${m.devices}</b>/3</span><button class="mr-more" data-act="toggle" aria-label="更多">${open ? '收起' : '管理'}</button></div>
-    ${open ? `<div class="mi-a">
-      <button data-act="${m.disabled ? 'enable' : 'disable'}">${m.disabled ? '啟用' : '停用'}</button>
-      <button data-act="note">備註</button>
-      <button data-act="unbind">解除綁定</button>
-      <button data-act="del" class="dz">刪除</button>
-    </div>` : ''}
-  </div>`;
-}
-function alertMsg(t) { showAlert({ title: t, tone: 'bad', ttl: 5000, sound: '' }); }
-async function copyText(t) {
-  try { await navigator.clipboard.writeText(t); return true; }
-  catch (e) { const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e2) {} ta.remove(); return ok; }
-}
-const inviteText = code => `【GA 比賽助手】邀請碼：${code}\n1. 用 iPhone Safari 打開 ${location.origin + location.pathname}\n2. 分享 → 加入主畫面，從主畫面打開\n3. 「設定」填你的 GA 編號\n4. 「設定 → 會員」輸入邀請碼\n（這組邀請碼會綁定你的 GA 編號，請不要轉給別人）`;
-document.addEventListener('click', async e => {
-  const cp = e.target.closest('[data-cp],[data-inv],[data-cpall]');
-  if (cp && cp.closest('#admBox')) {
-    const ok = await copyText(cp.dataset.cpall ? ADM.made.join('\n') : cp.dataset.cp ? cp.dataset.cp : inviteText(cp.dataset.inv));
-    const t = cp.textContent; cp.textContent = ok ? '已複製' : '複製失敗'; setTimeout(() => { cp.textContent = t; }, 1500); return;
-  }
-  const b = e.target.closest('#admBox [data-act]'); if (!b) return;
-  const code = b.closest('[data-code]').dataset.code, act = b.dataset.act;
-  if (act === 'toggle') { ADM.open = ADM.open === code ? null : code; renderAdmin(false); return; }
-  if (act === 'note') { // 備註：在這張卡片裡直接改
-    const mi = b.closest('[data-code]'); if (mi.querySelector('.mi-note')) return;
-    const cur = (ADM.list.find(m => m.code === code) || {}).note || '';
-    mi.insertAdjacentHTML('beforeend', `<div class="row mi-note"><input maxlength="40" value="${esc(cur)}" placeholder="備註（只有你看得到）"><button class="btn pri" data-act="notesave" style="flex:none">存</button></div>`);
-    mi.querySelector('.mi-note input').focus(); return;
-  }
-  if (act === 'notesave') {
-    b.disabled = true;
-    try { const j = await api('/api/admin/update', { body: { code, note: b.closest('.mi-note').querySelector('input').value.trim() } }); const i = ADM.list.findIndex(m => m.code === code); if (i >= 0) ADM.list[i] = j.member; renderAdmin(false); }
-    catch (err) { alertMsg(err.message); b.disabled = false; }
-    return;
-  }
-  if (act === 'del' || act === 'unbind') {
-    if (!b.classList.contains('arm')) { // 要按兩次，避免誤刪
-      const t = b.textContent; b.classList.add('arm'); b.textContent = act === 'del' ? '再按一次刪除' : '再按一次解除';
-      setTimeout(() => { if (b.isConnected) { b.classList.remove('arm'); b.textContent = t; } }, 3000); return;
-    }
-  }
-  b.disabled = true;
-  try {
-    if (act === 'del') { await api('/api/admin/delete', { body: { code } }); ADM.list = ADM.list.filter(m => m.code !== code); ADM.made = ADM.made.filter(c => c !== code); }
-    else {
-      const body = act === 'unbind' ? { code, unbind: true } : { code, disabled: act === 'disable' };
-      const j = await api('/api/admin/update', { body }); const i = ADM.list.findIndex(m => m.code === code); if (i >= 0) ADM.list[i] = j.member;
-    }
-    renderAdmin(false);
-  } catch (err) { alertMsg(err.message); b.disabled = false; }
-});
 // ---------- 摺疊 ----------
 const FOLD_DEFAULT = { match: false, hist: false, stand: true, calc: true, opp: false, manual: true }; // true = 收合
 let folds = Object.assign({}, FOLD_DEFAULT, store.get('folds', {}));
@@ -2261,165 +1673,6 @@ function playSplash() {
   sp.className = 'sp-off'; void sp.offsetWidth; sp.className = 'sp-' + S.splash; // 重新播動畫
   setTimeout(() => sp.classList.add('out'), 500);
 }
-// ---------- 賽事索引（管理員）----------
-const IDX = { st: null, run: null };
-async function renderIndex(reload = true) {
-  const box = $('#idxBox'); if (!box) return;
-  if (reload) { try { IDX.st = await api('/api/index/status'); } catch (e) { box.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; } }
-  const st = IDX.st || {}, run = IDX.run;
-  const cs = Object.entries(st.countries || {}).sort((a, b) => b[1] - a[1]);
-  const top = cs.slice(0, 6).map(([c, n]) => `<span><b>${n}</b> ${esc(ccName(c))}</span>`).join('');
-  box.innerHTML = `
-    ${st.ready ? `<div class="mem-st"><span>狀態</span><b style="color:var(--good)">運作中</b><span>上次更新</span><b>${fmtT(st.updated)}</b><span>已掃到</span><b>#${esc(st.lastId)}</b><span>未完賽</span><b>${st.open || 0} 場（${cs.length} 個國家）</b></div>
-      <div class="idx-cc">${top}</div>`
-    : `<p class="muted small" style="margin:0">還沒建立。第一次要往回掃約 8 週的賽事（約 5,000 個編號），按下去手機會自動分批跑完，大約 3 分鐘，期間請不要關掉 APP。之後 Cloudflare 每小時自動更新。</p>`}
-    ${run ? `<div class="idx-bar"><i style="width:${Math.min(100, Math.round(run.done / run.total * 100))}%"></i></div><div class="muted small">掃描中 ${run.done} / ${run.total}・已找到 ${run.found} 場未完賽</div>` : ''}
-    <button class="btn ${st.ready ? '' : 'pri'}" id="idxBuild" ${run ? 'disabled' : ''}>${run ? '建立中…' : st.ready ? '重新建立索引' : '建立賽事索引'}</button>
-    ${st.ready && !st.cron ? '<div class="msg err">還沒設定每小時排程：Cloudflare → ga-helper → 設定 → 觸發事件 → 新增 Cron 觸發條件 → 每小時。</div>' : ''}`;
-  $('#idxBuild').onclick = buildIndex;
-}
-async function buildIndex() {
-  if (IDX.run) return;
-  try {
-    const s0 = await api('/api/index/build', { body: { start: true } });
-    IDX.run = { done: 0, total: s0.total, found: 0, cursor: s0.cursor }; renderIndex(false);
-    while (IDX.run && IDX.run.cursor) {
-      const j = await api('/api/index/build', { body: { cursor: IDX.run.cursor } });
-      IDX.run.done = j.done; IDX.run.total = Math.max(j.total || 0, j.done || 0, 1); IDX.run.found = j.found; IDX.run.cursor = j.cursor; renderIndex(false);
-    }
-    IDX.run = null; renderIndex(true);
-  } catch (e) { IDX.run = null; alertMsg(e.message); renderIndex(true); }
-}
-// ---------- 自動找比賽（11/04）----------
-// 地區：手機時區 → 網路位置（Worker 回傳）→ 手動選；索引由 Worker 每小時排程整理「各國還沒完賽的賽事」
-const CC_NAME = { TW: '台灣', JP: '日本', HK: '香港', MY: '馬來西亞', SG: '新加坡', KR: '韓國', CN: '中國', TH: '泰國', PH: '菲律賓', ID: '印尼', VN: '越南', AU: '澳洲', NZ: '紐西蘭', US: '美國', CA: '加拿大', GB: '英國', DE: '德國', FR: '法國', NL: '荷蘭', BE: '比利時', ES: '西班牙', IT: '義大利', PL: '波蘭', BR: '巴西', MX: '墨西哥' };
-const TZ_CC = { 'Asia/Taipei': 'TW', 'Asia/Tokyo': 'JP', 'Asia/Hong_Kong': 'HK', 'Asia/Macau': 'HK', 'Asia/Kuala_Lumpur': 'MY', 'Asia/Kuching': 'MY', 'Asia/Singapore': 'SG', 'Asia/Seoul': 'KR', 'Asia/Shanghai': 'CN', 'Asia/Bangkok': 'TH', 'Asia/Manila': 'PH', 'Asia/Jakarta': 'ID', 'Asia/Ho_Chi_Minh': 'VN', 'Australia/Sydney': 'AU', 'Australia/Melbourne': 'AU', 'Australia/Brisbane': 'AU', 'Australia/Perth': 'AU', 'Pacific/Auckland': 'NZ', 'Europe/London': 'GB', 'Europe/Berlin': 'DE', 'Europe/Paris': 'FR', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE', 'Europe/Madrid': 'ES', 'Europe/Rome': 'IT', 'Europe/Warsaw': 'PL', 'America/Sao_Paulo': 'BR', 'America/Mexico_City': 'MX', 'America/Toronto': 'CA', 'America/Vancouver': 'CA' };
-function regionAuto() {
-  let tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
-  if (TZ_CC[tz]) return { cc: TZ_CC[tz], how: '手機時區' };
-  if (/^America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Detroit)/.test(tz) || tz === 'Pacific/Honolulu') return { cc: 'US', how: '手機時區' };
-  const n = store.get('netCC', ''); if (n) return { cc: n, how: '網路位置' };
-  return { cc: 'TW', how: '預設' };
-}
-const region = () => S.region ? { cc: S.region, how: '手動' } : regionAuto();
-const FD = { st: '', data: null, err: '', next: 0, until: 0, timer: null, tries: 0, all: false };
-const ccName = c => CC_NAME[c] || c;
-const fdTime = iso => { const d = new Date(iso); if (isNaN(d)) return ''; const p = n => String(n).padStart(2, '0'); const td = new Date(); const day = d.toDateString() === td.toDateString() ? '今天' : `${d.getMonth() + 1}/${d.getDate()}`; return `${day} ${p(d.getHours())}:${p(d.getMinutes())}`; };
-// 需要找嗎：還沒有比賽、或上一場已經完賽／超過 12 小時
-function needFind() {
-  if (!S.pid) return false;
-  const m = lastMatch; if (!m || !m.event) return true;
-  if (m.event.status === 'complete' || m.event.status === 'canceled') return true;
-  return Date.now() - (m._recv || 0) > 12 * 3600e3;
-}
-async function findEvent(opt = {}) {
-  if (!S.pid || !apiBase()) return;
-  clearTimeout(FD.timer); FD.st = 'busy'; FD.all = !!opt.all; renderFind();
-  try {
-    const r = region();
-    let j = await api(`/api/find?pid=${encodeURIComponent(S.pid)}&cc=${FD.all ? 'ALL' : r.cc}`);
-    if (j.netCC) store.set('netCC', j.netCC);
-    // 今天的賽事很多時分頁找（每頁約 40 場），找到就停，最多 6 頁
-    for (let pg = 1; j.indexReady && j.more && !(j.events || []).length && pg <= 5; pg++) {
-      const k = await api(`/api/find?pid=${encodeURIComponent(S.pid)}&cc=${FD.all ? 'ALL' : r.cc}&page=${pg}`);
-      j = { ...k, events: k.events || [], checked: k.checked };
-    }
-    FD.data = j; FD.err = '';
-    const evs = j.events || [];
-    if (!j.indexReady) FD.st = 'noidx';
-    else if (evs.length === 1) { FD.st = 'one'; pickEvent(evs[0], true); }
-    else if (evs.length > 1) FD.st = 'many';
-    else { FD.st = 'none'; scheduleRetry(); }
-  } catch (e) { FD.st = 'err'; FD.err = e.message; FD.errObj = e; }
-  renderFind();
-}
-function scheduleRetry() {
-  if (!FD.until) FD.until = Date.now() + 30 * 60e3;
-  if (Date.now() > FD.until) { FD.st = 'gaveup'; return; }
-  FD.next = Date.now() + 120e3; FD.tries++;
-  FD.timer = setTimeout(() => { if (needFind()) findEvent({ all: FD.all }); }, 120e3);
-}
-function pickEvent(ev, auto) {
-  FD.picked = ev; FD.until = 0; clearTimeout(FD.timer);
-  $('#evInput').value = String(ev.id); store.set('event', String(ev.id));
-  if (!auto) FD.st = 'one';
-  fetchMatch(true);
-}
-function evCard(ev, btn) {
-  const on = ev.status === 'started';
-  return `<${btn ? 'button' : 'div'} class="fd-ev" ${btn ? `data-pick="${esc(ev.id)}"` : ''}><b>${esc(ev.name || '#' + ev.id)}</b><span class="st ${on ? 'on' : ''}">${on ? '進行中' : '報名中'}</span>
-    <span>${esc(ev.host || '')}${ev.date ? '・' + fdTime(ev.date) + (on ? ' 開打' : ' 開始') : ''}${ev.players ? '・' + ev.players + ' 人' : ''}</span></${btn ? 'button' : 'div'}>`;
-}
-function renderFind() {
-  const box = $('#evFind'); if (!box) return;
-  const r = region(), loc = `<div class="fd-loc">📍 目前地區：${esc(ccName(r.cc))}（${r.how === '手動' ? '手動' : '自動・' + r.how}）<button data-fd="region">更改</button></div>`;
-  const d = FD.data || {};
-  const where = FD.all ? '全部國家' : ccName(r.cc);
-  let h = '';
-  if (FD.st === 'busy') h = `<div class="fd"><div class="fd-h"><span class="spin"></span>正在找你的比賽…<small>${esc(where)}</small></div>${loc}</div>`;
-  else if (FD.st === 'one' && FD.picked) h = `<div class="fd ok"><div class="fd-h">✓ 找到你的比賽<small>自動帶入</small></div>${evCard(FD.picked)}<div class="fd-row"><button class="btn" data-fd="not">不是這場</button><span class="muted small">之後會自動更新配對</span></div></div>`;
-  else if (FD.st === 'many') h = `<div class="fd ok"><div class="fd-h">找到 ${d.events.length} 場有你的比賽<small>選一場</small></div>${d.events.map(ev => evCard(ev, true)).join('')}${loc}</div>`;
-  else if (FD.st === 'none') { const sec = Math.max(0, Math.ceil((FD.next - Date.now()) / 1000)); h = `<div class="fd wait"><div class="fd-h">還沒在名單上<small>${esc(where)}・今天 ${d.checked || 0} 場</small></div>
-      <div class="muted small">可能店家還沒把你加進去，或比賽還沒建立。APP 開著時每 2 分鐘自動再找一次（最多 30 分鐘）。</div>
-      <div class="fd-row"><span class="small">下一次 <span class="fd-cd" id="fdCd">${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}</span></span><button class="btn" data-fd="again">現在再找</button>${FD.all ? '' : '<button class="btn" data-fd="all">找全部國家</button>'}</div>${loc}</div>`; }
-  else if (FD.st === 'gaveup') h = `<div class="fd"><div class="fd-h">30 分鐘內都沒找到</div><div class="muted small">請直接貼賽事網址，或按「再找一次」。</div><div class="fd-row"><button class="btn" data-fd="again">再找一次</button>${FD.all ? '' : '<button class="btn" data-fd="all">找全部國家</button>'}</div>${loc}</div>`;
-  else if (FD.st === 'noidx') h = `<div class="fd"><div class="fd-h">自動找比賽還沒準備好</div><div class="muted small">管理員還沒建立賽事索引，先貼賽事網址就好。</div></div>`;
-  else if (FD.st === 'err') h = FD.errObj && FD.errObj.code === 'need-invite' ? '' : `<div class="fd"><div class="fd-h">找比賽失敗</div><div class="muted small">${esc(FD.err)}</div><div class="fd-row"><button class="btn" data-fd="again">再試一次</button></div></div>`;
-  else if (FD.st === 'region') h = `<div class="fd"><div class="fd-h">選擇地區</div><div class="chips">${['', 'TW', 'JP', 'HK', 'MY', 'SG', 'KR', 'CN', 'TH', 'PH', 'AU', 'US'].map(c => `<button class="chip ${(S.region || '') === c ? 'on' : ''}" data-cc="${c}">${c ? ccName(c) : '自動'}</button>`).join('')}</div></div>`;
-  box.innerHTML = h;
-}
-setInterval(() => { const el = $('#fdCd'); if (el && FD.st === 'none') { const sec = Math.max(0, Math.ceil((FD.next - Date.now()) / 1000)); el.textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); } }, 1000);
-$('#evFind').addEventListener('click', e => {
-  const pk = e.target.closest('[data-pick]'); if (pk) { const ev = (FD.data.events || []).find(x => String(x.id) === pk.dataset.pick); if (ev) pickEvent(ev); renderFind(); return; }
-  const c = e.target.closest('[data-cc]'); if (c) { S.region = c.dataset.cc; saveS(); FD.until = 0; findEvent(); return; }
-  const b = e.target.closest('[data-fd]'); if (!b) return;
-  const k = b.dataset.fd;
-  if (k === 'region') { FD.st = 'region'; renderFind(); }
-  else if (k === 'again') { FD.until = 0; findEvent({ all: FD.all }); }
-  else if (k === 'all') { FD.until = 0; findEvent({ all: true }); }
-  else if (k === 'not') { FD.st = ''; FD.picked = null; $('#evInput').value = ''; lastMatch = null; store.set('lastMatch', null); renderOpp(); renderFind(); $('#evInput').focus(); }
-});
-window.GA_DEBUG = { FD, clearMatch() { lastMatch = null; } }; // 預覽與除錯用
-// 打開「比賽」分頁時自動找
-const _goTab = goTab;
-goTab = function (v) { _goTab(v); if (v === 'match' && needFind() && !['busy', 'none', 'one', 'many'].includes(FD.st)) findEvent(); };
-// ---------- 更新公告：更新後第一次打開跳一次（11/04）----------
-// 以後每次改版在最上面加一筆（v 要跟 APP_VERSION 一樣）
-const CHANGELOG = [
-  { v: '20261104b', date: '11/04', items: [
-    ['🔍', '自動找比賽', '打開「比賽」分頁就會自己找到你今天的比賽，不用再貼網址。還沒在名單上時，每 2 分鐘自動再找一次。'],
-    ['🎨', '英雄屬性色點', '對局過程和成績表會標出英雄的屬性顏色（火、水、風和 Lv3 高階屬性）。'],
-    ['⏱', '延長 5 分鐘倒數', '回合時間到之後，比分鈕改成倒數延長 5 分鐘，倒數完提醒比賽結束。'],
-    ['🔒', 'GA 編號綁定', '加入後 GA 編號固定；換手機時在新手機輸入同一組邀請碼就好。'],
-  ] },
-  { v: '20261102a', date: '11/02', items: [
-    ['🔔', '回合時間與新配對提醒', '剩 10、5 分鐘和時間到會提醒；自動更新時新的一輪配對出來也會提醒。'],
-    ['📝', '遊戲回報狀態', '「這場比賽」會顯示這一桌回報了沒，對手先回報時提醒你確認。'],
-    ['🎲', '對局紀錄', '先後攻結果寫進紀錄；沒有血量變動的回合也會列出來。'],
-  ] },
-];
-function changesHTML(list) {
-  return list.map(c => `<div class="cl"><div class="cl-h">${esc(c.date)} 更新<span>v${esc(c.v)}</span></div>${c.items.map(([ic, t, d]) => `<div class="cl-i"><span class="cl-ic">${ic}</span><div><b>${esc(t)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`).join('');
-}
-function showChanges(all) {
-  const seen = store.get('seenVer', '');
-  const list = all ? CHANGELOG : CHANGELOG.filter(c => !seen || c.v > seen).slice(0, seen ? 3 : 1);
-  if (!list.length) return;
-  store.set('seenVer', APP_VERSION);
-  sheet(all ? '更新紀錄' : '這次更新了什麼', changesHTML(list) + (all ? '' : '<button class="btn pri" data-ok style="width:100%">知道了</button>'), (sb, close) => { const b = sb.querySelector('[data-ok]'); if (b) b.onclick = close; });
-}
-// ---------- 第一次打開的介紹：滑三頁，按「開始使用」後不再出現 ----------
-function showIntro() {
-  const ob = $('#intro'), tr = ob.querySelector('.ob-track'), dots = [...ob.querySelectorAll('.ob-pg i')], go = ob.querySelector('.ob-go');
-  const N = dots.length; ob.hidden = false; tr.scrollLeft = 0;
-  const cur = () => Math.round(tr.scrollLeft / tr.clientWidth);
-  const paint = () => { const i = cur(); dots.forEach((d, k) => d.classList.toggle('on', k === i)); go.textContent = i >= N - 1 ? '確認，開始使用' : '下一步'; };
-  const done = () => { store.set('introSeen', 1); store.set('seenVer', APP_VERSION); ob.hidden = true; };
-  tr.onscroll = paint; paint();
-  go.onclick = () => { const i = cur(); if (i >= N - 1) done(); else tr.scrollTo({ left: (i + 1) * tr.clientWidth, behavior: 'smooth' }); };
-}
-if (!store.get('introSeen', 0)) showIntro();
-else if (store.get('seenVer', '') !== APP_VERSION) setTimeout(() => showChanges(false), 700); // 開場畫面淡出後
 setTimeout(() => $('#splash').classList.add('out'), 500);
 renderRounds();
 renderOpp();
