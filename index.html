@@ -255,6 +255,7 @@ body.compact.at-life .side.me{padding-bottom:var(--safe-b)}
 .idx-cc .here{background:rgba(217,179,91,.18);color:var(--accent)}
 #turnLbl{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none;transition:transform .6s ease;padding:8px 4px;margin:-8px 0;cursor:pointer}#turnLbl.pressing{transform:scale(1.25);color:var(--accent)}
 /* 自動找比賽（11/04）*/
+.fd-tg{cursor:pointer}.fd-tg .chev{margin-left:6px;flex:none}.fd.fdf>:not(.fd-h){display:none!important}.fd.fdf .chev{transform:rotate(-90deg)}.fd.fdf{padding:10px 13px}.fd-h small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #evFind:empty{display:none}
 .fd{display:flex;flex-direction:column;gap:8px;padding:12px 13px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}
 .fd.ok{border-color:rgba(91,191,138,.55);background:rgba(91,191,138,.08)}.fd.wait{border-color:rgba(217,179,91,.45)}
@@ -1604,7 +1605,7 @@ function oppHTML(p) {
     <div class="ev"><span class="d">${esc(e.date.slice(5).replace('-', '/'))}</span>${pill(e.deck, e.element)}<span class="rec">${esc(e.rec)}</span>
     <span class="nm">${esc(e.event)}</span><span class="cut">${esc(e.cut)}</span></div>`).join('');
   const link = 'https://grandarchivestats.com/players/' + (p.slug || encodeURIComponent(p.name));
-  return `${h2hHTML(p.pid, p.name)}
+  return `
   <div class="card">
     <div class="opp-head">
       <div style="min-width:0"><div class="opp-name">${esc(p.name)}</div><div class="muted small">${p.pid ? 'GA #' + esc(p.pid) + '・' : ''}共 ${all.length} 場賽事紀錄</div></div>
@@ -1622,7 +1623,7 @@ function oppHTML(p) {
     <h2>近期出賽</h2>
     <div class="evs">${recent || '<p class="empty">沒有出賽紀錄。</p>'}</div>
     <a class="small" style="color:var(--accent)" href="${esc(link)}" target="_blank" rel="noopener">在 grandarchivestats 開啟完整頁面 →</a>
-  </div>`;
+  </div>${h2hHTML(p.pid, p.name)}`;
 }
 function showSetup() { $('#setupCard').hidden = false; $('#setupCard').scrollIntoView({ behavior: 'smooth' }); }
 function renderOpp() {
@@ -2447,6 +2448,18 @@ function renderFind() {
   else if (FD.st === 'err') h = FD.errObj && FD.errObj.code === 'need-invite' ? '' : `<div class="fd"><div class="fd-h">找比賽失敗</div><div class="muted small">${esc(FD.err)}</div><div class="fd-row"><button class="btn" data-fd="again">再試一次</button></div></div>`;
   else if (FD.st === 'region') h = `<div class="fd"><div class="fd-h">選擇地區</div><div class="chips">${['', 'TW', 'JP', 'HK', 'MY', 'SG', 'KR', 'CN', 'TH', 'PH', 'AU', 'US'].map(c => `<button class="chip ${(S.region || '') === c ? 'on' : ''}" data-cc="${c}">${c ? ccName(c) : '自動'}</button>`).join('')}</div></div>`;
   box.innerHTML = h;
+  // 可收合（11/04）：點標題列收起，收起時只留一行摘要
+  const fd = box.querySelector('.fd'), hd = fd && fd.querySelector('.fd-h'); if (!hd || FD.st === 'region') return;
+  const folded = !!store.get('fdFold', false);
+  hd.dataset.fd = 'fold'; hd.classList.add('fd-tg');
+  hd.insertAdjacentHTML('beforeend', '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>');
+  fd.classList.toggle('fdf', folded);
+  if (folded) {
+    const sm = hd.querySelector('small') || hd.appendChild(document.createElement('small'));
+    if (FD.st === 'one' && FD.picked) sm.textContent = FD.picked.name || '#' + FD.picked.id;
+    else if (FD.st === 'none') { const sec = Math.max(0, Math.ceil((FD.next - Date.now()) / 1000)); sm.innerHTML = `下一次 <span class="fd-cd" id="fdCd">${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}</span>`; }
+    hd.appendChild(hd.querySelector('.chev'));
+  }
 }
 setInterval(() => { const el = $('#fdCd'); if (el && FD.st === 'none') { const sec = Math.max(0, Math.ceil((FD.next - Date.now()) / 1000)); el.textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); } }, 1000);
 $('#evFind').addEventListener('click', e => {
@@ -2454,6 +2467,7 @@ $('#evFind').addEventListener('click', e => {
   const c = e.target.closest('[data-cc]'); if (c) { S.region = c.dataset.cc; saveS(); FD.until = 0; findEvent(); return; }
   const b = e.target.closest('[data-fd]'); if (!b) return;
   const k = b.dataset.fd;
+  if (k === 'fold') { store.set('fdFold', !store.get('fdFold', false)); return renderFind(); }
   if (k === 'region') { FD.st = 'region'; renderFind(); }
   else if (k === 'again') { FD.until = 0; findEvent({ all: FD.all }); }
   else if (k === 'all') { FD.until = 0; findEvent({ all: true }); }
