@@ -1623,7 +1623,7 @@ function oppHTML(p) {
     <h2>近期出賽</h2>
     <div class="evs">${recent || '<p class="empty">沒有出賽紀錄。</p>'}</div>
     <a class="small" style="color:var(--accent)" href="${esc(link)}" target="_blank" rel="noopener">在 grandarchivestats 開啟完整頁面 →</a>
-  </div>${h2hHTML(p.pid, p.name)}`;
+  </div>${h2hHTML(p.pid, p.name, p.slug)}`;
 }
 function showSetup() { $('#setupCard').hidden = false; $('#setupCard').scrollIntoView({ behavior: 'smooth' }); }
 function renderOpp() {
@@ -2547,12 +2547,17 @@ function allRounds() {
   return out.sort((a, b) => String(b.ev.date).localeCompare(String(a.ev.date)) || b.round - a.round);
 }
 // ---------- 交手履歷 ----------
-function h2hRounds(pid, name) { const nm = String(name || '').toLowerCase(); return allRounds().filter(r => (r.oppId && String(r.oppId) === String(pid)) || (!r.oppId && nm && (String(r.oppName).toLowerCase() === nm || String(r.oppSlug).toLowerCase() === nm))); }
-function h2hHTML(pid, name) {
-  if (!pid) return '';
-  const rs = h2hRounds(pid, name); if (!rs.length) return '';
+function h2hRounds(pid, name, slug) {
+  const nm = String(name || '').toLowerCase(), sl = String(slug || '').toLowerCase();
+  const byName = r => (nm && (String(r.oppName || '').toLowerCase() === nm || String(r.oppSlug || '').toLowerCase() === nm)) || (sl && String(r.oppSlug || '').toLowerCase() === sl);
+  // 有 GA 編號先用編號比；查不到編號（手動用名字查）或那一輪沒有編號時，用名字比
+  return allRounds().filter(r => (pid && r.oppId && String(r.oppId) === String(pid)) || ((!pid || !r.oppId) && byName(r)));
+}
+function h2hHTML(pid, name, slug) {
+  if (!pid && !name) return '';
+  const rs = h2hRounds(pid, name, slug); if (!rs.length) return '';
   const done = rs.filter(r => ['w', 'l', 'd', 'id'].includes(r.res)), w = done.filter(r => r.res === 'w').length, l = done.filter(r => r.res === 'l').length;
-  return `<div class="card h2h-card"><div class="row" style="justify-content:space-between;align-items:baseline"><h2>跟 ${esc(name || '')}#${esc(pid)} 的交手履歷</h2><span class="muted small" style="font-family:var(--num)">打過 ${done.length} 次・${w} 勝 ${l} 敗</span></div>
+  return `<div class="card h2h-card"><div class="row" style="justify-content:space-between;align-items:baseline"><h2>跟 ${esc(name || '')}${pid ? '#' + esc(pid) : ''} 的交手履歷</h2><span class="muted small" style="font-family:var(--num)">打過 ${done.length} 次・${w} 勝 ${l} 敗</span></div>
     ${rs.map(r => {
       const live = !r.res, cls = r.res === 'w' ? 'w' : r.res === 'l' ? 'l' : '';
       const g = (r.games || []), f = g[0] && g[0].first;
