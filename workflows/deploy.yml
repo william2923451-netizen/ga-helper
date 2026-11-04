@@ -1,0 +1,44 @@
+# GA 比賽助手：推到 GitHub 就自動檢查版本號＋部署 Worker
+# 網頁（index.html 等）本來就由 GitHub Pages 自動更新；這裡只多做兩件事：
+# 1. 檢查 index.html 的 APP_VERSION、開場畫面版本、sw.js 的 VERSION 是否一致（不一致就標紅，提醒你漏改）
+# 2. worker.js 或 wrangler.toml 有變動時，自動部署到 Cloudflare（不用再手動複製貼上）
+name: 檢查與部署
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: 檢查版本號
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 比對 APP_VERSION 與 sw.js VERSION
+        run: |
+          app=$(grep -oP "const APP_VERSION = '\K[^']+" index.html)
+          sw=$(grep -oP "const VERSION = '\K[^']+" sw.js)
+          splash=$(grep -oP 'class="ver">v\K[^<]+' index.html | sort -u | tr '\n' ' ')
+          echo "APP_VERSION=$app  sw.js=$sw  開場畫面=$splash"
+          [ "$app" = "$sw" ] || { echo "::error::index.html 的 APP_VERSION ($app) 跟 sw.js 的 VERSION ($sw) 不一樣，手機可能不會更新"; exit 1; }
+          [ "$(echo $splash | xargs)" = "$app" ] || { echo "::error::開場畫面的版本 ($splash) 跟 APP_VERSION ($app) 不一樣"; exit 1; }
+          grep -q "v: '$app'" index.html || echo "::warning::更新公告（CHANGELOG）沒有 $app 這一版"
+
+  deploy-worker:
+    name: 部署 Worker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: worker.js 有沒有改
+        id: chg
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || git diff --name-only HEAD~1 HEAD | grep -qE '^(worker\.js|wrangler\.toml)$'; then echo "go=1" >> $GITHUB_OUTPUT; else echo "worker.js 沒變，略過部署"; fi
+      - name: 部署到 Cloudflare
+        if: steps.chg.outputs.go == '1'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
