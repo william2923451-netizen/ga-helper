@@ -253,7 +253,7 @@ body.compact.at-life .side.me{padding-bottom:var(--safe-b)}
 .win-q .bx h3{margin:0;font-size:22px}.win-q .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.win-q .row2 button{padding:18px 6px;font-size:18px;font-weight:900;border-radius:14px}
 .bug-pre{white-space:pre-wrap;word-break:break-all;background:var(--panel);border-radius:10px;padding:10px;font-size:11.5px;color:var(--muted);margin:0}
 .idx-cc .here{background:rgba(217,179,91,.18);color:var(--accent)}
-#turnLbl{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .6s ease}#turnLbl.pressing{transform:scale(1.25);color:var(--accent)}
+#turnLbl{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none;transition:transform .6s ease;padding:8px 4px;margin:-8px 0;cursor:pointer}#turnLbl.pressing{transform:scale(1.25);color:var(--accent)}
 /* 自動找比賽（11/04）*/
 #evFind:empty{display:none}
 .fd{display:flex;flex-direction:column;gap:8px;padding:12px 13px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}
@@ -1097,13 +1097,24 @@ function applyCompact() {
   if (S.compact && !store.get('hintRoll', 0) && typeof showAlert === 'function') { store.set('hintRoll', 1); setTimeout(() => showAlert({ title: '精簡模式也能擲骰', sub: '長按中間的回合數字（T1）就會擲先後攻。', sound: '', ttl: 6000 }), 400); }
 }
 // 長按回合數字擲先後攻（精簡模式沒有分頁可切時也能用）
+// iOS：文字長按會觸發選字／放大鏡並送出 pointercancel，所以改用 touch 事件並擋掉預設動作；手指稍微移動也不取消
 (() => {
-  const el = $('#turnLbl'); if (!el) return; let t = null, fired = false;
+  const el = $('#turnLbl'); if (!el) return; let t = null, fired = false, x0 = 0, y0 = 0;
   el.title = '長按擲先後攻';
-  const start = e => { fired = false; clearTimeout(t); el.classList.add('pressing'); t = setTimeout(() => { fired = true; el.classList.remove('pressing'); buzz(); document.querySelector('[data-die="first"]').click(); }, 600); };
-  const end = e => { clearTimeout(t); el.classList.remove('pressing'); if (fired) { e.preventDefault(); e.stopPropagation(); } };
-  el.addEventListener('pointerdown', start); ['pointerup', 'pointerleave', 'pointercancel'].forEach(k => el.addEventListener(k, end));
-  el.addEventListener('click', e => { if (fired) { e.stopPropagation(); e.preventDefault(); fired = false; } }, true);
+  const roll = () => { fired = true; el.classList.remove('pressing'); buzz(); const b = document.querySelector('[data-die="first"]'); if (b) b.click(); };
+  const start = (x, y) => { fired = false; x0 = x; y0 = y; clearTimeout(t); el.classList.add('pressing'); t = setTimeout(roll, 600); };
+  const cancel = () => { clearTimeout(t); el.classList.remove('pressing'); };
+  const moved = (x, y) => Math.abs(x - x0) > 25 || Math.abs(y - y0) > 25;
+  if ('ontouchstart' in window) {
+    el.addEventListener('touchstart', e => { e.preventDefault(); const p = e.touches[0]; start(p.clientX, p.clientY); }, { passive: false });
+    el.addEventListener('touchmove', e => { const p = e.touches[0]; if (moved(p.clientX, p.clientY)) cancel(); }, { passive: true });
+    el.addEventListener('touchend', e => { e.preventDefault(); cancel(); }, { passive: false });
+    el.addEventListener('touchcancel', cancel);
+  } else {
+    el.addEventListener('pointerdown', e => start(e.clientX, e.clientY));
+    el.addEventListener('pointermove', e => { if (moved(e.clientX, e.clientY)) cancel(); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(k => el.addEventListener(k, cancel));
+  }
   el.addEventListener('contextmenu', e => e.preventDefault());
 })();
 // 新的一局（「新的一局」按鈕和血量歸零詢問共用）
