@@ -253,6 +253,7 @@ body.compact.at-life .side.me{padding-bottom:var(--safe-b)}
 .win-q .bx h3{margin:0;font-size:22px}.win-q .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.win-q .row2 button{padding:18px 6px;font-size:18px;font-weight:900;border-radius:14px}
 .bug-pre{white-space:pre-wrap;word-break:break-all;background:var(--panel);border-radius:10px;padding:10px;font-size:11.5px;color:var(--muted);margin:0}
 .idx-cc .here{background:rgba(217,179,91,.18);color:var(--accent)}
+#turnLbl{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .6s ease}#turnLbl.pressing{transform:scale(1.25);color:var(--accent)}
 /* 自動找比賽（11/04）*/
 #evFind:empty{display:none}
 .fd{display:flex;flex-direction:column;gap:8px;padding:12px 13px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}
@@ -1091,7 +1092,20 @@ $('#undoBtn').onclick = () => {
   const last = L.log.splice(k, 1)[0];
   L.v[last.s] = last.from; saveL(); renderLife(); buzz();
 };
-function applyCompact() { document.body.classList.toggle('compact', !!S.compact); $('#compactBtn').classList.toggle('on', !!S.compact); $('#modeLbl').textContent = S.compact ? '精簡' : '正常'; }
+function applyCompact() {
+  document.body.classList.toggle('compact', !!S.compact); $('#compactBtn').classList.toggle('on', !!S.compact); $('#modeLbl').textContent = S.compact ? '精簡' : '正常';
+  if (S.compact && !store.get('hintRoll', 0) && typeof showAlert === 'function') { store.set('hintRoll', 1); setTimeout(() => showAlert({ title: '精簡模式也能擲骰', sub: '長按中間的回合數字（T1）就會擲先後攻。', sound: '', ttl: 6000 }), 400); }
+}
+// 長按回合數字擲先後攻（精簡模式沒有分頁可切時也能用）
+(() => {
+  const el = $('#turnLbl'); if (!el) return; let t = null, fired = false;
+  el.title = '長按擲先後攻';
+  const start = e => { fired = false; clearTimeout(t); el.classList.add('pressing'); t = setTimeout(() => { fired = true; el.classList.remove('pressing'); buzz(); document.querySelector('[data-die="first"]').click(); }, 600); };
+  const end = e => { clearTimeout(t); el.classList.remove('pressing'); if (fired) { e.preventDefault(); e.stopPropagation(); } };
+  el.addEventListener('pointerdown', start); ['pointerup', 'pointerleave', 'pointercancel'].forEach(k => el.addEventListener(k, end));
+  el.addEventListener('click', e => { if (fired) { e.stopPropagation(); e.preventDefault(); fired = false; } }, true);
+  el.addEventListener('contextmenu', e => e.preventDefault());
+})();
 // 新的一局（「新的一局」按鈕和血量歸零詢問共用）
 function newGame(r) {
   commit(0); commit(1); addResult(r);
@@ -2787,6 +2801,7 @@ const CHANGELOG = [
   { v: '20261104d', date: '11/04', items: [
     ['📊', '我的戰績', '「比賽」分頁最下面多了戰績簿：自動從 grandarchivestats 帶入你過去所有比賽，看勝率、先攻／後攻勝率、對各套牌的戰績，可以用自己的套牌篩選。'],
     ['🤝', '交手履歷', '查對手或配對到時，會列出你們以前在哪場比賽交手、雙方用什麼套牌、勝負。'],
+    ['🎲', '精簡模式也能擲骰', '長按計血頁中間的回合數字（T1）就會擲先後攻，不用切到骰子分頁。'],
     ['🏁', '血量歸零問誰贏', '一方血量歸零時直接問這局誰贏，點一下就記比分、開下一局。'],
     ['🔍', '打開就找比賽', '一打開 APP 就在背景找你今天的比賽，找到後自動更新配對；Omnidex 結果跟你記的比分不同時也會提醒。'],
     ['🛠', '自動回報問題', 'APP 出錯時會自動回報給管理員，不用截圖；設定 → 版本可以關掉或手動回報。'],
