@@ -231,6 +231,26 @@ body.compact.at-life .side.me{padding-bottom:var(--safe-b)}
 #intro .ob-pg{display:flex;gap:7px;flex:1}#intro .ob-pg i{width:8px;height:8px;border-radius:99px;background:var(--line);transition:all .25s}#intro .ob-pg i.on{width:22px;background:var(--accent)}
 #intro .ob-go{min-width:120px}
 .credit{text-align:center;font-size:13.5px;color:var(--muted);letter-spacing:.08em;padding:8px 0 4px}
+.cl{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.cl-h{font-weight:900;font-size:17px;display:flex;align-items:baseline;gap:8px}.cl-h span{font-family:var(--num);font-size:12px;color:var(--muted);font-weight:500}
+.cl-i{display:grid;grid-template-columns:34px 1fr;gap:10px;background:var(--panel2);border-radius:13px;padding:11px 12px}
+.cl-ic{width:34px;height:34px;border-radius:10px;background:var(--panel);display:grid;place-items:center;font-size:18px}
+.cl-i b{font-size:15.5px}.cl-i p{margin:3px 0 0;color:var(--muted);font-size:13.5px;line-height:1.55}
+/* 自動找比賽（11/04）*/
+#evFind:empty{display:none}
+.fd{display:flex;flex-direction:column;gap:8px;padding:12px 13px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}
+.fd.ok{border-color:rgba(91,191,138,.55);background:rgba(91,191,138,.08)}.fd.wait{border-color:rgba(217,179,91,.45)}
+.fd-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px}.fd-h .sp{flex:none}
+.fd-h small{margin-left:auto;font-weight:400;color:var(--muted);font-size:12px}
+.fd-ev{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;padding:9px 11px;border-radius:11px;background:var(--panel);border:1px solid var(--line);text-align:left;width:100%;color:var(--fg)}
+.fd-ev b{font-size:15px;line-height:1.3}.fd-ev span{font-size:12.5px;color:var(--muted)}.fd-ev .st{grid-row:1/3;grid-column:2;font-size:12px;padding:3px 9px;border-radius:99px;border:1px solid var(--line)}
+.fd-ev .st.on{color:var(--good);border-color:var(--good)}
+.fd-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.fd-row .btn{padding:8px 12px;font-size:13.5px}
+.fd-loc{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}.fd-loc button{background:none;border:0;color:var(--accent);font-size:12.5px;padding:0;text-decoration:underline}
+.fd-cd{font-family:var(--num);color:var(--accent)}
+.idx-cc{display:flex;flex-wrap:wrap;gap:6px;font-size:12.5px;color:var(--muted)}.idx-cc span{background:var(--panel2);border-radius:99px;padding:4px 10px}.idx-cc b{font-family:var(--num);color:var(--fg);font-weight:600}
+#idxBox{display:flex;flex-direction:column;gap:10px}
+.idx-bar{height:8px;border-radius:99px;background:var(--panel);overflow:hidden}.idx-bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
 /* 邀請碼 */
 .adm-sum b.g{color:var(--good)}
 .adm-mk{background:var(--panel2);border-radius:12px;padding:0 12px}
@@ -494,9 +514,9 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </head>
 <body>
 <div id="splash" class="sp-l3" aria-hidden="true">
-  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261102f</div></div>
-  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261102f</div></div>
-  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261102f</div></div>
+  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261104b</div></div>
+  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261104b</div></div>
+  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261104b</div></div>
 </div>
 <script>try{var sp=(JSON.parse(localStorage.getItem('ga.settings')||'{}')||{}).splash||'l3';if(!/^(l[123]|off)$/.test(sp))sp='l3';document.getElementById('splash').className='sp-'+sp}catch(e){}</script>
 <div class="app">
@@ -559,6 +579,7 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
       </div>
       <div class="card" data-fold="match">
         <div class="fold-head"><h2>這場比賽</h2></div>
+        <div id="evFind"></div>
         <div class="row"><input id="evInput" inputmode="url" placeholder="貼上 Omnidex 賽事網址或編號"><button class="btn pri" id="evGo">抓配對</button><button class="icon-btn" id="evFresh" aria-label="重新整理配對" title="重新整理（跳過快取）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button></div>
         <div id="evStatus" class="empty">比賽開始後，把 Omnidex 上這場賽事的網址貼進來，APP 會找出你這一輪的對手。</div>
         <div class="toggle small"><span class="muted">自動更新配對（等配對時每 30 秒、對戰中每 3 分鐘）</span><input type="checkbox" id="autoRef" style="width:auto"></div>
@@ -712,7 +733,7 @@ function showAlert({ title, sub = '', tone = '', sound = 'soft', ttl = 0, action
   clearTimeout(alertTimer); if (ttl) alertTimer = setTimeout(close, ttl);
 }
 // APP 主程式版本（改 index.html 或 sw.js 時往前推）
-const APP_VERSION = '20261102f';
+const APP_VERSION = '20261104b';
 
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
@@ -1921,6 +1942,10 @@ function renderSettings() {
       <div class="fold-head" id="admHead"><h2>會員管理</h2><span class="muted small" id="admSum"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
       <div id="admBox"></div>
     </div>
+    <div class="card" id="idxCard" hidden>
+      <h2>賽事索引（自動找比賽用）</h2>
+      <div id="idxBox"></div>
+    </div>
     <div class="card">
       <h2>計血</h2>
       <div class="muted small">計血方式（立即套用到目前這局）</div>
@@ -1961,6 +1986,7 @@ function renderSettings() {
         <span>離線可用</span><span id="swState">檢查中…</span>
       </div>
       <button class="btn" id="sUpd">檢查更新</button>
+      <button class="btn" id="sChg">更新紀錄</button>
       <button class="btn" id="sIntro">再看一次使用介紹</button>
       <div id="sUpdMsg"></div>
     </div>
@@ -1974,6 +2000,7 @@ function renderSettings() {
   swStatus();
   $('#sUpd').onclick = checkUpdate;
   $('#sIntro').onclick = () => showIntro();
+  $('#sChg').onclick = () => showChanges(true);
   const hint = () => { $('#sModeHint').textContent = (L.mode === 'dmg' ? '傷害計數：從 0 往上加。' : '剩餘血量：從起始血量往下扣。') + `切換時用英雄生命（沒選英雄就用起始血量 ${S.start}）換算目前的數字。`; };
   hint();
   $('#sMode').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; setMode(b.dataset.m); $('#sMode').querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b)); hint(); buzz(); };
@@ -2007,7 +2034,7 @@ function renderSettings() {
     try { await api('/api/admin/list'); msg.innerHTML = '<div class="msg">管理員登入成功。</div>'; $('#admKeyBox').hidden = true; renderMember(); }
     catch (e) { store.set('admin', ''); msg.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; $('#admCard').hidden = true; }
   };
-  $('#sAdmOut').onclick = () => { store.set('admin', ''); $('#sAdm').value = ''; $('#sAdmMsg').innerHTML = '<div class="msg">已登出管理員。</div>'; $('#admCard').hidden = true; renderMember(); };
+  $('#sAdmOut').onclick = () => { store.set('admin', ''); $('#sAdm').value = ''; $('#sAdmMsg').innerHTML = '<div class="msg">已登出管理員。</div>'; $('#admCard').hidden = true; $('#idxCard').hidden = true; renderMember(); };
   $('#admHead').onclick = () => { const c = $('#admCard'); c.classList.toggle('afold'); store.set('admFold', c.classList.contains('afold')); };
   renderMember();
 }
@@ -2030,7 +2057,7 @@ async function renderMember() {
     if (j.open) { box.innerHTML = '<p class="muted small" style="margin:0">目前所有人都能用，不需要邀請碼。</p>'; $('#admCard').hidden = true; return; }
     if (j.admin) {
       box.innerHTML = '<div class="mem-st"><span>身分</span><b>管理員（這支手機）</b></div>';
-      $('#admCard').hidden = false; renderAdmin(); return;
+      $('#admCard').hidden = false; renderAdmin(); $('#idxCard').hidden = false; renderIndex(); return;
     }
     const m = j.member; store.set('memberInfo', m); store.set('needInvite', false); setPidLock(m.pid);
     box.innerHTML = `<div class="mem-st">
@@ -2234,17 +2261,165 @@ function playSplash() {
   sp.className = 'sp-off'; void sp.offsetWidth; sp.className = 'sp-' + S.splash; // 重新播動畫
   setTimeout(() => sp.classList.add('out'), 500);
 }
+// ---------- 賽事索引（管理員）----------
+const IDX = { st: null, run: null };
+async function renderIndex(reload = true) {
+  const box = $('#idxBox'); if (!box) return;
+  if (reload) { try { IDX.st = await api('/api/index/status'); } catch (e) { box.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; } }
+  const st = IDX.st || {}, run = IDX.run;
+  const cs = Object.entries(st.countries || {}).sort((a, b) => b[1] - a[1]);
+  const top = cs.slice(0, 6).map(([c, n]) => `<span><b>${n}</b> ${esc(ccName(c))}</span>`).join('');
+  box.innerHTML = `
+    ${st.ready ? `<div class="mem-st"><span>狀態</span><b style="color:var(--good)">運作中</b><span>上次更新</span><b>${fmtT(st.updated)}</b><span>已掃到</span><b>#${esc(st.lastId)}</b><span>未完賽</span><b>${st.open || 0} 場（${cs.length} 個國家）</b></div>
+      <div class="idx-cc">${top}</div>`
+    : `<p class="muted small" style="margin:0">還沒建立。第一次要往回掃約 8 週的賽事（約 5,000 個編號），按下去手機會自動分批跑完，大約 3 分鐘，期間請不要關掉 APP。之後 Cloudflare 每小時自動更新。</p>`}
+    ${run ? `<div class="idx-bar"><i style="width:${Math.min(100, Math.round(run.done / run.total * 100))}%"></i></div><div class="muted small">掃描中 ${run.done} / ${run.total}・已找到 ${run.found} 場未完賽</div>` : ''}
+    <button class="btn ${st.ready ? '' : 'pri'}" id="idxBuild" ${run ? 'disabled' : ''}>${run ? '建立中…' : st.ready ? '重新建立索引' : '建立賽事索引'}</button>
+    ${st.ready && !st.cron ? '<div class="msg err">還沒設定每小時排程：Cloudflare → ga-helper → 設定 → 觸發事件 → 新增 Cron 觸發條件 → 每小時。</div>' : ''}`;
+  $('#idxBuild').onclick = buildIndex;
+}
+async function buildIndex() {
+  if (IDX.run) return;
+  try {
+    const s0 = await api('/api/index/build', { body: { start: true } });
+    IDX.run = { done: 0, total: s0.total, found: 0, cursor: s0.cursor }; renderIndex(false);
+    while (IDX.run && IDX.run.cursor) {
+      const j = await api('/api/index/build', { body: { cursor: IDX.run.cursor } });
+      IDX.run.done = j.done; IDX.run.total = Math.max(j.total || 0, j.done || 0, 1); IDX.run.found = j.found; IDX.run.cursor = j.cursor; renderIndex(false);
+    }
+    IDX.run = null; renderIndex(true);
+  } catch (e) { IDX.run = null; alertMsg(e.message); renderIndex(true); }
+}
+// ---------- 自動找比賽（11/04）----------
+// 地區：手機時區 → 網路位置（Worker 回傳）→ 手動選；索引由 Worker 每小時排程整理「各國還沒完賽的賽事」
+const CC_NAME = { TW: '台灣', JP: '日本', HK: '香港', MY: '馬來西亞', SG: '新加坡', KR: '韓國', CN: '中國', TH: '泰國', PH: '菲律賓', ID: '印尼', VN: '越南', AU: '澳洲', NZ: '紐西蘭', US: '美國', CA: '加拿大', GB: '英國', DE: '德國', FR: '法國', NL: '荷蘭', BE: '比利時', ES: '西班牙', IT: '義大利', PL: '波蘭', BR: '巴西', MX: '墨西哥' };
+const TZ_CC = { 'Asia/Taipei': 'TW', 'Asia/Tokyo': 'JP', 'Asia/Hong_Kong': 'HK', 'Asia/Macau': 'HK', 'Asia/Kuala_Lumpur': 'MY', 'Asia/Kuching': 'MY', 'Asia/Singapore': 'SG', 'Asia/Seoul': 'KR', 'Asia/Shanghai': 'CN', 'Asia/Bangkok': 'TH', 'Asia/Manila': 'PH', 'Asia/Jakarta': 'ID', 'Asia/Ho_Chi_Minh': 'VN', 'Australia/Sydney': 'AU', 'Australia/Melbourne': 'AU', 'Australia/Brisbane': 'AU', 'Australia/Perth': 'AU', 'Pacific/Auckland': 'NZ', 'Europe/London': 'GB', 'Europe/Berlin': 'DE', 'Europe/Paris': 'FR', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE', 'Europe/Madrid': 'ES', 'Europe/Rome': 'IT', 'Europe/Warsaw': 'PL', 'America/Sao_Paulo': 'BR', 'America/Mexico_City': 'MX', 'America/Toronto': 'CA', 'America/Vancouver': 'CA' };
+function regionAuto() {
+  let tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+  if (TZ_CC[tz]) return { cc: TZ_CC[tz], how: '手機時區' };
+  if (/^America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Detroit)/.test(tz) || tz === 'Pacific/Honolulu') return { cc: 'US', how: '手機時區' };
+  const n = store.get('netCC', ''); if (n) return { cc: n, how: '網路位置' };
+  return { cc: 'TW', how: '預設' };
+}
+const region = () => S.region ? { cc: S.region, how: '手動' } : regionAuto();
+const FD = { st: '', data: null, err: '', next: 0, until: 0, timer: null, tries: 0, all: false };
+const ccName = c => CC_NAME[c] || c;
+const fdTime = iso => { const d = new Date(iso); if (isNaN(d)) return ''; const p = n => String(n).padStart(2, '0'); const td = new Date(); const day = d.toDateString() === td.toDateString() ? '今天' : `${d.getMonth() + 1}/${d.getDate()}`; return `${day} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+// 需要找嗎：還沒有比賽、或上一場已經完賽／超過 12 小時
+function needFind() {
+  if (!S.pid) return false;
+  const m = lastMatch; if (!m || !m.event) return true;
+  if (m.event.status === 'complete' || m.event.status === 'canceled') return true;
+  return Date.now() - (m._recv || 0) > 12 * 3600e3;
+}
+async function findEvent(opt = {}) {
+  if (!S.pid || !apiBase()) return;
+  clearTimeout(FD.timer); FD.st = 'busy'; FD.all = !!opt.all; renderFind();
+  try {
+    const r = region();
+    let j = await api(`/api/find?pid=${encodeURIComponent(S.pid)}&cc=${FD.all ? 'ALL' : r.cc}`);
+    if (j.netCC) store.set('netCC', j.netCC);
+    // 今天的賽事很多時分頁找（每頁約 40 場），找到就停，最多 6 頁
+    for (let pg = 1; j.indexReady && j.more && !(j.events || []).length && pg <= 5; pg++) {
+      const k = await api(`/api/find?pid=${encodeURIComponent(S.pid)}&cc=${FD.all ? 'ALL' : r.cc}&page=${pg}`);
+      j = { ...k, events: k.events || [], checked: k.checked };
+    }
+    FD.data = j; FD.err = '';
+    const evs = j.events || [];
+    if (!j.indexReady) FD.st = 'noidx';
+    else if (evs.length === 1) { FD.st = 'one'; pickEvent(evs[0], true); }
+    else if (evs.length > 1) FD.st = 'many';
+    else { FD.st = 'none'; scheduleRetry(); }
+  } catch (e) { FD.st = 'err'; FD.err = e.message; FD.errObj = e; }
+  renderFind();
+}
+function scheduleRetry() {
+  if (!FD.until) FD.until = Date.now() + 30 * 60e3;
+  if (Date.now() > FD.until) { FD.st = 'gaveup'; return; }
+  FD.next = Date.now() + 120e3; FD.tries++;
+  FD.timer = setTimeout(() => { if (needFind()) findEvent({ all: FD.all }); }, 120e3);
+}
+function pickEvent(ev, auto) {
+  FD.picked = ev; FD.until = 0; clearTimeout(FD.timer);
+  $('#evInput').value = String(ev.id); store.set('event', String(ev.id));
+  if (!auto) FD.st = 'one';
+  fetchMatch(true);
+}
+function evCard(ev, btn) {
+  const on = ev.status === 'started';
+  return `<${btn ? 'button' : 'div'} class="fd-ev" ${btn ? `data-pick="${esc(ev.id)}"` : ''}><b>${esc(ev.name || '#' + ev.id)}</b><span class="st ${on ? 'on' : ''}">${on ? '進行中' : '報名中'}</span>
+    <span>${esc(ev.host || '')}${ev.date ? '・' + fdTime(ev.date) + (on ? ' 開打' : ' 開始') : ''}${ev.players ? '・' + ev.players + ' 人' : ''}</span></${btn ? 'button' : 'div'}>`;
+}
+function renderFind() {
+  const box = $('#evFind'); if (!box) return;
+  const r = region(), loc = `<div class="fd-loc">📍 目前地區：${esc(ccName(r.cc))}（${r.how === '手動' ? '手動' : '自動・' + r.how}）<button data-fd="region">更改</button></div>`;
+  const d = FD.data || {};
+  const where = FD.all ? '全部國家' : ccName(r.cc);
+  let h = '';
+  if (FD.st === 'busy') h = `<div class="fd"><div class="fd-h"><span class="spin"></span>正在找你的比賽…<small>${esc(where)}</small></div>${loc}</div>`;
+  else if (FD.st === 'one' && FD.picked) h = `<div class="fd ok"><div class="fd-h">✓ 找到你的比賽<small>自動帶入</small></div>${evCard(FD.picked)}<div class="fd-row"><button class="btn" data-fd="not">不是這場</button><span class="muted small">之後會自動更新配對</span></div></div>`;
+  else if (FD.st === 'many') h = `<div class="fd ok"><div class="fd-h">找到 ${d.events.length} 場有你的比賽<small>選一場</small></div>${d.events.map(ev => evCard(ev, true)).join('')}${loc}</div>`;
+  else if (FD.st === 'none') { const sec = Math.max(0, Math.ceil((FD.next - Date.now()) / 1000)); h = `<div class="fd wait"><div class="fd-h">還沒在名單上<small>${esc(where)}・今天 ${d.checked || 0} 場</small></div>
+      <div class="muted small">可能店家還沒把你加進去，或比賽還沒建立。APP 開著時每 2 分鐘自動再找一次（最多 30 分鐘）。</div>
+      <div class="fd-row"><span class="small">下一次 <span class="fd-cd" id="fdCd">${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}</span></span><button class="btn" data-fd="again">現在再找</button>${FD.all ? '' : '<button class="btn" data-fd="all">找全部國家</button>'}</div>${loc}</div>`; }
+  else if (FD.st === 'gaveup') h = `<div class="fd"><div class="fd-h">30 分鐘內都沒找到</div><div class="muted small">請直接貼賽事網址，或按「再找一次」。</div><div class="fd-row"><button class="btn" data-fd="again">再找一次</button>${FD.all ? '' : '<button class="btn" data-fd="all">找全部國家</button>'}</div>${loc}</div>`;
+  else if (FD.st === 'noidx') h = `<div class="fd"><div class="fd-h">自動找比賽還沒準備好</div><div class="muted small">管理員還沒建立賽事索引，先貼賽事網址就好。</div></div>`;
+  else if (FD.st === 'err') h = FD.errObj && FD.errObj.code === 'need-invite' ? '' : `<div class="fd"><div class="fd-h">找比賽失敗</div><div class="muted small">${esc(FD.err)}</div><div class="fd-row"><button class="btn" data-fd="again">再試一次</button></div></div>`;
+  else if (FD.st === 'region') h = `<div class="fd"><div class="fd-h">選擇地區</div><div class="chips">${['', 'TW', 'JP', 'HK', 'MY', 'SG', 'KR', 'CN', 'TH', 'PH', 'AU', 'US'].map(c => `<button class="chip ${(S.region || '') === c ? 'on' : ''}" data-cc="${c}">${c ? ccName(c) : '自動'}</button>`).join('')}</div></div>`;
+  box.innerHTML = h;
+}
+setInterval(() => { const el = $('#fdCd'); if (el && FD.st === 'none') { const sec = Math.max(0, Math.ceil((FD.next - Date.now()) / 1000)); el.textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); } }, 1000);
+$('#evFind').addEventListener('click', e => {
+  const pk = e.target.closest('[data-pick]'); if (pk) { const ev = (FD.data.events || []).find(x => String(x.id) === pk.dataset.pick); if (ev) pickEvent(ev); renderFind(); return; }
+  const c = e.target.closest('[data-cc]'); if (c) { S.region = c.dataset.cc; saveS(); FD.until = 0; findEvent(); return; }
+  const b = e.target.closest('[data-fd]'); if (!b) return;
+  const k = b.dataset.fd;
+  if (k === 'region') { FD.st = 'region'; renderFind(); }
+  else if (k === 'again') { FD.until = 0; findEvent({ all: FD.all }); }
+  else if (k === 'all') { FD.until = 0; findEvent({ all: true }); }
+  else if (k === 'not') { FD.st = ''; FD.picked = null; $('#evInput').value = ''; lastMatch = null; store.set('lastMatch', null); renderOpp(); renderFind(); $('#evInput').focus(); }
+});
+window.GA_DEBUG = { FD, clearMatch() { lastMatch = null; } }; // 預覽與除錯用
+// 打開「比賽」分頁時自動找
+const _goTab = goTab;
+goTab = function (v) { _goTab(v); if (v === 'match' && needFind() && !['busy', 'none', 'one', 'many'].includes(FD.st)) findEvent(); };
+// ---------- 更新公告：更新後第一次打開跳一次（11/04）----------
+// 以後每次改版在最上面加一筆（v 要跟 APP_VERSION 一樣）
+const CHANGELOG = [
+  { v: '20261104b', date: '11/04', items: [
+    ['🔍', '自動找比賽', '打開「比賽」分頁就會自己找到你今天的比賽，不用再貼網址。還沒在名單上時，每 2 分鐘自動再找一次。'],
+    ['🎨', '英雄屬性色點', '對局過程和成績表會標出英雄的屬性顏色（火、水、風和 Lv3 高階屬性）。'],
+    ['⏱', '延長 5 分鐘倒數', '回合時間到之後，比分鈕改成倒數延長 5 分鐘，倒數完提醒比賽結束。'],
+    ['🔒', 'GA 編號綁定', '加入後 GA 編號固定；換手機時在新手機輸入同一組邀請碼就好。'],
+  ] },
+  { v: '20261102a', date: '11/02', items: [
+    ['🔔', '回合時間與新配對提醒', '剩 10、5 分鐘和時間到會提醒；自動更新時新的一輪配對出來也會提醒。'],
+    ['📝', '遊戲回報狀態', '「這場比賽」會顯示這一桌回報了沒，對手先回報時提醒你確認。'],
+    ['🎲', '對局紀錄', '先後攻結果寫進紀錄；沒有血量變動的回合也會列出來。'],
+  ] },
+];
+function changesHTML(list) {
+  return list.map(c => `<div class="cl"><div class="cl-h">${esc(c.date)} 更新<span>v${esc(c.v)}</span></div>${c.items.map(([ic, t, d]) => `<div class="cl-i"><span class="cl-ic">${ic}</span><div><b>${esc(t)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>`).join('');
+}
+function showChanges(all) {
+  const seen = store.get('seenVer', '');
+  const list = all ? CHANGELOG : CHANGELOG.filter(c => !seen || c.v > seen).slice(0, seen ? 3 : 1);
+  if (!list.length) return;
+  store.set('seenVer', APP_VERSION);
+  sheet(all ? '更新紀錄' : '這次更新了什麼', changesHTML(list) + (all ? '' : '<button class="btn pri" data-ok style="width:100%">知道了</button>'), (sb, close) => { const b = sb.querySelector('[data-ok]'); if (b) b.onclick = close; });
+}
 // ---------- 第一次打開的介紹：滑三頁，按「開始使用」後不再出現 ----------
 function showIntro() {
   const ob = $('#intro'), tr = ob.querySelector('.ob-track'), dots = [...ob.querySelectorAll('.ob-pg i')], go = ob.querySelector('.ob-go');
   const N = dots.length; ob.hidden = false; tr.scrollLeft = 0;
   const cur = () => Math.round(tr.scrollLeft / tr.clientWidth);
   const paint = () => { const i = cur(); dots.forEach((d, k) => d.classList.toggle('on', k === i)); go.textContent = i >= N - 1 ? '確認，開始使用' : '下一步'; };
-  const done = () => { store.set('introSeen', 1); ob.hidden = true; };
+  const done = () => { store.set('introSeen', 1); store.set('seenVer', APP_VERSION); ob.hidden = true; };
   tr.onscroll = paint; paint();
   go.onclick = () => { const i = cur(); if (i >= N - 1) done(); else tr.scrollTo({ left: (i + 1) * tr.clientWidth, behavior: 'smooth' }); };
 }
 if (!store.get('introSeen', 0)) showIntro();
+else if (store.get('seenVer', '') !== APP_VERSION) setTimeout(() => showChanges(false), 700); // 開場畫面淡出後
 setTimeout(() => $('#splash').classList.add('out'), 500);
 renderRounds();
 renderOpp();
