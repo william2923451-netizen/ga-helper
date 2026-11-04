@@ -2185,6 +2185,7 @@ async function renderAdmin(reload = true) {
       <button class="icon-btn" id="admRe" aria-label="重新整理" title="重新整理"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button></div>
     <input id="admQ" class="adm-q" placeholder="搜尋名字、GA 編號、暱稱、邀請碼" value="${esc(ADM.q || '')}">
     <div class="row"><button class="btn" id="admCsv" style="flex:1">⬇ 匯出會員名單</button><button class="btn" id="admCsv2" style="flex:1">⬇ 匯出邀請碼</button></div>
+    <details class="adm-mk" id="admBk"><summary><span>🗄 備份與還原</span><small id="bkSum">每週自動備份</small></summary><div id="bkBox"><p class="empty"><span class="spin"></span></p></div></details>
     ${f !== 'new' ? `<div class="mlist">${rows.length ? rows.map(memRow).join('') : `<p class="empty">${q ? '找不到符合的會員。' : f === 'off' ? '沒有停用的邀請碼。' : '還沒有人加入。'}</p>`}${!q && more > 0 ? `<button class="btn" id="admMore">再顯示 ${Math.min(more, 10)} 位（還有 ${more} 位）</button>` : ''}</div>` : ''}
     ${spare.length ? `<div class="sp-h">還沒用的邀請碼 <b>${spare.length}</b></div><div class="sp-list">${spare.map(m => `<div class="sp-r" data-code="${esc(m.code)}"><span class="code">${esc(m.code)}</span>${m.note ? `<span class="muted small sp-nt">${esc(m.note)}</span>` : '<span class="sp-nt"></span>'}<button data-lnk="${esc(m.code)}">連結</button><button data-inv="${esc(m.code)}">邀請</button><button data-act="del" class="dz">刪除</button></div>`).join('')}</div>` : ''}
     <p class="muted small" style="margin:0">使用次數每 50 次或 30 分鐘寫回一次，會比實際晚一點。</p>`;
@@ -2200,6 +2201,7 @@ async function renderAdmin(reload = true) {
   $('#admQ').oninput = e => { ADM.q = e.target.value; clearTimeout(ADM.qt); ADM.qt = setTimeout(() => { renderAdmin(false); const i = $('#admQ'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 250); };
   $('#admRe').onclick = () => renderAdmin(true);
   $('#admCsv').onclick = () => exportMembers(false); $('#admCsv2').onclick = () => exportMembers(true);
+  $('#admBk').ontoggle = () => { if ($('#admBk').open) renderBackups(); };
   const mb = $('#admMore'); if (mb) mb.onclick = () => { ADM.lim = (ADM.lim || 10) + 10; renderAdmin(false); };
 }
 // 會員一列：GA 名字#編號、暱稱與備註、邀請碼與時間、使用量；點一下展開操作
@@ -2503,7 +2505,7 @@ setTimeout(() => loadSeason(false), 2500);
 // ev[eventId] = { id, name, date, myDeck:[英雄], at, rounds: { 'swiss:3': { stage, round, oppId, oppName, oppDeck, me, op, res, elo, status, games:[{r, first}] } } }
 let HIST = store.get('hist', null) || { v: 1, ev: {}, del: {}, at: 0 };
 let histDirty = false;
-const saveHist = () => { HIST.at = Date.now(); store.set('hist', HIST); histDirty = true; scheduleHistSync(); renderStatSum(); };
+const saveHist = () => { DECKMAP = null; HIST.at = Date.now(); store.set('hist', HIST); histDirty = true; scheduleHistSync(); renderStatSum(); };
 const rKey = r => (r.stage || 'swiss') + ':' + r.round;
 function histUpdate(m) {
   if (!m || !m.event || !m.rounds || HIST.del[m.event.id]) return;
@@ -2535,10 +2537,22 @@ function histGame(r) {
   o.games = o.games || []; o.games.push({ r, first: L.curFirst || null, g: L.game }); saveHist();
 }
 const deckName = list => { const t = topHero(list || []); return t ? String(t.name).split(',')[0] : ''; };
-const myDeckOf = e => e.myDeckName || deckName(e.myDeck);
-const oppDeckOf = r => r.oppDeckName || deckName(r.oppDeck);
-const myDots = e => e.myDeckName ? archDots(e.myDeckName) : chainDots(e.myDeck);
-const oppDots = r => r.oppDeckName ? archDots(r.oppDeckName) : chainDots(r.oppDeck);
+// 11/04：當天還沒被 stats 收錄的比賽，用「以前同一組英雄在 stats 叫什麼」來套名稱，避免篩選被拆成兩項
+const deckSig = list => (list || []).slice().sort().join('|');
+let DECKMAP = null;
+function deckMap() {
+  if (DECKMAP) return DECKMAP; DECKMAP = {};
+  for (const e of Object.values(HIST.ev)) {
+    if (e.myDeckName && (e.myDeck || []).length) DECKMAP[deckSig(e.myDeck)] = e.myDeckName;
+    for (const r of Object.values(e.rounds)) if (r.oppDeckName && (r.oppDeck || []).length) DECKMAP[deckSig(r.oppDeck)] = r.oppDeckName;
+  }
+  return DECKMAP;
+}
+const guessArch = list => (list || []).length ? deckMap()[deckSig(list)] || '' : '';
+const myDeckOf = e => e.myDeckName || guessArch(e.myDeck) || deckName(e.myDeck);
+const oppDeckOf = r => r.oppDeckName || guessArch(r.oppDeck) || deckName(r.oppDeck);
+const myDots = e => (e.myDeckName || guessArch(e.myDeck)) ? archDots(myDeckOf(e)) : chainDots(e.myDeck);
+const oppDots = r => (r.oppDeckName || guessArch(r.oppDeck)) ? archDots(oppDeckOf(r)) : chainDots(r.oppDeck);
 const chainDots = list => { const out = []; (list || []).forEach(n => { const el = heroEl(n); if (el && !out.includes(el)) out.push(el); }); return out.map(elDot).join(''); };
 const fmtD = iso => { const d = new Date(iso); return isNaN(d) ? '' : `${d.getMonth() + 1}/${d.getDate()}`; };
 function allRounds() {
@@ -2676,7 +2690,7 @@ async function syncStats(force) {
     const r = await fetch(apiBase() + '/api/gasraw?pid=' + encodeURIComponent(S.pid), { headers: authHeaders() });
     if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || '同步失敗 ' + r.status); }
     const html = await r.text(); if (!html || html[0] === '{') throw new Error('grandarchivestats 找不到你的資料');
-    const evs = parseGas(html); if (!evs.length) throw new Error('grandarchivestats 頁面讀不到比賽紀錄（可能改版了）');
+    const evs = parseGas(html); if (!evs.length) { autoBug('parse', 'grandarchivestats 戰績頁解析不到比賽（可能改版）', '/api/gasraw', 0); throw new Error('grandarchivestats 頁面讀不到比賽紀錄（可能改版了），已自動回報'); }
     let add = 0;
     for (const g of evs) {
       const id = String(g.id); if (HIST.del[id]) continue;
@@ -2701,7 +2715,7 @@ async function pushHist(force) {
   if (!histDirty || !S.pid || !(store.get('member', '') || store.get('admin', ''))) return;
   if (!force && Date.now() - (store.get('histPush', 0) || 0) < 15 * 60e3) return scheduleHistSync();
   store.set('histPush', Date.now());
-  try { await api('/api/hist?pid=' + encodeURIComponent(S.pid), { body: HIST }); histDirty = false; } catch (e) {}
+  try { const r = await api('/api/hist?pid=' + encodeURIComponent(S.pid), { body: HIST }); if (r && r.ok !== false) histDirty = false; else { store.set('histPush', 0); scheduleHistSync(); } } catch (e) {}
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') pushHist(); });
 async function pullHist() {
@@ -2812,6 +2826,31 @@ document.addEventListener('click', async e => {
     BUG.list = BUG.list.filter(x => x.id !== id); renderBugs(false); api('/api/admin/bugdel', { body: { id } }).catch(err => alertMsg(err.message));
   }
 });
+// ---------- 會員資料備份與還原（11/04）----------
+async function renderBackups() {
+  const box = $('#bkBox'); if (!box) return;
+  let j; try { j = await api('/api/admin/backups'); } catch (e) { box.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
+  const sum = $('#bkSum'); if (sum) sum.textContent = j.last ? '上次 ' + fmtT(j.last) : '還沒備份過';
+  box.innerHTML = `<div class="mk">
+    ${j.full ? '<div class="msg err">伺服器今天的儲存額度用完了（台灣時間早上 8 點重置），寫入暫停中；已加入的會員照常可以用。</div>' : ''}
+    <p class="muted small" style="margin:0">Cloudflare 每週自動備份一次會員資料，留最近 4 份。建議偶爾下載一份存在手機或雲端硬碟。</p>
+    ${(j.list || []).map(d => `<div class="sp-r"><span class="code" style="letter-spacing:0">${esc(d)}</span><span class="sp-nt"></span><button data-bkdl="${esc(d)}">下載</button><button data-bkrs="${esc(d)}">匯回</button></div>`).join('') || '<p class="empty">還沒有雲端備份。</p>'}
+    <div class="row"><button class="btn" id="bkNow" style="flex:1">立即備份</button><button class="btn" id="bkDl" style="flex:1">⬇ 下載完整備份</button></div>
+    <label class="btn" style="text-align:center">⬆ 從檔案匯回<input type="file" id="bkFile" accept=".json,application/json" hidden></label>
+    <p class="muted small" style="margin:0">匯回只會補上不存在的邀請碼，不會覆蓋現有的；會員原本的手機登入也會一起恢復。</p>
+    <div id="bkMsg"></div></div>`;
+  const msg = t => { $('#bkMsg').innerHTML = t; };
+  const dl = (name, obj) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 1)], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); };
+  const restore = async codes => { if (!Array.isArray(codes)) return msg('<div class="msg err">檔案格式不對。</div>'); const r = await api('/api/admin/restore', { body: { codes } }); msg(`<div class="msg ${r.full ? 'err' : ''}">補回 ${r.add} 組、略過 ${r.skip} 組（已存在）${r.full ? '；儲存額度用完，剩下的明天再匯回' : ''}</div>`); renderAdmin(true); };
+  $('#bkNow').onclick = async () => { try { const r = await api('/api/admin/backup', { body: {} }); msg(`<div class="msg">已備份 ${r.n} 組邀請碼（${r.day}）</div>`); renderBackups(); } catch (e) { msg(`<div class="msg err">${esc(e.message)}</div>`); } };
+  $('#bkDl').onclick = async () => { try { const r = await api('/api/admin/export'); dl(`GA會員備份_${new Date().toISOString().slice(0, 10)}.json`, r); } catch (e) { msg(`<div class="msg err">${esc(e.message)}</div>`); } };
+  $('#bkFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const o = JSON.parse(await f.text()); await restore(o.codes); } catch (err) { msg(`<div class="msg err">讀不到檔案：${esc(err.message)}</div>`); } };
+  box.onclick = async e => {
+    const d = e.target.closest('[data-bkdl]'), r = e.target.closest('[data-bkrs]');
+    if (d) { const o = await api('/api/admin/backup', { body: { day: d.dataset.bkdl } }).catch(err => (msg(`<div class="msg err">${esc(err.message)}</div>`), null)); if (o) dl(`GA會員備份_${d.dataset.bkdl}.json`, o); }
+    if (r) { if (!r.classList.contains('arm')) { r.classList.add('arm'); r.textContent = '確定？'; return; } const o = await api('/api/admin/backup', { body: { day: r.dataset.bkrs } }).catch(() => null); if (o) restore(o.codes); }
+  };
+}
 // ---------- 會員名單匯出 ----------
 function downloadCSV(name, rows) {
   const csv = '﻿' + rows.map(r => r.map(v => { v = String(v ?? ''); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(',')).join('\n');
