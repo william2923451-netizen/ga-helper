@@ -288,6 +288,8 @@ body.compact.at-life .side.me{padding-bottom:var(--safe-b)}
 .mr-top{display:flex;align-items:center;gap:8px;cursor:pointer}
 .mr-dot{width:9px;height:9px;border-radius:50%;background:var(--line);flex:none}.mr.live .mr-dot{background:var(--good);box-shadow:0 0 0 3px rgba(91,191,138,.18)}.mr.off .mr-dot{background:var(--bad)}
 .mr-n{flex:1;min-width:0;font-weight:700;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gid{font-family:var(--num);font-weight:500;color:var(--muted);margin-left:1px}
+.stand .gid{font-size:.85em}
 .mr-id{font-family:var(--num);font-weight:500;color:var(--muted);margin-left:1px}
 .mr-st{font-size:12.5px;color:var(--muted);flex:none}.mr.live .mr-st{color:var(--good)}
 .mr-sub{font-size:13px;color:var(--accent);padding-left:17px}
@@ -534,9 +536,9 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </head>
 <body>
 <div id="splash" class="sp-l3" aria-hidden="true">
-  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261105f</div></div>
-  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261105f</div></div>
-  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261105f</div></div>
+  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261105g</div></div>
+  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261105g</div></div>
+  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261105g</div></div>
 </div>
 <script>try{var sp=(JSON.parse(localStorage.getItem('ga.settings')||'{}')||{}).splash||'l3';if(!/^(l[123]|off)$/.test(sp))sp='l3';document.getElementById('splash').className='sp-'+sp}catch(e){}</script>
 <div class="app">
@@ -719,6 +721,8 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 'use strict';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// 玩家顯示統一成「名字#編號」（11/05f）
+const gid = (name, pid) => `${esc(name || '')}${pid ? `<span class="gid">#${esc(pid)}</span>` : ''}`;
 const store = {
   get(k, d) { try { const v = localStorage.getItem('ga.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem('ga.' + k, JSON.stringify(v)); } catch (e) {} },
@@ -757,7 +761,7 @@ function showAlert({ title, sub = '', tone = '', sound = 'soft', ttl = 0, action
   clearTimeout(alertTimer); if (ttl) alertTimer = setTimeout(close, ttl);
 }
 // APP 主程式版本（改 index.html 或 sw.js 時往前推）
-const APP_VERSION = '20261105f';
+const APP_VERSION = '20261105g';
 
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
@@ -1609,7 +1613,7 @@ function oppHTML(p) {
   return `
   <div class="card">
     <div class="opp-head">
-      <div style="min-width:0"><div class="opp-name">${esc(p.name)}</div><div class="muted small">${p.pid ? 'GA #' + esc(p.pid) + '・' : ''}共 ${all.length} 場賽事紀錄</div></div>
+      <div style="min-width:0"><div class="opp-name">${gid(p.name, p.pid)}</div><div class="muted small">共 ${all.length} 場賽事紀錄</div></div>
       <div class="elo"><b>${p.elo != null ? Math.round(p.elo) : '–'}</b><span class="muted small">ELO</span><br><span class="tier ${hi ? 'hi' : ''}">${hi ? '高手（前 25%）' : '一般'}</span></div>
     </div>
     ${all[0] ? `<div class="small muted">最近一次：${esc(all[0].date)} 用 ${pill(all[0].deck, all[0].element)}</div>` : ''}
@@ -1754,7 +1758,7 @@ function renderRounds() {
     const oe = e && e.initialElo != null ? Math.round(e.initialElo) : null;
     const eloTag = oe != null ? `<span class="oelo ${oe >= S.hiElo ? 'hi' : ''}">${oe}</span>` : '';
     const dl = r.me && r.me.elo != null && r.status === 'complete' ? `<span class="de ${r.me.elo >= 0 ? 'up' : 'dn'}">${r.me.elo >= 0 ? '+' : ''}${r.me.elo.toFixed(1)}</span>` : '';
-    return `<div class="hrow${now}">${rd}<span class="nm">vs ${esc(r.opp.name || '#' + r.opp.id)}${eloTag}</span><span class="res">${res}${gs}${dl}</span><span class="hero">${heroTxt}</span></div>`;
+    return `<div class="hrow${now}">${rd}<span class="nm">vs ${r.opp.name ? gid(r.opp.name, r.opp.id) : '#' + esc(r.opp.id)}${eloTag}</span><span class="res">${res}${gs}${dl}</span><span class="hero">${heroTxt}</span></div>`;
   }).reverse().join('');
   if (!(CHAMPS && CHAMPS.length) && !renderRounds.loading) { renderRounds.loading = true; loadChamps().then(() => renderRounds()).catch(() => {}); }
   // 英雄資料：同一場比賽 60 秒內不重抓
@@ -1788,7 +1792,7 @@ function renderStand() {
     const cls = [r.id === me ? 'me' : '', r.id === opp ? 'op' : '', cut && r.rank === cut ? 'cutline' : ''].join(' ');
     const tag = r.id === me ? '<span class="tag">你</span>' : r.id === opp ? '<span class="tag">對手</span>' : '';
     const drop = r.status === 'dropped' ? ' <span class="muted small">退賽</span>' : '';
-    return gap + `<tr class="${cls}" data-id="${r.id}"><td class="num l">${r.rank}</td><td class="l nm">${esc(r.name)}${tag}${drop}</td>
+    return gap + `<tr class="${cls}" data-id="${r.id}"><td class="num l">${r.rank}</td><td class="l nm">${gid(r.name, r.id)}${tag}${drop}</td>
       <td class="num">${r.score}</td><td class="num">${r.w}-${r.l}-${r.t}${r.byes ? `<span class="muted small"> +${r.byes}B</span>` : ''}</td>
       <td class="num">${pct(r.omw)}</td><td class="num x">${pct(r.gw)}</td><td class="num x">${pct(r.ogw)}</td>
       <td class="x">${esc(r.country)}</td><td class="num x">${r.place ?? '–'}</td></tr>`;
@@ -2165,7 +2169,7 @@ async function renderMember() {
     box.innerHTML = `<div class="mem-st">
         <span>狀態</span><b style="color:var(--good)">已加入</b>
         <span>邀請碼</span><b class="code">${esc(m.code)}</b>
-        <span>綁定</span><b>GA #${esc(m.pid)}${m.name ? '・' + esc(m.name) : ''}</b>
+        <span>綁定</span><b>${gid(m.gaName || m.name || '', m.pid)}${m.gaName && m.name && m.name !== m.gaName ? '<span class="muted small">・暱稱 ' + esc(m.name) + '</span>' : ''}</b>
         <span>裝置</span><b>${m.devices} / 3 支</b>
       </div>
       <button class="btn" id="memOut">這支手機登出</button>
@@ -2605,7 +2609,7 @@ function h2hHTML(pid, name, slug) {
   if (!pid && !name) return '';
   const rs = h2hRounds(pid, name, slug); if (!rs.length) return '';
   const done = rs.filter(r => ['w', 'l', 'd', 'id'].includes(r.res)), w = done.filter(r => r.res === 'w').length, l = done.filter(r => r.res === 'l').length;
-  return `<div class="card h2h-card"><div class="row" style="justify-content:space-between;align-items:baseline"><h2>跟 ${esc(name || '')}${pid ? '#' + esc(pid) : ''} 的交手履歷</h2><span class="muted small" style="font-family:var(--num)">打過 ${done.length} 次・${w} 勝 ${l} 敗</span></div>
+  return `<div class="card h2h-card"><div class="row" style="justify-content:space-between;align-items:baseline"><h2>跟 ${gid(name, pid)} 的交手履歷</h2><span class="muted small" style="font-family:var(--num)">打過 ${done.length} 次・${w} 勝 ${l} 敗</span></div>
     ${rs.map(r => {
       const live = !r.res, cls = r.res === 'w' ? 'w' : r.res === 'l' ? 'l' : '';
       const g = (r.games || []), f = g[0] && g[0].first;
@@ -2982,6 +2986,9 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // ---------- 更新公告：更新後第一次打開跳一次（11/04）----------
 // 以後每次改版在最上面加一筆（v 要跟 APP_VERSION 一樣）
 const CHANGELOG = [
+  { v: '20261105g', date: '11/05', items: [
+    ['🏷', '名字#編號', '對手資料、成績表、對局紀錄、交手履歷、會員資料都統一顯示成「名字#編號」，同名的人也分得出來。'],
+  ] },
   { v: '20261105f', date: '11/05', items: [
     ['📊', '戰績不會再被刪掉', '戰績簿和交手履歷改成不能刪除，每次同步都照 grandarchivestats 重新帶入；以前刪掉的比賽會在下次同步時補回來。打開戰績簿時也會自動同步。'],
   ] },
