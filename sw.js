@@ -1,6 +1,6 @@
 // GA 比賽助手：離線與更新（Service Worker）
 // 改了 APP 檔案清單或這支程式時，把 VERSION 往前推，手機就會跳出「有新版本」。
-const VERSION = '20261105a';
+const VERSION = '20261105c';
 const SHELL = 'ga-shell-' + VERSION;   // APP 本身
 const RT = 'ga-runtime';               // 字型、英雄卡圖
 const FILES = ['./', 'index.html', 'config.js', 'deck.js', 'ascent.js', 'display.js', 'logo.webp', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
@@ -47,4 +47,20 @@ self.addEventListener('fetch', e => {
   if (u.origin === location.origin) return e.respondWith(networkFirst(req));
   if (/fonts\.(googleapis|gstatic)\.com$/.test(u.hostname) || (u.hostname === 'api.gatcg.com' && u.pathname.startsWith('/cards/images/'))) return e.respondWith(cacheFirst(req));
   // 配對、成績表、對手資料：一律即時上網，不存
+});
+
+// ---------- 推播通知（11/05）----------
+self.addEventListener('push', e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: '比賽助手', body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || '比賽助手', {
+    body: d.body || '', tag: d.tag || 'ga', renotify: true, icon: 'icon-192.png', badge: 'icon-192.png', data: { url: d.url || './' },
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || './', self.registration.scope).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) if (c.url.startsWith(self.registration.scope)) { c.postMessage({ type: 'open', url }); return c.focus(); }
+    return self.clients.openWindow(url);
+  }));
 });

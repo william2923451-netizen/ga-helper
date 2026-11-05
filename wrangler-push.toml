@@ -1,0 +1,12 @@
+# GA 比賽助手：推播分身（ga-push）的設定
+# 只負責幫 ga-helper 加密並送出推播；沒有公開網址，只有 ga-helper 叫得到。
+name = "ga-push"
+main = "push-worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+preview_urls = false
+
+# 跟 ga-helper 共用同一個儲存空間（讀推播金鑰 push:vapid，不會寫入）
+[[kv_namespaces]]
+binding = "GA_KV"
+id = "5f46c5483ccd4287adbff4ced7fda377"

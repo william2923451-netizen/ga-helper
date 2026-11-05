@@ -533,9 +533,9 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </head>
 <body>
 <div id="splash" class="sp-l3" aria-hidden="true">
-  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261105a</div></div>
-  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261105a</div></div>
-  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261105a</div></div>
+  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261105c</div></div>
+  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261105c</div></div>
+  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261105c</div></div>
 </div>
 <script>try{var sp=(JSON.parse(localStorage.getItem('ga.settings')||'{}')||{}).splash||'l3';if(!/^(l[123]|off)$/.test(sp))sp='l3';document.getElementById('splash').className='sp-'+sp}catch(e){}</script>
 <div class="app">
@@ -756,7 +756,7 @@ function showAlert({ title, sub = '', tone = '', sound = 'soft', ttl = 0, action
   clearTimeout(alertTimer); if (ttl) alertTimer = setTimeout(close, ttl);
 }
 // APP 主程式版本（改 index.html 或 sw.js 時往前推）
-const APP_VERSION = '20261105a';
+const APP_VERSION = '20261105c';
 
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
@@ -1543,7 +1543,7 @@ async function fetchReport(m, fresh) {
     if (lastMatch !== m) return;
     m._report = r; store.set('lastMatch', m);
     const after = repInfo(m);
-    if (after && !after.done && after.op && !after.me && !(before && before.op) && S.alertPair)
+    if (after && !after.done && after.op && !after.me && !(before && before.op) && S.alertPair && inAppAlerts())
       showAlert({ title: '對手回報了這一輪的結果', sub: `${r.me.score}-${r.opp.score}，請到 Omnidex 確認`, tone: 'warn', actions: [{ label: '看比賽', run: () => goTab('match') }] });
     renderOpp();
   } catch (e) {}
@@ -1565,7 +1565,7 @@ function checkTimerAlerts() {
   renderClock();
   const st = timerState(); if (!st) return;
   const rem = st.end - Date.now();
-  if (!S.alertTime) return;
+  if (!S.alertTime || !inAppAlerts()) return; // 開了推播（沒勾 APP 內也顯示）就交給推播
   const done = fired[st.key] || [];
   const fire = (k, a) => { done.push(k); fired[st.key] = done; const keys = Object.keys(fired); if (keys.length > 30) delete fired[keys[0]]; store.set('fired', fired); showAlert(a); };
   // 延長 5 分鐘：剩 1 分鐘、結束（只在剛跨過的 2 分鐘內提醒，避免重開 APP 時補發舊的）
@@ -1655,7 +1655,7 @@ async function fetchMatch(quiet, fresh) {
     if (newOpp && newOpp !== prevOpp) { buzz(); if (typeof setFold === 'function') setFold('opp', false); if (L.match.opp !== newOpp) resetScore(newOpp); }
     // 新配對提醒：自動更新時發現新的一輪（或重新配對）
     const newRound = nc && (!pc || prevEv !== j.event.id || pc.round !== nc.round || pc.stage !== nc.stage);
-    if (quiet && S.alertPair && nc && nc.status !== 'complete' && (newRound || j._repaired)) {
+    if (quiet && S.alertPair && inAppAlerts() && nc && nc.status !== 'complete' && (newRound || j._repaired)) {
       const nm = nc.opp ? (nc.opp.name || (j.opponent && j.opponent.name) || '#' + nc.opp.id) : '';
       showAlert({
         title: j._repaired ? `第 ${nc.round} 輪重新配對` : `第 ${nc.round} 輪配對出來了`,
@@ -1998,6 +1998,7 @@ function renderSettings() {
       <div class="fold-head" id="admHead"><h2>會員管理</h2><span class="muted small" id="admSum"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
       <div id="admBox"></div>
     </div>
+    <div class="card" id="pushAdmCard" hidden><h2>推播狀態</h2><div id="pushAdmBox"></div></div>
     <div class="card ${store.get('bugFold', false) ? 'afold' : ''}" id="bugCard" hidden>
       <div class="fold-head" id="bugHead"><h2>問題回報</h2><span class="muted small" id="bugSum"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
       <div id="bugBox"></div>
@@ -2016,9 +2017,14 @@ function renderSettings() {
       <div class="toggle"><span>對手區倒過來（面對面）</span><input type="checkbox" id="sFlip" style="width:auto" ${S.flip ? 'checked' : ''}></div>
       <div class="toggle"><span>精簡模式（計血頁不顯示下方分頁）</span><input type="checkbox" id="sCompact" style="width:auto" ${S.compact ? 'checked' : ''}></div>
     </div>
+    <div class="card" id="pushCard">
+      <h2>推播通知 <span class="tag on" style="vertical-align:2px">會員功能</span></h2>
+      <div id="pushBox"><p class="empty"><span class="spin"></span></p></div>
+    </div>
     <div class="card">
       <h2>提醒 <span class="tag on" style="vertical-align:2px">會員功能</span></h2>
       <p class="muted small" style="margin:0">回合時間、新配對、對手回報的提醒都要用到配對資料，需要先用邀請碼加入會員才會作用。</p>
+      ${S.pushOn && !S.pushAlsoInApp ? '<div class="msg">已經開了推播，這些提醒改由推播通知送（APP 開著時不再跳提醒條）。要兩種都收，到上面「推播通知」打開「APP 開著時也顯示提醒條」。</div>' : ''}
       ${store.get('needInvite', false) && !store.get('member', '') && !store.get('admin', '') ? '<div class="msg err">你還沒加入會員，提醒目前不會作用。到上面「會員」輸入邀請碼。</div>' : ''}
       <div class="toggle"><span>回合時間提醒</span><input type="checkbox" id="sAlT" style="width:auto" ${S.alertTime ? 'checked' : ''}></div>
       <div class="muted small">剩幾分鐘時提醒（可複選）</div>
@@ -2106,10 +2112,10 @@ function renderSettings() {
     try { await api('/api/admin/list'); msg.innerHTML = '<div class="msg">管理員登入成功。</div>'; $('#admKeyBox').hidden = true; renderMember(); }
     catch (e) { store.set('admin', ''); msg.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; $('#admCard').hidden = true; }
   };
-  $('#sAdmOut').onclick = () => { store.set('admin', ''); $('#sAdm').value = ''; $('#sAdmMsg').innerHTML = '<div class="msg">已登出管理員。</div>'; $('#admCard').hidden = true; $('#idxCard').hidden = true; $('#bugCard').hidden = true; renderMember(); };
+  $('#sAdmOut').onclick = () => { store.set('admin', ''); $('#sAdm').value = ''; $('#sAdmMsg').innerHTML = '<div class="msg">已登出管理員。</div>'; $('#admCard').hidden = true; $('#idxCard').hidden = true; $('#bugCard').hidden = true; $('#pushAdmCard').hidden = true; renderMember(); };
   $('#bugHead').onclick = () => { const c = $('#bugCard'); c.classList.toggle('afold'); store.set('bugFold', c.classList.contains('afold')); };
   $('#admHead').onclick = () => { const c = $('#admCard'); c.classList.toggle('afold'); store.set('admFold', c.classList.contains('afold')); };
-  renderMember();
+  renderMember(); renderPush();
 }
 // ---------- 會員（邀請碼）----------
 const fmtT = iso => { if (!iso) return '—'; const d = new Date(iso); if (isNaN(d)) return '—'; const p = n => String(n).padStart(2, '0'); const today = new Date().toDateString() === d.toDateString(); return today ? `今天 ${p(d.getHours())}:${p(d.getMinutes())}` : `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
@@ -2130,7 +2136,7 @@ async function renderMember() {
     if (j.open) { box.innerHTML = '<p class="muted small" style="margin:0">目前所有人都能用，不需要邀請碼。</p>'; $('#admCard').hidden = true; return; }
     if (j.admin) {
       box.innerHTML = '<div class="mem-st"><span>身分</span><b>管理員（這支手機）</b></div>';
-      $('#admCard').hidden = false; renderAdmin(); $('#idxCard').hidden = false; renderIndex(); $('#bugCard').hidden = false; renderBugs(); return;
+      $('#admCard').hidden = false; renderAdmin(); $('#idxCard').hidden = false; renderIndex(); $('#bugCard').hidden = false; renderBugs(); $('#pushAdmCard').hidden = false; renderPushAdmin(); return;
     }
     const m = j.member; store.set('memberInfo', m); store.set('needInvite', false); setPidLock(m.pid);
     box.innerHTML = `<div class="mem-st">
@@ -2830,6 +2836,93 @@ document.addEventListener('click', async e => {
     BUG.list = BUG.list.filter(x => x.id !== id); renderBugs(false); api('/api/admin/bugdel', { body: { id } }).catch(err => alertMsg(err.message));
   }
 });
+// ---------- 推播通知（11/05）----------
+// 伺服器每分鐘替會員看配對／時間／回報，APP 關著也收得到。開了推播後，預設不再跳 APP 內的提醒（可在推播卡片打開）。
+const PUSH_KINDS = [['pair', '新的一輪配對', '第幾桌、對手是誰'], ['t10', '剩 10 分鐘', ''], ['t5', '剩 5 分鐘', ''], ['t0', '時間到・延長結束', ''], ['rep', '對手已回報', '提醒你到 Omnidex 確認']];
+const PUSH_DEF_PREFS = { pair: true, t10: false, t5: true, t0: true, rep: true, compact: true };
+const pushPrefs = () => Object.assign({}, PUSH_DEF_PREFS, S.pushPrefs || {});
+const isStandalone = () => window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+const isIOS = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+// APP 內提醒要不要跳（開了推播、且沒勾「APP 開著也顯示」就不跳）
+const inAppAlerts = () => !S.pushOn || !!S.pushAlsoInApp;
+async function pushSub() { try { const reg = await navigator.serviceWorker.ready; return await reg.pushManager.getSubscription(); } catch (e) { return null; } }
+const keyBytes = b64 => { b64 = b64.replace(/-/g, '+').replace(/_/g, '/'); while (b64.length % 4) b64 += '='; const s0 = atob(b64), u = new Uint8Array(s0.length); for (let i = 0; i < s0.length; i++) u[i] = s0.charCodeAt(i); return u; };
+async function pushEnable(msgEl) {
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { msgEl.innerHTML = '<div class="msg err">你沒有允許通知。要開的話：iPhone「設定 → 通知 → 比賽助手」打開允許通知，再回來按一次。</div>'; return; }
+    const { key } = await api('/api/push/key');
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(key) });
+    const ev = lastMatch && lastMatch.event && !['complete', 'canceled'].includes(lastMatch.event.status) ? lastMatch.event.id : null;
+    await api('/api/push/sub', { body: { sub: sub.toJSON(), prefs: pushPrefs(), event: ev } });
+    S.pushOn = true; saveS(); renderPush();
+  } catch (e) { msgEl.innerHTML = `<div class="msg err">開不了推播：${esc(e.message || e)}</div>`; }
+}
+async function pushDisable() {
+  const sub = await pushSub();
+  if (sub) { try { await api('/api/push/unsub', { body: { endpoint: sub.endpoint } }); } catch (e) {} try { await sub.unsubscribe(); } catch (e) {} }
+  S.pushOn = false; saveS(); renderPush();
+}
+async function renderPush() {
+  const box = $('#pushBox'); if (!box) return;
+  const member = store.get('member', '') || store.get('admin', '');
+  if (!member) { box.innerHTML = '<p class="muted small" style="margin:0">加入會員後才能開推播。</p>'; return; }
+  if (!pushSupported() || (isIOS() && !isStandalone())) {
+    box.innerHTML = isIOS() && !isStandalone() ? '<div class="msg err">要先把 APP 加到主畫面才能開推播：Safari 分享 → 加入主畫面，再從主畫面打開。</div>' : '<p class="muted small" style="margin:0">這個瀏覽器不支援推播通知。iPhone 需要 iOS 16.4 以上。</p>';
+    return;
+  }
+  const sub = await pushSub(), on = !!(sub && Notification.permission === 'granted');
+  if (S.pushOn !== on) { S.pushOn = on; saveS(); }
+  if (!on) {
+    box.innerHTML = `<div class="mk"><div class="muted small">APP 關著、螢幕鎖著也能收到配對和時間通知。</div><button class="btn pri" id="pushOn">🔔 開啟推播通知</button>
+      <p class="muted small" style="margin:0">${isIOS() ? 'iPhone 需要 iOS 16.4 以上，並且從主畫面打開 APP。' : ''}按下去後手機會問要不要允許通知，請按「允許」。</p><div id="pushMsg"></div></div>`;
+    $('#pushOn').onclick = () => { $('#pushOn').disabled = true; pushEnable($('#pushMsg')); };
+    return;
+  }
+  const pf = pushPrefs();
+  const tog = (k, t, sub2, chk) => `<div class="toggle"><span>${t}${sub2 ? `<br><small class="muted">${sub2}</small>` : ''}</span><input type="checkbox" data-pk="${k}" style="width:auto" ${chk ? 'checked' : ''}></div>`;
+  box.innerHTML = `<div class="mk"><div class="mem-st"><span>狀態</span><b style="color:var(--good)">已開啟（這支手機）</b></div>
+    <div class="muted small">要收哪些通知</div>
+    ${PUSH_KINDS.map(([k, t, d]) => tog(k, t, d, pf[k] && !(k === 't10' && pf.compact))).join('')}
+    ${tog('compact', '精簡通知', '大比賽建議打開：不送剩 10 分鐘', pf.compact)}
+    ${tog('inapp', 'APP 開著時也顯示提醒條', '關掉的話，APP 開著也只收推播，不會重複提醒', !!S.pushAlsoInApp)}
+    <div class="row"><button class="btn" id="pushTest" style="flex:1">傳一則測試通知</button><button class="btn" id="pushOff" style="flex:1">關閉推播</button></div>
+    <div id="pushMsg"></div>
+    <p class="muted small" style="margin:0">伺服器每分鐘檢查一次，通知最多晚 1 分鐘；很多朋友同時配對時可能晚 1～2 分鐘。比賽要先抓過一次配對（或打開 APP 自動找到），伺服器才會開始幫你看。</p></div>`;
+  box.querySelectorAll('[data-pk]').forEach(cb => cb.onchange = async () => {
+    const k = cb.dataset.pk;
+    if (k === 'inapp') { S.pushAlsoInApp = cb.checked; saveS(); return; }
+    S.pushPrefs = Object.assign(pushPrefs(), { [k]: cb.checked });
+    if (k === 't10' && cb.checked) S.pushPrefs.compact = false;
+    saveS(); renderPush();
+    try { await api('/api/push/prefs', { body: { endpoint: sub.endpoint, prefs: pushPrefs() } }); } catch (e) { $('#pushMsg').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+  });
+  $('#pushTest').onclick = async () => { const m = $('#pushMsg'); m.innerHTML = '<p class="empty"><span class="spin"></span></p>'; try { await api('/api/push/test', { body: { endpoint: sub.endpoint } }); m.innerHTML = '<div class="msg">已送出，幾秒內會收到（APP 開著時有些手機不會跳出來，可以先回主畫面）。</div>'; } catch (e) { m.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; } };
+  $('#pushOff').onclick = pushDisable;
+}
+// 點通知打開 APP：直接切到比賽
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'open') { goTab('match'); if (needFind && lastMatch) fetchMatch(true); } });
+try { const q0 = new URLSearchParams(location.search); if (q0.get('tab') === 'match') { setTimeout(() => goTab('match'), 300); const ev0 = q0.get('event'); if (ev0 && !$('#evInput').value) { $('#evInput').value = ev0; setTimeout(() => fetchMatch(true), 800); } history.replaceState(null, '', location.pathname); } } catch (e) {}
+// ---------- 管理員：推播狀態 ----------
+async function renderPushAdmin() {
+  const box = $('#pushAdmBox'); if (!box) return;
+  let j; try { j = await api('/api/admin/push'); } catch (e) { box.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
+  box.innerHTML = `<div class="adm-sum"><div><b>${j.subs}</b><span>開了推播</span></div><div><b class="g">${j.events.length}</b><span>監看中比賽</span></div><div><b>${j.sent}</b><span>今天送出</span></div><div><b>${j.fail}</b><span>送達失敗</span></div></div>
+    ${j.events.length ? `<div class="sp-list">${j.events.map(e => `<div class="sp-r"><div style="flex:1;min-width:0"><b>${esc(e.name)}</b><br><small class="muted">${esc(e.cc || '')}${e.round ? '・第 ' + e.round + ' 輪' : ''}・${e.members} 位會員</small></div><small class="muted">${fmtT(new Date(e.at).toISOString())}</small></div>`).join('')}</div>` : '<p class="empty">現在沒有監看中的比賽。</p>'}
+    <div class="sp-r" style="align-items:center"><div style="flex:1;min-width:0"><b>推播分身</b> ${j.pz && j.pz.on ? '<span class="tag on">已啟用</span>' : j.pz && j.pz.bound ? '<span class="tag">未啟用</span>' : '<span class="tag">未部署</span>'}<br><small class="muted">每分鐘最多 ${j.perMin || 25} 則${j.viaPz ? '・今天分身送了 ' + j.viaPz + ' 則' : ''}${j.pz && j.pz.why ? '・' + esc(j.pz.why) : ''}</small></div>
+      ${j.pz && j.pz.bound ? (j.pz.on ? '<button class="btn" id="pzOff">停用</button>' : '<button class="btn" id="pzOn">檢測並啟用</button>') : ''}</div>
+    <div id="pzMsg"></div>
+    <p class="muted small" style="margin:0">送達失敗通常是對方關掉通知或刪了 APP，會自動移除。分身是另一個小 Worker，同時幫忙送，朋友多時配對通知也能在 1 分鐘內送完；檢測不通過就維持每分鐘 25 則。</p>`;
+  const pm = t => { $('#pzMsg').innerHTML = t; };
+  if ($('#pzOn')) $('#pzOn').onclick = async e => { e.target.disabled = true; e.target.textContent = '檢測中…';
+    try { const r = await api('/api/admin/pushpz', { body: {} }); pm(r.ok ? '<div class="msg">檢測通過，已啟用推播分身。</div>' : `<div class="msg err">檢測沒通過（${esc(r.why || '')}），維持自己送。</div>`); }
+    catch (err) { pm(`<div class="msg err">檢測沒通過（${esc(err.message)}），維持自己送。</div>`); }
+    setTimeout(renderPushAdmin, 1500); };
+  if ($('#pzOff')) $('#pzOff').onclick = async () => { try { await api('/api/admin/pushpz', { body: { off: true } }); } catch (err) {} renderPushAdmin(); };
+}
 // ---------- 會員資料備份與還原（11/04）----------
 async function renderBackups() {
   const box = $('#bkBox'); if (!box) return;
@@ -2871,6 +2964,12 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // ---------- 更新公告：更新後第一次打開跳一次（11/04）----------
 // 以後每次改版在最上面加一筆（v 要跟 APP_VERSION 一樣）
 const CHANGELOG = [
+  { v: '20261105c', date: '11/05', items: [
+    ['⚡', '推播送得更快', '朋友多的比賽日，配對通知也能在 1 分鐘內送到每個人。'],
+  ] },
+  { v: '20261105b', date: '11/05', items: [
+    ['🔔', '推播通知', 'APP 關著、螢幕鎖著也能收到「配對出來了・第幾桌」、剩 5 分鐘、時間到、對手回報。到「設定 → 推播通知」開啟（iPhone 要先加到主畫面）。'],
+  ] },
   { v: '20261105a', date: '11/05', items: [
     ['⚙️', '穩定性改善', '減少伺服器的儲存用量，朋友多的比賽日也不容易卡住；比賽中的戰績改成打完再備份。'],
   ] },

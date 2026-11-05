@@ -12,6 +12,13 @@ keep_vars = true
 binding = "GA_KV"
 id = "5f46c5483ccd4287adbff4ced7fda377"
 
-# 每小時排程（賽事索引、每週備份）
+# 推播分身（ga-push，設定在 wrangler-push.toml）：主 Worker 透過這個綁定叫它幫忙送推播
+# 自動部署會先部署 ga-push 再部署這裡，順序不能反（綁定的對象要先存在）
+[[services]]
+binding = "PUSHER"
+service = "ga-push"
+
+# 每分鐘排程 ×5（免費方案上限 5 條；推播分五組送；整點那次另外跑賽事索引、每週備份）
+# 五條寫法不同、意思都是「每分鐘」，worker.js 用寫法分辨是第幾組，不要改寫法
 [triggers]
-crons = ["0 * * * *"]
+crons = ["* * * * *", "*/1 * * * *", "0-59 * * * *", "* 0-23 * * *", "* * 1-31 * *"]
