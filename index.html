@@ -534,9 +534,9 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </head>
 <body>
 <div id="splash" class="sp-l3" aria-hidden="true">
-  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261105e</div></div>
-  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261105e</div></div>
-  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261105e</div></div>
+  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261105f</div></div>
+  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261105f</div></div>
+  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261105f</div></div>
 </div>
 <script>try{var sp=(JSON.parse(localStorage.getItem('ga.settings')||'{}')||{}).splash||'l3';if(!/^(l[123]|off)$/.test(sp))sp='l3';document.getElementById('splash').className='sp-'+sp}catch(e){}</script>
 <div class="app">
@@ -757,7 +757,7 @@ function showAlert({ title, sub = '', tone = '', sound = 'soft', ttl = 0, action
   clearTimeout(alertTimer); if (ttl) alertTimer = setTimeout(close, ttl);
 }
 // APP 主程式版本（改 index.html 或 sw.js 時往前推）
-const APP_VERSION = '20261105e';
+const APP_VERSION = '20261105f';
 
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
@@ -2534,16 +2534,20 @@ setTimeout(() => loadSeason(false), 2500);
 // ev[eventId] = { id, name, date, myDeck:[英雄], at, rounds: { 'swiss:3': { stage, round, oppId, oppName, oppDeck, me, op, res, elo, status, games:[{r, first}] } } }
 let HIST = store.get('hist', null) || { v: 1, ev: {}, del: {}, at: 0 };
 let histDirty = false;
+// 11/05f：戰績不能刪除，每次同步都照 grandarchivestats 重新帶入 → 把以前刪掉的紀錄解除（下次同步會補回來）
+if (Object.keys(HIST.del || {}).length || Object.values(HIST.ev).some(e => e.del && Object.keys(e.del).length)) {
+  HIST.del = {}; for (const e of Object.values(HIST.ev)) delete e.del; store.set('hist', HIST); store.set('gasSync', 0); histDirty = true;
+}
 const saveHist = () => { DECKMAP = null; HIST.at = Date.now(); store.set('hist', HIST); histDirty = true; scheduleHistSync(); renderStatSum(); };
 const rKey = r => (r.stage || 'swiss') + ':' + r.round;
 function histUpdate(m) {
-  if (!m || !m.event || !m.rounds || HIST.del[m.event.id]) return;
+  if (!m || !m.event || !m.rounds) return;
   const id = String(m.event.id);
   const e = HIST.ev[id] = HIST.ev[id] || { id: m.event.id, name: m.event.name, date: m.event.date || new Date().toISOString(), myDeck: [], rounds: {} };
   e.name = m.event.name || e.name; e.status = m.event.status; e.at = Date.now();
   let changed = false;
   for (const r of m.rounds) {
-    const k = rKey(r); if ((e.del || {})[k]) continue;
+    const k = rKey(r);
     const o = e.rounds[k] = e.rounds[k] || { stage: r.stage, round: r.round, games: [], date: new Date().toISOString() };
     const res = !r.opp ? 'bye' : r.status !== 'complete' ? '' : r.me.status === 'winner' ? 'w' : r.me.status === 'loser' ? 'l' : 'd';
     const n = { oppId: r.opp ? r.opp.id : null, oppName: r.opp ? (r.opp.name || '') : '', me: r.me ? r.me.score : 0, op: r.opp ? r.opp.score : 0, res, elo: r.me ? r.me.elo : null, status: r.status };
@@ -2605,7 +2609,7 @@ function h2hHTML(pid, name, slug) {
     ${rs.map(r => {
       const live = !r.res, cls = r.res === 'w' ? 'w' : r.res === 'l' ? 'l' : '';
       const g = (r.games || []), f = g[0] && g[0].first;
-      return `<div class="h2h-ev" data-ev="${esc(r.ev.id)}" data-rk="${esc(rKey(r))}"><div class="h2h-t"><b>${fmtD(r.ev.date)}・${esc(r.ev.name || '#' + r.ev.id)}</b><span class="muted small">${r.stage === 'single-elimination' ? 'T' : 'R'}${r.round}</span><button class="h2h-x" data-hdel title="刪除這筆">✕</button></div>
+      return `<div class="h2h-ev" data-ev="${esc(r.ev.id)}" data-rk="${esc(rKey(r))}"><div class="h2h-t"><b>${fmtD(r.ev.date)}・${esc(r.ev.name || '#' + r.ev.id)}</b><span class="muted small">${r.stage === 'single-elimination' ? 'T' : 'R'}${r.round}</span></div>
         <div class="h2h-m"><span>${myDots(r.ev)} 我：${esc(myDeckOf(r.ev) || '？')}</span><b class="${cls}">${live ? '進行中' : r.res === 'id' ? 'ID' : r.res === 'd' ? '和 ' + r.me + '-' + r.op : (r.res === 'w' ? '勝 ' : '敗 ') + r.me + '-' + r.op}</b><span style="text-align:right">${oppDots(r)} ${esc(oppDeckOf(r) || '？')}</span></div>
         ${!live && (f || r.elo != null) ? `<small class="muted">${f ? (f === 'me' ? '先攻' : '後攻') : ''}${f && r.elo != null ? '・' : ''}${r.elo != null ? 'ELO ' + (r.elo >= 0 ? '+' : '') + r.elo.toFixed(1) : ''}</small>` : ''}</div>`;
     }).join('')}</div>`;
@@ -2616,14 +2620,6 @@ function h2hLine(pid, evId) {
   const w = rs.filter(r => r.res === 'w').length, l = rs.filter(r => r.res === 'l').length, last = rs[0];
   return `<div class="h2h">🤝<div>你們<b>交手過 ${rs.length} 次</b>（${w} 勝 ${l} 敗）<br><span class="muted small">上次 ${fmtD(last.ev.date)} ${esc(last.ev.name || '')}，你 ${last.me}-${last.op} ${last.res === 'w' ? '贏' : last.res === 'l' ? '輸' : last.res === 'id' ? 'ID' : '和'}${oppDeckOf(last) ? '，他用 ' + esc(oppDeckOf(last)) : ''}</span></div></div>`;
 }
-document.addEventListener('click', e => {
-  const b = e.target.closest('[data-hdel]'); if (!b) return;
-  if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '刪除？'; setTimeout(() => { if (b.isConnected) { b.classList.remove('arm'); b.textContent = '✕'; } }, 3000); return; }
-  const it = b.closest('[data-ev]'), ev = HIST.ev[it.dataset.ev]; if (!ev) return;
-  delete ev.rounds[it.dataset.rk]; ev.del = ev.del || {}; ev.del[it.dataset.rk] = 1;
-  if (!Object.keys(ev.rounds).length) { delete HIST.ev[it.dataset.ev]; HIST.del[it.dataset.ev] = 1; }
-  saveHist(); renderOpp();
-});
 // ---------- 戰績簿 ----------
 const ST = { scope: 'season', deck: '' };
 function statData() {
@@ -2653,7 +2649,7 @@ function statHTML() {
   const recent = d.use.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).map(e => {
     const rs = Object.values(e.rounds), w = rs.filter(r => r.res === 'w' || r.res === 'bye').length, l = rs.filter(r => r.res === 'l').length, dd = rs.filter(r => r.res === 'd' || r.res === 'id').length;
     const elo = e.src === 'gas' && e.eloEv != null ? e.eloEv : rs.reduce((a, r) => a + (r.elo || 0), 0);
-    return `<div class="st-ev" data-sev="${esc(e.id)}"><div><b>${esc(e.name || '#' + e.id)}</b><small>${String(e.date || '').slice(0, 10).replace(/-/g, '/')}・${e.rec || `${w}-${l}-${dd}`}${e.cut ? '・' + esc(e.cut) : ''}・${myDots(e)}${esc(myDeckOf(e) || '套牌未公開')}・ELO ${elo >= 0 ? '+' : ''}${elo.toFixed(1)}</small></div><button class="btn sm" data-sdel>刪除</button></div>`;
+    return `<div class="st-ev" data-sev="${esc(e.id)}"><div><b>${esc(e.name || '#' + e.id)}</b><small>${String(e.date || '').slice(0, 10).replace(/-/g, '/')}・${e.rec || `${w}-${l}-${dd}`}${e.cut ? '・' + esc(e.cut) : ''}・${myDots(e)}${esc(myDeckOf(e) || '套牌未公開')}・ELO ${elo >= 0 ? '+' : ''}${elo.toFixed(1)}</small></div></div>`;
   }).join('');
   const ls = store.get('gasSync', 0);
   return `<div class="mk">
@@ -2665,7 +2661,7 @@ function statHTML() {
     <div class="tile" style="grid-template-columns:1fr 1fr"><div><b>${pctS(d.first.w, d.first.n)}</b><span>先攻勝率（${d.first.n} 局）</span></div><div><b>${pctS(d.second.w, d.second.n)}</b><span>後攻勝率（${d.second.n} 局）</span></div></div>
     <div class="muted small">${ST.deck ? '用 ' + esc(ST.deck) + ' ' : ''}對各套牌</div>
     ${vsRows ? `<table><tr><th>對手套牌</th><th>場</th><th>勝-敗</th><th>勝率</th></tr>${vsRows}</table>` : '<p class="empty">還沒有打完的對局。</p>'}
-    <div class="muted small">比賽（按刪除可以移除這場紀錄）</div>
+    <div class="muted small">比賽（每次同步都照 grandarchivestats 重新帶入）</div>
     ${recent || '<p class="empty">還沒有紀錄。抓過配對的比賽會自動記下來。</p>'}
     <p class="muted small" style="margin:0">過去的比賽從 grandarchivestats 同步（比賽結束後通常幾小時到一天才收錄）；先後攻勝率要在計血頁擲「先後攻」並記勝負才會算到。${store.get('member', '') ? '資料會自動備份到伺服器，換手機用同一組邀請碼就會帶過去。' : ''}</p></div>`;
 }
@@ -2673,14 +2669,12 @@ function openStats() {
   sheet('我的戰績', '<div id="stBody"></div>', sb => {
     const paint = () => { sb.querySelector('#stBody').innerHTML = statHTML(); };
     paint();
+    // 打開戰績簿：上次同步超過 1 小時就在背景重新抓一次
+    if (S.pid && Date.now() - (store.get('gasSync', 0) || 0) > 3600e3) syncStats(true).then(r => { if (!sb.isConnected) return; paint(); if (r.ok && r.add) sb.querySelector('#stMsg').innerHTML = `<div class="msg">已同步，新增 ${r.add} 場比賽</div>`; });
     sb.onclick = async e => {
       const sy = e.target.closest('[data-sync]'); if (sy) { sy.disabled = true; sy.innerHTML = '<span class="spin"></span>'; const r = await syncStats(true); paint(); sb.querySelector('#stMsg').innerHTML = r.ok ? `<div class="msg">同步好了：${r.n} 場比賽${r.add ? '（新增 ' + r.add + ' 場）' : ''}</div>` : `<div class="msg err">${esc(r.msg)}</div>`; return; }
       const a = e.target.closest('[data-ss]'); if (a) { ST.scope = a.dataset.ss; ST.deck = ''; return paint(); }
       const c = e.target.closest('[data-sd]'); if (c) { ST.deck = c.dataset.sd; return paint(); }
-      const x = e.target.closest('[data-sdel]'); if (x) {
-        if (!x.classList.contains('arm')) { x.classList.add('arm'); x.textContent = '再按一次'; setTimeout(() => { if (x.isConnected) { x.classList.remove('arm'); x.textContent = '刪除'; } }, 3000); return; }
-        const id = x.closest('[data-sev]').dataset.sev; delete HIST.ev[id]; HIST.del[id] = 1; saveHist(); pushHist(true); paint();
-      }
     };
   });
 }
@@ -2723,11 +2717,11 @@ async function syncStats(force) {
     const evs = parseGas(html); if (!evs.length) { autoBug('parse', 'grandarchivestats 戰績頁解析不到比賽（可能改版）', '/api/gasraw', 0); throw new Error('grandarchivestats 頁面讀不到比賽紀錄（可能改版了），已自動回報'); }
     let add = 0;
     for (const g of evs) {
-      const id = String(g.id); if (HIST.del[id]) continue;
+      const id = String(g.id);
       const e = HIST.ev[id] = HIST.ev[id] || { id: g.id, rounds: {}, myDeck: [] }; if (!e.src) add++;
       Object.assign(e, { name: g.name, date: g.date || e.date, myDeckName: g.deck || e.myDeckName || '', cut: g.cut, rec: g.rec, eloEv: g.elo, src: 'gas', at: Date.now() });
       for (const r0 of g.rounds) {
-        const k = r0.stage + ':' + r0.round; if ((e.del || {})[k]) continue;
+        const k = r0.stage + ':' + r0.round;
         const o = e.rounds[k] = e.rounds[k] || { stage: r0.stage, round: r0.round, games: [] };
         Object.assign(o, { res: r0.res, me: r0.me, op: r0.op, oppName: r0.oppName || o.oppName, oppSlug: r0.oppSlug, oppId: r0.oppId || o.oppId || null, oppDeckName: r0.oppDeckName, status: 'complete' });
       }
@@ -2756,14 +2750,13 @@ async function pullHist() {
   try {
     const j = await api('/api/hist?pid=' + encodeURIComponent(S.pid)); const srv = j && j.data; if (!srv || !srv.ev) return;
     let ch = false;
-    for (const id in srv.del || {}) if (!HIST.del[id]) { HIST.del[id] = 1; delete HIST.ev[id]; ch = true; }
-    for (const id in srv.ev) { if (HIST.del[id]) continue; const a = HIST.ev[id], b = srv.ev[id]; if (!a || (b.at || 0) > (a.at || 0)) { HIST.ev[id] = b; ch = true; } }
+    for (const id in srv.ev) { const a = HIST.ev[id], b = srv.ev[id]; if (!a || (b.at || 0) > (a.at || 0)) { HIST.ev[id] = b; ch = true; } }
     if (ch) { store.set('hist', HIST); renderStatSum(); }
     if (Object.keys(HIST.ev).length > Object.keys(srv.ev).length) { histDirty = true; pushHist(true); }
   } catch (e) {}
 }
 setTimeout(pullHist, 4000);
-window.GA_DEBUG = Object.assign(window.GA_DEBUG || {}, { pushHist, pullHist, hist: () => HIST });
+window.GA_DEBUG = Object.assign(window.GA_DEBUG || {}, { pushHist, pullHist, syncStats, hist: () => HIST });
 // ---------- 血量歸零：問這局誰贏 ----------
 let zeroTimer = null;
 function isDead(i) { const life = lifeOf(i) ?? S.start; return DMG() ? L.v[i] >= life : L.v[i] <= 0; }
@@ -2989,6 +2982,9 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // ---------- 更新公告：更新後第一次打開跳一次（11/04）----------
 // 以後每次改版在最上面加一筆（v 要跟 APP_VERSION 一樣）
 const CHANGELOG = [
+  { v: '20261105f', date: '11/05', items: [
+    ['📊', '戰績不會再被刪掉', '戰績簿和交手履歷改成不能刪除，每次同步都照 grandarchivestats 重新帶入；以前刪掉的比賽會在下次同步時補回來。打開戰績簿時也會自動同步。'],
+  ] },
   { v: '20261105e', date: '11/05', items: [
     ['🔔', '不用打開 APP 也收得到', '開過推播的朋友，只要同場有人用 APP 查過這場比賽，配對、時間、對手回報都會直接推給你，不用先打開 APP。'],
   ] },
