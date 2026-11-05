@@ -352,15 +352,13 @@ async function member(env, tok) {
     if (AUTH.size > 500) AUTH.delete(AUTH.keys().next().value);
   }
   if (!a.m || a.m.disabled) return null;
-  // 記使用次數（延後寫回）
-  a.pending++;
-  if (!kvFull() && (a.pending >= 50 || Date.now() - a.flushed > 30 * 60e3)) {
+  // 11/05：只記「最後使用時間」，每人每 6 小時最多寫一次（省雲端儲存寫入額度）
+  const seenAt = a.m.seen ? new Date(a.m.seen).getTime() : 0;
+  if (!kvFull() && Date.now() - seenAt > 6 * 3600e3 && Date.now() - (a.tried || 0) > 10 * 60e3) {
+    a.tried = Date.now();
     const m = (await env.GA_KV.get('code:' + a.code, 'json')) || a.m;
-    const d = today();
-    if (!m.usage || m.usage.d !== d) m.usage = { d, n: 0 };
-    m.usage.n += a.pending; m.total = (m.total || 0) + a.pending; m.seen = new Date().toISOString();
-    await env.GA_KV.put('code:' + a.code, JSON.stringify(m));
-    a.m = m; a.pending = 0; a.flushed = Date.now();
+    m.seen = new Date().toISOString(); delete m.usage; delete m.total;
+    if (await env.GA_KV.put('code:' + a.code, JSON.stringify(m))) a.m = m;
   }
   return a.m;
 }
@@ -372,7 +370,7 @@ async function nickOf(env, pid) {
 }
 async function gaNameOf(pid) { try { const h = await search(String(pid)); return (h && h[0] && h[0].name) || ''; } catch (e) { return ''; } }
 async function readBody(req) { try { return await req.json(); } catch (e) { return {}; } }
-const pub = m => ({ code: m.code, note: m.note || '', pid: m.pid || null, name: m.name || '', gaName: m.gaName || '', disabled: !!m.disabled, created: m.created, bound: m.bound || null, seen: m.seen || null, today: m.usage && m.usage.d === today() ? m.usage.n : 0, total: m.total || 0, devices: (m.tokens || []).length });
+const pub = m => ({ code: m.code, note: m.note || '', pid: m.pid || null, name: m.name || '', gaName: m.gaName || '', disabled: !!m.disabled, created: m.created, bound: m.bound || null, seen: m.seen || null, devices: (m.tokens || []).length });
 async function join(env, body) {
   const code = normCode(body.code), pid = String(body.pid || '').replace(/\D/g, '');
   if (!code) return json({ error: '請輸入邀請碼' }, 400);
@@ -435,8 +433,7 @@ async function admin(env, path, req) {
 
 
 // ---------- 賽事索引與自動找比賽（11/04）----------
-// KV：idx:meta → {ready, lastId, updated, cronAt, open, countries:{TW:41,…}}
-//     idx:cc:<國家> → [{id, name, host, cc, date, status, chk}]（只留報名中、進行中）
+// KV：idx:all → { meta: {ready, lastId, updated, cronAt, open, countries:{TW:41,…}}, cc: { 國家: [{id, name, host, cc, date, status}] } }（只留報名中、進行中）
 // 賽事編號照建立時間排，比賽日期可能在幾週後，所以第一次要往回掃約 8 週；之後每小時排程掃新編號。
 // 免費方案每次最多 50 個對外請求：掃描每批 40 個。
 const IDX_BASE = 67830;          // 11/04 時的最新編號附近（第一次建立索引的起點參考）
@@ -456,10 +453,32 @@ async function rawEvent(id) {
   } catch (err) { return null; }
 }
 const slimEv = e => ({ id: e.id, name: e.name, host: e.host, cc: e.cc, date: e.date, status: e.status, chk: Date.now() });
-async function idxMeta(env) { return (await env.GA_KV.get('idx:meta', 'json')) || { ready: false, lastId: 0, countries: {}, open: 0 }; }
-async function idxGet(env, cc) { return (await env.GA_KV.get('idx:cc:' + cc, 'json')) || []; }
-async function idxPut(env, cc, list, meta) {
-  if (list.length) await env.GA_KV.put('idx:cc:' + cc, JSON.stringify(list)); else await env.GA_KV.delete('idx:cc:' + cc);
+// 11/05：整份索引存成一個 key（idx:all = { meta, cc:{ 國家: [...] } }），一次排程最多寫 1 次（原本每個國家各寫一次）
+// 每次請求讀一次放在 env.__idx；改動只記在記憶體，最後 idxSave() 才寫回
+async function idxDoc(env) {
+  if (env.__idx) return env.__idx;
+  let d = await env.GA_KV.get('idx:all', 'json');
+  if (!d) { // 舊格式（idx:meta＋idx:cc:<國家>）自動搬過來
+    const meta = (await env.GA_KV.get('idx:meta', 'json')) || { ready: false, lastId: 0, countries: {}, open: 0 }, cc = {};
+    for (const c of Object.keys(meta.countries || {})) cc[c] = (await env.GA_KV.get('idx:cc:' + c, 'json')) || [];
+    d = { meta, cc }; if (meta.ready) d.dirty = true;
+  }
+  d.meta.countries = d.meta.countries || {};
+  env.__idx = d; return d;
+}
+async function idxSave(env, force) {
+  const d = env.__idx; if (!d || (!d.dirty && !force)) return;
+  const { dirty, ...out } = d;
+  if (await env.GA_KV.put('idx:all', JSON.stringify(out))) d.dirty = false;
+}
+async function idxMeta(env) { return (await idxDoc(env)).meta; }
+async function idxGet(env, cc) { return (await idxDoc(env)).cc[cc] || []; }
+async function idxPut(env, cc, list, meta, prev) {
+  const d = await idxDoc(env);
+  const strip = l => JSON.stringify((l || []).map(x => ({ ...x, chk: 0 })));
+  if (prev && strip(prev) === strip(list)) { if (list.length) meta.countries[cc] = list.length; return; } // 沒變就不算
+  if (list.length) d.cc[cc] = list; else delete d.cc[cc];
+  d.dirty = true;
   if (list.length) meta.countries[cc] = list.length; else delete meta.countries[cc];
 }
 const recount = meta => { meta.open = Object.values(meta.countries || {}).reduce((a, b) => a + b, 0); };
@@ -483,7 +502,7 @@ async function mergeFound(env, meta, found) {
   for (const cc of Object.keys(by)) {
     const list = await idxGet(env, cc), map = new Map(list.map(x => [x.id, x]));
     for (const e of by[cc]) map.set(e.id, e);
-    await idxPut(env, cc, [...map.values()].filter(x => !stale(x)), meta);
+    await idxPut(env, cc, [...map.values()].filter(x => !stale(x)), meta, list);
   }
 }
 // 每小時排程：掃新編號（最多 40 個）＋把過期的移掉＋重新確認幾場最近的賽事
@@ -499,19 +518,26 @@ async function cronRun(env) {
     if (!r.lastSeen) break;
     meta.lastId = r.lastSeen;
   }
-  // 剩下的額度：重新確認日期在前後 3 天內、最久沒檢查的幾場（店家可能改日期或已完賽），最多 12 場
+  // 剩下的額度：重新確認開始時間在前後 36 小時內的比賽（可能已開打、完賽或改日期），最多 12 場
+  // 11/05：台灣優先；其他國家每小時輪流看一段（不用把「檢查時間」寫回去，省寫入）
+  const before = JSON.stringify(meta);
   let budget = Math.min(12, 50 - used - 2);
   if (budget > 0) {
-    const cands = [];
+    const home = [], rest = [];
     for (const cc of Object.keys(meta.countries || {})) for (const e of await idxGet(env, cc)) {
       const dt = e.date ? Math.abs(new Date(e.date).getTime() - Date.now()) : 0;
-      if (dt < 3 * 864e5) cands.push(e);
+      if (dt < 36 * 3600e3) (cc === 'TW' ? home : rest).push(e);
     }
-    cands.sort((a, b) => (a.chk || 0) - (b.chk || 0));
-    const pick = cands.slice(0, budget);
+    rest.sort((a, b) => a.id - b.id);
+    const pickHome = home.sort((a, b) => a.id - b.id).slice(0, Math.min(6, budget));
+    const n = budget - pickHome.length, hr = Math.floor(Date.now() / 3600e3);
+    const off = rest.length ? (hr * n) % rest.length : 0;
+    const pick = pickHome.concat(rest.slice(off, off + n), off + n > rest.length ? rest.slice(0, off + n - rest.length) : []);
     const fresh = await Promise.all(pick.map(e => rawEvent(e.id)));
     const touched = new Set();
-    pick.forEach((e, i) => { const f = fresh[i]; if (f === null) return; e._new = f ? slimEv(f) : null; touched.add(e.cc); });
+    // 只有狀態、日期、名稱、國家真的變了（或已不存在）才算有變
+    const same = (x, f) => f && x.status === f.status && x.date === f.date && x.name === f.name && x.cc === f.cc && OPEN.has(f.status) && !stale(f);
+    pick.forEach((e, i) => { const f = fresh[i]; if (f === null) return; const n = f ? slimEv(f) : null; if (n && same(e, n)) return; e._new = n; touched.add(e.cc); });
     for (const cc of touched) {
       const list = await idxGet(env, cc), upd = new Map(pick.filter(e => e.cc === cc && '_new' in e).map(e => [e.id, e._new]));
       const out = []; const moved = [];
@@ -520,12 +546,18 @@ async function cronRun(env) {
         const n = upd.get(x.id); if (!n || !OPEN.has(n.status) || stale(n)) continue;
         if (n.cc !== cc) moved.push(n); else out.push(n);
       }
-      await idxPut(env, cc, out, meta);
+      await idxPut(env, cc, out, meta, list);
       if (moved.length) await mergeFound(env, meta, moved);
     }
   }
-  recount(meta); meta.updated = new Date().toISOString(); meta.cronAt = meta.updated;
-  await env.GA_KV.put('idx:meta', JSON.stringify(meta));
+  // meta：內容有變才寫；沒變的話每 2 小時寫一次「排程有在跑」的時間（設定頁的排程提示用）
+  recount(meta);
+  const changed = JSON.stringify(meta) !== before;
+  const d = await idxDoc(env);
+  if (changed || d.dirty || !meta.cronAt || Date.now() - new Date(meta.cronAt).getTime() > 2 * 3600e3) {
+    meta.updated = new Date().toISOString(); meta.cronAt = meta.updated;
+    await idxSave(env, true);
+  }
 }
 // 管理員：分批建立索引。start → 決定範圍；之後每次帶 cursor 掃 40 個，掃到最新（連續 30 個沒有）就完成
 async function idxBuild(env, body) {
@@ -549,11 +581,13 @@ async function idxBuild(env, body) {
     return json({ ok: true, done: b.next - b.from, total: Math.max(b.top + 60, b.next) - b.from, found: b.found.length, cursor: String(b.next) });
   }
   // 完成：照國家分好寫入（先清掉舊的）
-  for (const cc of Object.keys(meta.countries || {})) await env.GA_KV.delete('idx:cc:' + cc);
+  for (const cc of Object.keys(meta.countries || {})) await env.GA_KV.delete('idx:cc:' + cc); // 舊格式清掉
+  env.__idx = { meta: null, cc: {} };
   const m2 = { ready: true, lastId: b.lastSeen || b.top, countries: {}, open: 0, cronAt: meta.cronAt || null };
+  env.__idx.meta = m2;
   await mergeFound(env, m2, b.found);
   recount(m2); m2.updated = new Date().toISOString();
-  await env.GA_KV.put('idx:meta', JSON.stringify(m2));
+  await idxSave(env, true); await env.GA_KV.delete('idx:meta');
   await env.GA_KV.delete('idx:build'); MEM.delete('idxb');
   return json({ ok: true, done: b.next - b.from, total: b.next - b.from, found: b.found.length, cursor: null });
 }
@@ -567,7 +601,7 @@ async function findEvents(env, pid, cc, netCC, page = 0) {
   const headDue = !page && !memGet('findHead');
   const head = headDue ? await scanRange(meta.lastId + 1, 6) : { lastSeen: 0, found: [] };
   if (headDue) memSet('findHead', 1, 600);
-  if (head.lastSeen) { meta.lastId = head.lastSeen; if (head.found.length) await mergeFound(env, meta, head.found); recount(meta); await env.GA_KV.put('idx:meta', JSON.stringify(meta)); }
+  if (head.lastSeen) { meta.lastId = head.lastSeen; if (head.found.length) await mergeFound(env, meta, head.found); recount(meta); (await idxDoc(env)).dirty = true; }
   const ccs = cc === 'ALL' ? Object.keys(meta.countries || {}) : [cc];
   const W = 14 * 3600e3, now = Date.now(), cands = [];
   for (const c of ccs) for (const e of await idxGet(env, c)) {
@@ -607,8 +641,9 @@ async function findEvents(env, pid, cc, netCC, page = 0) {
   if (gone.size) {
     const byCc = {}; pick.filter(e => gone.has(e.id)).forEach(e => { byCc[e.cc] = 1; });
     for (const c of Object.keys(byCc)) await idxPut(env, c, (await idxGet(env, c)).filter(x => !gone.has(x.id)), meta);
-    recount(meta); await env.GA_KV.put('idx:meta', JSON.stringify(meta));
+    recount(meta);
   }
+  await idxSave(env); // 有改才寫（新編號、移除已完賽），一次找比賽最多寫 1 次
   out.sort((a, b) => (b.status === 'started') - (a.status === 'started') || String(a.date).localeCompare(String(b.date)));
   return { indexReady: true, cc, netCC, checked: off + pick.length, total: cands.length, more: off + pick.length < cands.length, page, events: out };
 }

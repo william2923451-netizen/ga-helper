@@ -533,9 +533,9 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </head>
 <body>
 <div id="splash" class="sp-l3" aria-hidden="true">
-  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261104d</div></div>
-  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261104d</div></div>
-  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261104d</div></div>
+  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261105a</div></div>
+  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261105a</div></div>
+  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261105a</div></div>
 </div>
 <script>try{var sp=(JSON.parse(localStorage.getItem('ga.settings')||'{}')||{}).splash||'l3';if(!/^(l[123]|off)$/.test(sp))sp='l3';document.getElementById('splash').className='sp-'+sp}catch(e){}</script>
 <div class="app">
@@ -756,7 +756,7 @@ function showAlert({ title, sub = '', tone = '', sound = 'soft', ttl = 0, action
   clearTimeout(alertTimer); if (ttl) alertTimer = setTimeout(close, ttl);
 }
 // APP 主程式版本（改 index.html 或 sw.js 時往前推）
-const APP_VERSION = '20261104d';
+const APP_VERSION = '20261105a';
 
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
@@ -2159,7 +2159,7 @@ async function renderAdmin(reload = true) {
     catch (e) { box.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
   }
   const L2 = ADM.list, td = new Date().toDateString();
-  const isToday = m => m.today > 0 || (m.seen && new Date(m.seen).toDateString() === td);
+  const isToday = m => !!(m.seen && new Date(m.seen).toDateString() === td);
   const used = L2.filter(m => m.pid), unused = L2.filter(m => !m.pid && !m.disabled), off = L2.filter(m => m.disabled);
   const act = used.filter(m => !m.disabled && isToday(m)).length;
   const made = (ADM.made || []).map(c => L2.find(m => m.code === c)).filter(Boolean);
@@ -2188,7 +2188,7 @@ async function renderAdmin(reload = true) {
     <details class="adm-mk" id="admBk"><summary><span>🗄 備份與還原</span><small id="bkSum">每週自動備份</small></summary><div id="bkBox"><p class="empty"><span class="spin"></span></p></div></details>
     ${f !== 'new' ? `<div class="mlist">${rows.length ? rows.map(memRow).join('') : `<p class="empty">${q ? '找不到符合的會員。' : f === 'off' ? '沒有停用的邀請碼。' : '還沒有人加入。'}</p>`}${!q && more > 0 ? `<button class="btn" id="admMore">再顯示 ${Math.min(more, 10)} 位（還有 ${more} 位）</button>` : ''}</div>` : ''}
     ${spare.length ? `<div class="sp-h">還沒用的邀請碼 <b>${spare.length}</b></div><div class="sp-list">${spare.map(m => `<div class="sp-r" data-code="${esc(m.code)}"><span class="code">${esc(m.code)}</span>${m.note ? `<span class="muted small sp-nt">${esc(m.note)}</span>` : '<span class="sp-nt"></span>'}<button data-lnk="${esc(m.code)}">連結</button><button data-inv="${esc(m.code)}">邀請</button><button data-act="del" class="dz">刪除</button></div>`).join('')}</div>` : ''}
-    <p class="muted small" style="margin:0">使用次數每 50 次或 30 分鐘寫回一次，會比實際晚一點。</p>`;
+    <p class="muted small" style="margin:0">最後使用時間每 6 小時更新一次，會比實際晚一點。</p>`;
   $('#admN').onclick = e => { const c = e.target.closest('[data-n]'); if (!c) return; ADM.n = +c.dataset.n; $('#admNum').value = ''; $('#admN').querySelectorAll('[data-n]').forEach(x => x.classList.toggle('on', x === c)); };
   $('#admNum').oninput = e => { const v = parseInt(e.target.value, 10); if (v) { ADM.n = Math.max(1, Math.min(20, v)); $('#admN').querySelectorAll('[data-n]').forEach(x => x.classList.remove('on')); } };
   $('#admMake').onclick = async () => {
@@ -2206,7 +2206,7 @@ async function renderAdmin(reload = true) {
 }
 // 會員一列：GA 名字#編號、暱稱與備註、邀請碼與時間、使用量；點一下展開操作
 function memRow(m) {
-  const td = new Date().toDateString(), live = m.today > 0 || (m.seen && new Date(m.seen).toDateString() === td);
+  const td = new Date().toDateString(), live = !!(m.seen && new Date(m.seen).toDateString() === td);
   const st = m.disabled ? 'off' : live ? 'live' : '';
   const who = m.gaName || m.name || '';
   const sub = [m.gaName && m.name && m.name !== m.gaName ? `暱稱 ${esc(m.name)}` : '', m.note ? `備註 ${esc(m.note)}` : ''].filter(Boolean).join('・');
@@ -2219,7 +2219,7 @@ function memRow(m) {
     </div>
     ${sub ? `<div class="mr-sub">${sub}</div>` : ''}
     <div class="mr-meta"><span class="code">${esc(m.code)}</span><span>${fmtT(m.bound)} 加入</span></div>
-    <div class="mr-use"><span>今天 <b>${m.today}</b></span><span>累計 <b>${m.total}</b></span><span>手機 <b>${m.devices}</b>/3</span><button class="mr-more" data-act="toggle" aria-label="更多">${open ? '收起' : '管理'}</button></div>
+    <div class="mr-use"><span>手機 <b>${m.devices}</b>/3</span><button class="mr-more" data-act="toggle" aria-label="更多">${open ? '收起' : '管理'}</button></div>
     ${open ? `<div class="mi-a">
       <button data-act="${m.disabled ? 'enable' : 'disable'}">${m.disabled ? '啟用' : '停用'}</button>
       <button data-act="note">備註</button>
@@ -2521,6 +2521,7 @@ function histUpdate(m) {
     for (const kk in n) if (o[kk] !== n[kk] && !(kk === 'oppName' && !n[kk])) { o[kk] = n[kk]; changed = true; }
   }
   if (changed) saveHist();
+  if (changed && ['complete', 'canceled'].includes(m.event.status)) setTimeout(() => pushHist(true), 2000); // 比賽結束就備份
   if (histDecks.ev === m.event.id && histDecks.data) histDecksMerge(m.event.id, histDecks.data);
 }
 function histDecksMerge(evId, d) {
@@ -2710,10 +2711,13 @@ setTimeout(() => syncStats(false), 6000);
 // ---------- 戰績備份到伺服器（會員）----------
 let histTimer = null;
 // 省 KV 寫入：最多每 15 分鐘存一次（免費每天 1,000 次，大家共用）
-function scheduleHistSync() { clearTimeout(histTimer); histTimer = setTimeout(pushHist, 15 * 60e3); }
+function scheduleHistSync() { clearTimeout(histTimer); histTimer = setTimeout(pushHist, 30 * 60e3); }
+// 11/05：比賽進行中先不存（打完那場、或比賽結束後才存），省雲端寫入
+const inMatch = () => { const m = lastMatch; return !!(m && m.event && !['complete', 'canceled'].includes(m.event.status) && Date.now() - (m._recv || 0) < 3 * 3600e3); };
 async function pushHist(force) {
   if (!histDirty || !S.pid || !(store.get('member', '') || store.get('admin', ''))) return;
-  if (!force && Date.now() - (store.get('histPush', 0) || 0) < 15 * 60e3) return scheduleHistSync();
+  if (!force && inMatch()) return scheduleHistSync();
+  if (!force && Date.now() - (store.get('histPush', 0) || 0) < 30 * 60e3) return scheduleHistSync();
   store.set('histPush', Date.now());
   try { const r = await api('/api/hist?pid=' + encodeURIComponent(S.pid), { body: HIST }); if (r && r.ok !== false) histDirty = false; else { store.set('histPush', 0); scheduleHistSync(); } } catch (e) {}
 }
@@ -2859,7 +2863,7 @@ function downloadCSV(name, rows) {
 function exportMembers(spare) {
   const L2 = (ADM.list || []).filter(m => spare ? !m.pid : !!m.pid); const d = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   if (spare) downloadCSV(`GA邀請碼_${d}.csv`, [['邀請碼', '狀態', '建立時間', '備註', '邀請連結'], ...L2.map(m => [m.code, m.disabled ? '停用' : '還沒用', m.created, m.note, inviteLink(m.code)])]);
-  else downloadCSV(`GA會員名單_${d}.csv`, [['GA 名稱', 'GA 編號', '暱稱', '邀請碼', '狀態', '加入時間', '最後使用', '今天次數', '累計次數', '手機數', '備註'], ...L2.map(m => [m.gaName, m.pid, m.name, m.code, m.disabled ? '停用' : '使用中', m.bound, m.seen, m.today, m.total, m.devices, m.note])]);
+  else downloadCSV(`GA會員名單_${d}.csv`, [['GA 名稱', 'GA 編號', '暱稱', '邀請碼', '狀態', '加入時間', '最後使用', '手機數', '備註'], ...L2.map(m => [m.gaName, m.pid, m.name, m.code, m.disabled ? '停用' : '使用中', m.bound, m.seen, m.devices, m.note])]);
 }
 // ---------- 打開 APP 就在背景找比賽 ----------
 setTimeout(() => { if (S.pid && needFind() && !FD.st) findEvent({ bg: true }); }, 1800);
@@ -2867,6 +2871,9 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // ---------- 更新公告：更新後第一次打開跳一次（11/04）----------
 // 以後每次改版在最上面加一筆（v 要跟 APP_VERSION 一樣）
 const CHANGELOG = [
+  { v: '20261105a', date: '11/05', items: [
+    ['⚙️', '穩定性改善', '減少伺服器的儲存用量，朋友多的比賽日也不容易卡住；比賽中的戰績改成打完再備份。'],
+  ] },
   { v: '20261104d', date: '11/04', items: [
     ['📊', '我的戰績', '「比賽」分頁最下面多了戰績簿：自動從 grandarchivestats 帶入你過去所有比賽，看勝率、先攻／後攻勝率、對各套牌的戰績，可以用自己的套牌篩選。'],
     ['🤝', '交手履歷', '查對手或配對到時，會列出你們以前在哪場比賽交手、雙方用什麼套牌、勝負。'],
