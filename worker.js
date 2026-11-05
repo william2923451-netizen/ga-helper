@@ -995,7 +995,8 @@ export default {
         if (sub === 'key') return json({ ok: true, key: (await vapidKeys(env)).pub });
         let pid = (q.get('pid') || '').replace(/\D/g, '');
         if (!isAdmin(req, env)) { const m = gated(env) ? await member(env, req.headers.get('X-GA-Key')) : null; if (!m) return json({ error: '需要邀請碼', code: 'need-invite' }, 401); pid = String(m.pid); }
-        if (!pid) return json({ error: '需要 GA 編號' }, 400);
+        else if (!pid && req.headers.get('X-GA-Key')) { const m = await member(env, req.headers.get('X-GA-Key')); if (m && m.pid) pid = String(m.pid); } // 管理員同時也是會員
+        if (!pid) return json({ error: '需要 GA 編號（請先到「玩家」填你的 GA 編號）' }, 400);
         const b0 = req.method === 'POST' ? await readBody(req) : {};
         const ps = await pushSubs(env, pid);
         if (sub === 'sub') {

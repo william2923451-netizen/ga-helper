@@ -402,6 +402,7 @@ table.stand{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nu
 .stand .cutline td{border-bottom:2px dashed var(--accent)}
 .fold-head{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;min-height:28px}
 .fold-head h2{flex:1}
+.set-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.set-top .adm-link{align-self:auto}
 .chev{width:20px;height:20px;flex:none;color:var(--muted);transition:transform .2s}
 .folded .chev{transform:rotate(-90deg)}
 [data-fold].folded > :not(.fold-head){display:none!important}
@@ -533,9 +534,9 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </head>
 <body>
 <div id="splash" class="sp-l3" aria-hidden="true">
-  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261105c</div></div>
-  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261105c</div></div>
-  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261105c</div></div>
+  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261105d</div></div>
+  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261105d</div></div>
+  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261105d</div></div>
 </div>
 <script>try{var sp=(JSON.parse(localStorage.getItem('ga.settings')||'{}')||{}).splash||'l3';if(!/^(l[123]|off)$/.test(sp))sp='l3';document.getElementById('splash').className='sp-'+sp}catch(e){}</script>
 <div class="app">
@@ -756,7 +757,7 @@ function showAlert({ title, sub = '', tone = '', sound = 'soft', ttl = 0, action
   clearTimeout(alertTimer); if (ttl) alertTimer = setTimeout(close, ttl);
 }
 // APP 主程式版本（改 index.html 或 sw.js 時往前推）
-const APP_VERSION = '20261105c';
+const APP_VERSION = '20261105d';
 
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
@@ -1968,6 +1969,27 @@ async function verifyPid(pid, msgEl) {
   } catch (e) { msgEl.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return null; }
 }
 
+// 設定分頁每張卡片都可以折疊（11/05d）：點標題收起／展開，記在這支手機
+const SFCHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+function setFolds() {
+  const body = $('#setBody'), st = store.get('setFold', {}) || {};
+  for (const c of body.querySelectorAll(':scope > .card')) {
+    if (c.querySelector(':scope > .fold-head')) continue; // 會員管理、問題回報本來就有自己的折疊
+    const h = c.querySelector(':scope > h2'); if (!h) continue;
+    const key = c.id || h.textContent.replace(/會員功能/g, '').trim();
+    const head = document.createElement('div'); head.className = 'fold-head';
+    h.replaceWith(head); head.appendChild(h); head.insertAdjacentHTML('beforeend', SFCHEV);
+    c.dataset.fold = key; if (st[key]) c.classList.add('folded');
+    head.onclick = () => { c.classList.toggle('folded'); const s2 = store.get('setFold', {}) || {}; s2[key] = c.classList.contains('folded'); store.set('setFold', s2); foldAllLabel(); };
+  }
+  const fa = $('#sFoldAll'); if (fa) fa.onclick = () => {
+    const all = [...body.querySelectorAll(':scope > .card')].filter(c => !c.hidden), close = all.some(c => !c.classList.contains('folded') && !c.classList.contains('afold'));
+    const s2 = {}; for (const c of all) { if (c.dataset.fold) { c.classList.toggle('folded', close); s2[c.dataset.fold] = close; } else c.classList.toggle('afold', close); }
+    store.set('setFold', s2); store.set('admFold', close); store.set('bugFold', close); foldAllLabel();
+  };
+  foldAllLabel();
+}
+function foldAllLabel() { const fa = $('#sFoldAll'); if (!fa) return; const all = [...$('#setBody').querySelectorAll(':scope > .card')].filter(c => !c.hidden); fa.textContent = all.some(c => !c.classList.contains('folded') && !c.classList.contains('afold')) ? '全部收起' : '全部展開'; }
 // =====================================================================
 // 設定分頁（每一項改了就立即生效）
 // =====================================================================
@@ -1975,7 +1997,7 @@ function renderSettings() {
   const presets = [15, 19, 22, 25, 26, 27, 28, 30];
   const dflt = CFG.api && !/你的名稱/.test(CFG.api) ? CFG.api : '';
   $('#setBody').innerHTML = `
-    <h1>設定</h1>
+    <div class="set-top"><h1>設定</h1><button class="adm-link" id="sFoldAll"></button></div>
     <div class="card">
       <h2>玩家</h2>
       <label class="fld">我的 GA 編號（Omnidex 個人頁的 # 數字）<input id="sPid" inputmode="numeric" value="${esc(S.pid)}" placeholder="例如 3753" ${store.get('lockPid', '') ? 'readonly' : ''}></label>
@@ -2065,6 +2087,7 @@ function renderSettings() {
     </div>
     <p class="muted small" style="text-align:center">所有設定改了就會儲存。</p>
     <div class="credit">by 塵世迷途小書僮</div>`;
+  setFolds();
   $('#sAlT').onchange = e => { S.alertTime = e.target.checked; saveS(); };
   $('#sAlM').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; const n = +b.dataset.m; const L2 = new Set(S.alertMins || []); L2.has(n) ? L2.delete(n) : L2.add(n); S.alertMins = [...L2]; saveS(); b.classList.toggle('on', L2.has(n)); };
   $('#sAlP').onchange = e => { S.alertPair = e.target.checked; saveS(); if (S.alertPair && !$('#autoRef').checked) { $('#autoRef').checked = true; setAuto(); } };
@@ -2848,22 +2871,24 @@ const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in win
 const inAppAlerts = () => !S.pushOn || !!S.pushAlsoInApp;
 async function pushSub() { try { const reg = await navigator.serviceWorker.ready; return await reg.pushManager.getSubscription(); } catch (e) { return null; } }
 const keyBytes = b64 => { b64 = b64.replace(/-/g, '+').replace(/_/g, '/'); while (b64.length % 4) b64 += '='; const s0 = atob(b64), u = new Uint8Array(s0.length); for (let i = 0; i < s0.length; i++) u[i] = s0.charCodeAt(i); return u; };
+// 管理員身分登入時，伺服器不知道是誰 → 帶上自己的 GA 編號（11/05d）
+const pushPath = n => '/api/push/' + n + (store.get('admin', '') && S.pid ? '?pid=' + encodeURIComponent(S.pid) : '');
 async function pushEnable(msgEl) {
   try {
     const perm = await Notification.requestPermission();
     if (perm !== 'granted') { msgEl.innerHTML = '<div class="msg err">你沒有允許通知。要開的話：iPhone「設定 → 通知 → 比賽助手」打開允許通知，再回來按一次。</div>'; return; }
-    const { key } = await api('/api/push/key');
+    const { key } = await api(pushPath('key'));
     const reg = await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(key) });
     const ev = lastMatch && lastMatch.event && !['complete', 'canceled'].includes(lastMatch.event.status) ? lastMatch.event.id : null;
-    await api('/api/push/sub', { body: { sub: sub.toJSON(), prefs: pushPrefs(), event: ev } });
+    await api(pushPath('sub'), { body: { sub: sub.toJSON(), prefs: pushPrefs(), event: ev } });
     S.pushOn = true; saveS(); renderPush();
   } catch (e) { msgEl.innerHTML = `<div class="msg err">開不了推播：${esc(e.message || e)}</div>`; }
 }
 async function pushDisable() {
   const sub = await pushSub();
-  if (sub) { try { await api('/api/push/unsub', { body: { endpoint: sub.endpoint } }); } catch (e) {} try { await sub.unsubscribe(); } catch (e) {} }
+  if (sub) { try { await api(pushPath('unsub'), { body: { endpoint: sub.endpoint } }); } catch (e) {} try { await sub.unsubscribe(); } catch (e) {} }
   S.pushOn = false; saveS(); renderPush();
 }
 async function renderPush() {
@@ -2898,9 +2923,9 @@ async function renderPush() {
     S.pushPrefs = Object.assign(pushPrefs(), { [k]: cb.checked });
     if (k === 't10' && cb.checked) S.pushPrefs.compact = false;
     saveS(); renderPush();
-    try { await api('/api/push/prefs', { body: { endpoint: sub.endpoint, prefs: pushPrefs() } }); } catch (e) { $('#pushMsg').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+    try { await api(pushPath('prefs'), { body: { endpoint: sub.endpoint, prefs: pushPrefs() } }); } catch (e) { $('#pushMsg').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
   });
-  $('#pushTest').onclick = async () => { const m = $('#pushMsg'); m.innerHTML = '<p class="empty"><span class="spin"></span></p>'; try { await api('/api/push/test', { body: { endpoint: sub.endpoint } }); m.innerHTML = '<div class="msg">已送出，幾秒內會收到（APP 開著時有些手機不會跳出來，可以先回主畫面）。</div>'; } catch (e) { m.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; } };
+  $('#pushTest').onclick = async () => { const m = $('#pushMsg'); m.innerHTML = '<p class="empty"><span class="spin"></span></p>'; try { await api(pushPath('test'), { body: { endpoint: sub.endpoint } }); m.innerHTML = '<div class="msg">已送出，幾秒內會收到（APP 開著時有些手機不會跳出來，可以先回主畫面）。</div>'; } catch (e) { m.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; } };
   $('#pushOff').onclick = pushDisable;
 }
 // 點通知打開 APP：直接切到比賽
@@ -2964,6 +2989,10 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // ---------- 更新公告：更新後第一次打開跳一次（11/04）----------
 // 以後每次改版在最上面加一筆（v 要跟 APP_VERSION 一樣）
 const CHANGELOG = [
+  { v: '20261105d', date: '11/05', items: [
+    ['📂', '設定可以折疊', '設定裡每張卡片點標題就能收起來，右上角可以一次全部收起／展開，會記住你的選擇。'],
+    ['🔔', '推播修正', '用管理員身分登入時也能開推播。'],
+  ] },
   { v: '20261105c', date: '11/05', items: [
     ['⚡', '推播送得更快', '朋友多的比賽日，配對通知也能在 1 分鐘內送到每個人。'],
   ] },
