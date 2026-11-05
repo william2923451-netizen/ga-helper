@@ -1,7 +1,8 @@
 # GA 比賽助手：推到 GitHub 就自動檢查版本號＋部署 Worker
 # 網頁（index.html 等）本來就由 GitHub Pages 自動更新；這裡只多做兩件事：
 # 1. 檢查 index.html 的 APP_VERSION、開場畫面版本、sw.js 的 VERSION 是否一致（不一致就標紅，提醒你漏改）
-# 2. worker.js 或 wrangler.toml 有變動時，自動部署到 Cloudflare（不用再手動複製貼上）
+# 2. worker.js、wrangler.toml 或推播分身（push-worker.js、wrangler-push.toml）有變動時，自動部署到 Cloudflare
+#    順序：先部署推播分身 ga-push，再部署 ga-helper（ga-helper 綁定了 ga-push，要先存在）
 name: 檢查與部署
 on:
   push:
@@ -34,8 +35,15 @@ jobs:
       - name: worker.js 有沒有改
         id: chg
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || git diff --name-only HEAD~1 HEAD | grep -qE '^(worker\.js|wrangler\.toml)$'; then echo "go=1" >> $GITHUB_OUTPUT; else echo "worker.js 沒變，略過部署"; fi
-      - name: 部署到 Cloudflare
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || git diff --name-only HEAD~1 HEAD | grep -qE '^(worker\.js|wrangler\.toml|push-worker\.js|wrangler-push\.toml)$'; then echo "go=1" >> $GITHUB_OUTPUT; else echo "worker.js 沒變，略過部署"; fi
+      - name: 部署推播分身（ga-push）
+        if: steps.chg.outputs.go == '1'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler-push.toml
+      - name: 部署到 Cloudflare（ga-helper）
         if: steps.chg.outputs.go == '1'
         uses: cloudflare/wrangler-action@v3
         with:
