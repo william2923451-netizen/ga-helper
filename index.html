@@ -534,9 +534,9 @@ label.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--
 </head>
 <body>
 <div id="splash" class="sp-l3" aria-hidden="true">
-  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261105d</div></div>
-  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261105d</div></div>
-  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261105d</div></div>
+  <div class="sp l1"><div class="lg"></div><div class="rule"></div><div class="t">比賽助手</div><div class="ver">v20261105e</div></div>
+  <div class="sp l2"><div class="halo"></div><div class="lg"></div><div class="en">TCG COMPANION</div><div class="t">比賽助手</div><div class="ver">v20261105e</div></div>
+  <div class="sp l3"><div class="frame"></div><div class="lg"></div><div class="t">比賽助手</div><div class="ver">v20261105e</div></div>
 </div>
 <script>try{var sp=(JSON.parse(localStorage.getItem('ga.settings')||'{}')||{}).splash||'l3';if(!/^(l[123]|off)$/.test(sp))sp='l3';document.getElementById('splash').className='sp-'+sp}catch(e){}</script>
 <div class="app">
@@ -757,7 +757,7 @@ function showAlert({ title, sub = '', tone = '', sound = 'soft', ttl = 0, action
   clearTimeout(alertTimer); if (ttl) alertTimer = setTimeout(close, ttl);
 }
 // APP 主程式版本（改 index.html 或 sw.js 時往前推）
-const APP_VERSION = '20261105d';
+const APP_VERSION = '20261105e';
 
 // ---------- 設定 ----------
 const urlApi = new URLSearchParams(location.search).get('api');
@@ -2989,6 +2989,9 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // ---------- 更新公告：更新後第一次打開跳一次（11/04）----------
 // 以後每次改版在最上面加一筆（v 要跟 APP_VERSION 一樣）
 const CHANGELOG = [
+  { v: '20261105e', date: '11/05', items: [
+    ['🔔', '不用打開 APP 也收得到', '開過推播的朋友，只要同場有人用 APP 查過這場比賽，配對、時間、對手回報都會直接推給你，不用先打開 APP。'],
+  ] },
   { v: '20261105d', date: '11/05', items: [
     ['📂', '設定可以折疊', '設定裡每張卡片點標題就能收起來，右上角可以一次全部收起／展開，會記住你的選擇。'],
     ['🔔', '推播修正', '用管理員身分登入時也能開推播。'],

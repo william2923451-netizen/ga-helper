@@ -787,6 +787,22 @@ async function pzProbe(env) {
   return { ok, why: c.why, ms: Date.now() - t };
 }
 const PUSH_DEF = { pair: true, t10: false, t5: true, t0: true, rep: true };
+// 有開推播的會員名單（push:all = [GA 編號]）：只在開／關推播時寫入。
+// 每分鐘看比賽時，配對表裡有這些人就直接推，不用他先打開 APP（11/05e）
+async function pushAll(env) {
+  const hit = memGet('pall'); if (hit) return hit;
+  let a = await env.GA_KV.get('push:all', 'json');
+  if (!Array.isArray(a)) { // 第一次：從現有的訂閱建立
+    a = (await env.GA_KV.list({ prefix: 'push:' })).keys.map(k => k.name.match(/^push:(\d+)$/)).filter(Boolean).map(m => +m[1]);
+    await env.GA_KV.put('push:all', JSON.stringify(a));
+  }
+  memSet('pall', a, 60); return a;
+}
+async function pushAllSet(env, pid, on) {
+  const a = (await pushAll(env)).slice(), i = a.indexOf(+pid);
+  if (on && i < 0) a.push(+pid); else if (!on && i >= 0) a.splice(i, 1); else return;
+  await env.GA_KV.put('push:all', JSON.stringify(a)); memSet('pall', a, 60);
+}
 async function pushSubs(env, pid) { return (await env.GA_KV.get('push:' + pid, 'json')) || { subs: [] }; }
 // 監看清單：pw = { ev: { 賽事: { pids: [GA 編號], at } } }
 async function watchAdd(env, evId, pid) {
@@ -819,16 +835,20 @@ async function pushRun(env, shard = 0, nShards = 1) {
   const ids = Object.keys(w.ev); if (!ids.length) return;
   const states = new Map(); // 這次執行自己的狀態（不放在共用的 pw 物件上，三組同時跑才不會互相蓋掉）
   let wChanged = false, budget = 36, sendBudget = 5; const queue = []; // 每則約 1.5 毫秒運算，5 則加上其他工作留在 10 毫秒內
+  const subsAll = new Set((await pushAll(env)).filter(x => x % nShards === shard)); // 這一組負責、有開推播的人
   for (const evId of ids) {
     const we = w.ev[evId];
     if (Date.now() - we.at > 16 * 3600e3) { if (shard === 0) { delete w.ev[evId]; wChanged = true; } continue; }
-    const pids = we.pids.filter(x => x % nShards === shard); if (!pids.length) continue;
+    const own = we.pids.filter(x => x % nShards === shard); if (!own.length && !subsAll.size) continue;
     if (budget < 6) break;
     const stKey = 'pst:' + evId + ':' + shard;
     const st = (await env.GA_KV.get(stKey, 'json')) || { last: null, sent: {}, stats: { d: '', n: 0, f: 0 } };
     const now = await eventNow(evId, st.last); if (!now) continue; budget -= now.used + 1;
     if (now.ev.status === 'complete' || now.ev.status === 'canceled') { if (shard === 0) { delete w.ev[evId]; wChanged = true; } await env.GA_KV.delete(stKey); continue; }
     if (!now.p) continue;
+    // 要推的人：登記過這場的會員＋配對表裡出現、有開推播的會員（他不用先打開 APP）
+    const inPair = new Set(); for (const m of now.p.pairings) for (const y of m.pairing) if (subsAll.has(y.id)) inPair.add(y.id);
+    const pids = [...new Set([...own, ...inPair])]; if (!pids.length) { states.set(evId, st); continue; }
     st._prevLast = st.last; st.last = { si: now.si, r: now.r };
     const label = (now.stage === 'single-elimination' ? '決賽 ' : '第 ') + now.r + ' 輪';
     const rk = now.si + ':' + now.r;
@@ -882,7 +902,7 @@ async function pushRun(env, shard = 0, nShards = 1) {
     if (r === 'ok' || r === 'gone') markSent(x.it); if (r === 'gone') (gone[x.it.pid] = gone[x.it.pid] || []).push(x.sub.endpoint);
   }
   // 送不完的（rest）不記成已送，下一分鐘自動補送
-  for (const pid in gone) { const ps = await pushSubs(env, pid); ps.subs = ps.subs.filter(x => !gone[pid].includes(x.endpoint)); if (ps.subs.length) await env.GA_KV.put('push:' + pid, JSON.stringify(ps)); else await env.GA_KV.delete('push:' + pid); }
+  for (const pid in gone) { const ps = await pushSubs(env, pid); ps.subs = ps.subs.filter(x => !gone[pid].includes(x.endpoint)); if (ps.subs.length) await env.GA_KV.put('push:' + pid, JSON.stringify(ps)); else { await env.GA_KV.delete('push:' + pid); await pushAllSet(env, pid, false); } }
   for (const [evId, st] of states) { if (st && st._dirty) { delete st._dirty; await env.GA_KV.put('pst:' + evId + ':' + shard, JSON.stringify(st), { expirationTtl: 2 * 86400 }); } }
   if (wChanged) { await env.GA_KV.put('pw', JSON.stringify(w)); MEM.delete('pw'); }
 }
@@ -1003,11 +1023,12 @@ export default {
           const s0 = b0.sub; if (!s0 || !s0.endpoint || !s0.keys || !s0.keys.p256dh || !s0.keys.auth) return json({ error: '訂閱資料不完整' }, 400);
           ps.subs = ps.subs.filter(x => x.endpoint !== s0.endpoint).concat({ endpoint: s0.endpoint, keys: s0.keys, prefs: b0.prefs || {}, at: new Date().toISOString() }).slice(-3);
           if (!(await env.GA_KV.put('push:' + pid, JSON.stringify(ps)))) return json({ error: '伺服器今天的儲存額度用完了，明天再開推播' }, 503);
+          await pushAllSet(env, pid, true);
           if (b0.event) await watchAdd(env, String(b0.event).replace(/\D/g, ''), pid);
           return json({ ok: true, devices: ps.subs.length });
         }
         if (sub === 'prefs') { const x = ps.subs.find(x => x.endpoint === b0.endpoint); if (!x) return json({ error: '這支手機還沒開推播', code: 'no-sub' }, 404); x.prefs = b0.prefs || {}; await env.GA_KV.put('push:' + pid, JSON.stringify(ps)); return json({ ok: true }); }
-        if (sub === 'unsub') { ps.subs = ps.subs.filter(x => x.endpoint !== b0.endpoint); if (ps.subs.length) await env.GA_KV.put('push:' + pid, JSON.stringify(ps)); else await env.GA_KV.delete('push:' + pid); return json({ ok: true }); }
+        if (sub === 'unsub') { ps.subs = ps.subs.filter(x => x.endpoint !== b0.endpoint); if (ps.subs.length) await env.GA_KV.put('push:' + pid, JSON.stringify(ps)); else { await env.GA_KV.delete('push:' + pid); await pushAllSet(env, pid, false); } return json({ ok: true }); }
         if (sub === 'test') { const x = ps.subs.find(x => x.endpoint === b0.endpoint) || ps.subs[0]; if (!x) return json({ error: '這支手機還沒開推播', code: 'no-sub' }, 404); const r = await sendPush(env, x, { title: '測試通知', body: '推播設定成功！比賽時會用這種方式通知你。', tag: 'test', url: './' }); return r === 'ok' ? json({ ok: true }) : json({ error: r === 'gone' ? '這支手機的通知權限失效了，請重新開啟推播' : '送不出去，請稍後再試' }, 502); }
         if (sub === 'status') return json({ ok: true, on: ps.subs.some(x => x.endpoint === q.get('endpoint')), devices: ps.subs.length });
         return json({ error: '不支援' }, 400);
